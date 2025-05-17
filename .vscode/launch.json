@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "HelloWorld",
+      "request": "launch",
+      "mainClass": "com.log430.tp0.HelloWorld",
+      "projectName": "tp0"
+    },
+    {
+      "type": "java",
+      "name": "Debug All Tests",
+      "request": "launch",
+      "mainClass": "org.junit.platform.console.ConsoleLauncher",
+      "args": "--scan-class-path",
+      "projectName": "tp0"
+    }
+  ]
+}

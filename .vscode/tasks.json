@@ -1,0 +1,10 @@
+{
+  "label": "Run JUnit Tests",
+  "type": "shell",
+  "command": "mvn test",
+  "group": {
+    "kind": "test",
+    "isDefault": true
+  },
+  "problemMatcher": []
+}
