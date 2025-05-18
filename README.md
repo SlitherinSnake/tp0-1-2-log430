@@ -18,27 +18,44 @@ Mon application Java est un simple projet qui à pour but de montrer le message 
 
   ```git clone https://github.com/Username/projetGit```
 ## Structuration du projet
+En MVC
 ```
 TPO-LOG430/
 │
-├── .github/workflows
-│   └── ci.yml                                  # Pipeline CI/CD GitHub Actions
-└── java-hello-world/
-    ├── src/
-    │   ├── main/java/com/log430/tp0
-    │   │   └── HelloWorld.java         # Classe principale Java affichant Hello World
-    │   └── test/java/com/log430/tp0
-    │   │   └── HelloWorldTest.java     # Tests unitaires pour l'application Java
-    ├── target/
-    │   ├── classes/com/log430/tp0
-    │   │   └── HelloWorld.class      
-    │   └── test-classes/com/log430/tp0
-    │   │   └── HelloWorldTest.class  
-├── .gitignore                                      # Fichiers à ignorer par Git
-├── docker-compose.yml                              # Fichier pour orchestrer le conteneur
-├── Dockerfile                                      # Fichier Docker pour créer l'image
-├── pom.xml    
-└── README.md                                       # Fichier d'information
+java-hello-world/
+├── src/
+│   ├── main/
+│   │   └── java/
+│   │       └── com/log430/tp0/
+│   │           ├── controller/
+│   │           │   └── HelloController.java
+│   │           ├── model/
+│   │           │   └── HelloMovel.java
+│   │           ├── server/
+│   │           │   └── HelloServer.java
+│   │           ├── view/
+│   │           │   └── HelloView.java
+│   │           └── HelloApp.java
+│
+│   └── test/
+│       └── java/
+│           └── com/log430/tp0/
+│               ├── controller/
+│               │   └── HelloControllerTest.java
+│               ├── server/
+│               │   └── HelloServerTest.java
+│               ├── view/
+│               │   └── HelloViewTest.java
+│               └── HelloWorldTest.java
+│
+├── pom.xml
+├── Dockerfile
+├── docker-compose.yml
+├── .gitignore
+└── .github/
+    └── workflows/
+        └── ci.yml
+
 
 ```
 

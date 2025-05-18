@@ -3,9 +3,9 @@
   "configurations": [
     {
       "type": "java",
-      "name": "HelloWorld",
+      "name": "HelloApp",
       "request": "launch",
-      "mainClass": "com.log430.tp0.HelloWorld",
+      "mainClass": "com.log430.tp0.HelloApp",
       "projectName": "tp0"
     },
     {
