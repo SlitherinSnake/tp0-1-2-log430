@@ -1,14 +1,14 @@
 # ----------------------------
-#  Usage Documented
+#  Docker - Usage Instructions
 # ----------------------------
 
-# Build the image
+# To build the image
 # docker build -t java-hello-app .
 
-# Run the container (console app)
+# To run the container (console app)
 # docker run --rm java-hello-app
 
-# Run the container (web app on port 8080)
+# To run the container (web app on port 8080)
 # docker run --rm -p 8080:8080 java-hello-app
 
 # ----------------------------

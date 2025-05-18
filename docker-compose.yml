@@ -1,19 +1,19 @@
 # =============================================
-# Instructions pour utiliser Docker Compose :
+# Docker Compose - Usage Instructions
 #
-# Installer Docker Compose (si nécessaire) :
+# Install Docker Compose (if needed):
 # sudo apt install docker-compose
 #
-# Construire l’image :
+# To build the image:
 # docker-compose build
 #
-# Lancer l’application :
+# To run the application:
 # docker-compose up
 #
-# Lancer en arrière-plan (mode détaché) :
+# To run in detached mode:
 # docker-compose up -d
 #
-# Afficher les logs du conteneur :
+# To view container logs:
 # docker-compose logs -f
 # =============================================
 
