@@ -6,7 +6,9 @@
       "name": "HelloApp",
       "request": "launch",
       "mainClass": "com.log430.tp0.HelloApp",
-      "projectName": "tp0"
+      "projectName": "tp0",
+      "console": "integratedTerminal",
+      "vmArgs": "-XX:+EnableDynamicAgentLoading"
     },
     {
       "type": "java",
