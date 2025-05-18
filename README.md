@@ -85,10 +85,17 @@ TPO-LOG430/
 ```
 ## 6. Structuration du projet (Architecture MVC)
 Une pipeline GitHub Actions est définie dans .github/workflows/ci.yml. Elle s’exécute automatiquement à chaque push ou pull_request sur la branche main et comprend :
-- Lint
-- Tests unitaires
-- Build
-- Publication sur Docker Hub
+- Lint:
+  - Analyse statique du code pour détecter les erreurs de style ou de structure.
+  - Permet d’unifier l’apparence du code, d’en améliorer la lisibilité et la maintenabilité.
+- Tests unitaires:
+  - Vérifie automatiquement les fonctionnalités principales de l’application.
+  - En cas d’échec, la pipeline s’interrompt immédiatement.
+- Build:
+  - Construit l’image Docker si le lint et les tests passent sans erreur.
+- Publication sur Docker Hub:
+  - L’image est automatiquement poussée vers Docker Hub au format docker.io/username/nom-image:tag.
+  - Deux tags sont utilisés : latest et la date du jour (YYYY-MM-DD).
 
 Les identifiants Docker Hub sont stockés de façon sécurisée avec les secrets GitHub DOCKERHUB_USERNAME et DOCKERHUB_TOKEN.
 
