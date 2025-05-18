@@ -1,0 +1,33 @@
+# =============================================
+# Instructions pour utiliser Docker Compose :
+#
+# Installer Docker Compose (si nécessaire) :
+# sudo apt install docker-compose
+#
+# Construire l’image :
+# docker-compose build
+#
+# Lancer l’application :
+# docker-compose up
+#
+# Lancer en arrière-plan (mode détaché) :
+# docker-compose up -d
+#
+# Afficher les logs du conteneur :
+# docker-compose logs -f
+# =============================================
+
+version: "3.8"
+
+services:
+  java-app:
+    container_name: java-hello-app
+    build:
+      context: ./java-hello-world
+      dockerfile: Dockerfile
+    image: java-hello-app
+    ports:
+      - "8080:8080"      # Permet l'accès au serveur lorsqu'il est actif dans l'application
+    restart: unless-stopped
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur

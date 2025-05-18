@@ -21,41 +21,45 @@ Mon application Java est un simple projet qui à pour but de montrer le message 
 En MVC
 ```
 TPO-LOG430/
-│
-java-hello-world/
-├── src/
-│   ├── main/
-│   │   └── java/
-│   │       └── com/log430/tp0/
-│   │           ├── controller/
-│   │           │   └── HelloController.java
-│   │           ├── model/
-│   │           │   └── HelloMovel.java
-│   │           ├── server/
-│   │           │   └── HelloServer.java
-│   │           ├── view/
-│   │           │   └── HelloView.java
-│   │           └── HelloApp.java
-│
-│   └── test/
-│       └── java/
-│           └── com/log430/tp0/
-│               ├── controller/
-│               │   └── HelloControllerTest.java
-│               ├── server/
-│               │   └── HelloServerTest.java
-│               ├── view/
-│               │   └── HelloViewTest.java
-│               └── HelloWorldTest.java
-│
-├── pom.xml
-├── Dockerfile
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── .vscode/
+│   ├── launch.json
+│   ├── settings.json
+│   └── task.json
+├── java-hello-world/
+│   ├── pom.xml
+│   ├── Dockerfile
+│   └── src/
+│       ├── main/
+│       │   └── java/
+│       │       └── com/
+│       │           └── log430/
+│       │               └── tp0/
+│       │                   ├── controller/
+│       │                   │   └── HelloController.java
+│       │                   ├── model/
+│       │                   │   └── HelloMovel.java
+│       │                   ├── server/
+│       │                   │   └── HelloServer.java
+│       │                   ├── view/
+│       │                   │   └── HelloView.java
+│       │                   └── HelloApp.java
+│       └── test/
+│           └── java/
+│               └── com/
+│                   └── log430/
+│                       └── tp0/
+│                           ├── controller/
+│                           │   └── HelloControllerTest.java
+│                           ├── server/
+│                           │   └── HelloServerTest.java
+│                           ├── view/
+│                           │   └── HelloViewTest.java
+│                           └── HelloWorldTest.java
 ├── docker-compose.yml
 ├── .gitignore
-└── .github/
-    └── workflows/
-        └── ci.yml
-
-
+└── README.md
 ```
 
