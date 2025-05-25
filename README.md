@@ -105,7 +105,7 @@ Les identifiants Docker Hub sont stockés de façon sécurisée avec les secrets
 - Platform de conteneurisation : J'ai choisi Docker, car je l'avais un peu utiliser au Cégep et je souhaitais pouvoir en apprendre d'avantage sur Docker. Docker est un conteneurisation assurant portabilité et reproductibilité.
 - Docker Compose : J'ai pris docker compose, pour l'orchestration simple pour exécution en local.
 - Outil de pipeline : J'ai choisi GitHub Actions comme outil CI/CD pour intégré ma validation automatisée, car je l'avais utiliser auparavant et donc j'avais déjà un début de connaissance.
-- Structuration du projet : J'ai choisi l'architecture MVC, car c'est elle que je suis le plus familier avec et préfère le plus. Elle permet une séparation claire des responsabilités, facilitant les tests et la maintenance.
+- Structuration du projet : J'ai choisi le pattern MVC, car c'est elle que je suis le plus familier avec et préfère le plus. Elle permet une séparation claire des responsabilités, facilitant les tests et la maintenance.
 
 ## 8. Preuve d’exécution CI/CD
 L'image généré sur DockerHub: ![alt text](image.png)
