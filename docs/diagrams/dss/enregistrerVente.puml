@@ -1,0 +1,18 @@
+@startuml
+title DSS – Enregistrer une vente
+
+actor Employe
+participant "Console (View)" as Console
+participant "ConsoleController" as Controller
+participant "VenteDAO" as DAO
+database "SQLite"
+
+Employe -> Console : saisirProduits(produits : List<Produit>)
+Console -> Controller : enregistrerVente(produits : List<Produit>, employe : Employe)
+Controller -> DAO : enregistrerVente(produits : List<Produit>, employe : Employe)
+DAO -> SQLite : via JPA/Hibernate
+SQLite -> DAO : enregistre la vente + retourne l'objet Vente
+DAO --> Controller : vente : Vente
+Controller --> Console : vente : Vente
+Console --> Employe : afficherConfirmation(vente)
+@enduml

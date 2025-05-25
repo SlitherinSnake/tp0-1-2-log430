@@ -1,0 +1,80 @@
+@startuml
+title Diagramme de classe pour un système de caisse pour un petit magasin de quartier
+
+' === Entités ===
+class Employe {
+  - id : int
+  - nom : String
+  --
+  + getNom() : String
+  + getId() : int
+}
+
+class Produit {
+  - id : int
+  - nom : String
+  - categorie : String
+  - prix : float
+  - quantite : int
+  --
+  + getNom() : String
+  + getQuantite() : int
+  + getPrix() : float
+}
+
+class Vente {
+  - id : int
+  - dateVente : Date
+  - montantTotal : float
+  - listeProduitVendu : List<Produit>
+  --
+  + getDateVente() : Date
+  + getMontantTotal() : float
+  + getProduitsVendus() : List<Produit>
+}
+
+class Retour {
+  - id : int
+  - preuveVente : Vente
+  - dateRetour : Date
+  - listeProduitRetourner : List<Produit>
+  --
+  + getDateRetour() : Date
+  + getProduitsRetournes() : List<Produit>
+}
+
+' === DAO ===
+class ProduitDAO {
+  + rechercher(critere : String) : List<Produit>
+  + consulterStock(idProduit : int) : int
+}
+
+class VenteDAO {
+  + enregistrerVente(produits : List<Produit>, employe : Employe) : Vente
+}
+
+class RetourDAO {
+  + enregistrerRetour(vente : Vente, produits : List<Produit>, employe : Employe) : Retour
+}
+
+' === Contrôleur console ===
+class ConsoleController {
+  + rechercherProduit(critere : String) : List<Produit>
+  + enregistrerVente(produits : List<Produit>, employe : Employe) : Vente
+  + consulterStock(idProduit : int) : int
+  + traiterRetour(vente : Vente, produits : List<Produit>, employe : Employe) : Retour
+}
+
+' === Relations ===
+Employe --> ConsoleController : utilise
+ConsoleController --> ProduitDAO
+ConsoleController --> VenteDAO
+ConsoleController --> RetourDAO
+
+Vente "*" --> "1" Employe
+Retour "*" --> "1" Employe
+Retour "1" --> "1" Vente : preuve
+Vente "1" o-- "*" Produit : contient >
+Retour "1" o-- "*" Produit : retourne >
+
+@enduml

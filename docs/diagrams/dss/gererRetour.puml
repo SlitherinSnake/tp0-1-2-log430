@@ -1,0 +1,18 @@
+@startuml
+title DSS – Gérer un retour
+
+actor Employe
+participant "Console (View)" as Console
+participant "ConsoleController" as Controller
+participant "RetourDAO" as DAO
+database "SQLite"
+
+Employe -> Console : saisirRetour(vente : Vente, produits : List<Produit>)
+Console -> Controller : traiterRetour(vente : Vente, produits : List<Produit>, employe : Employe)
+Controller -> DAO : enregistrerRetour(vente : Vente, produits : List<Produit>, employe : Employe)
+DAO -> SQLite : via JPA/Hibernate
+SQLite -> DAO : enregistre le retour et met à jour le stock
+DAO --> Controller : retour : Retour
+Controller --> Console : retour : Retour
+Console --> Employe : afficherConfirmation(retour)
+@enduml

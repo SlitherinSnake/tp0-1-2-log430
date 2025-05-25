@@ -1,0 +1,33 @@
+@startuml
+title Vue d’implémentation – Organisation des modules (MVC + DAO)
+
+package "com.magasin.view" {
+  class ConsoleView
+}
+
+package "com.magasin.controller" {
+  class ConsoleController
+}
+
+package "com.magasin.model" {
+  class Produit
+  class Vente
+  class Retour
+  class Employe
+}
+
+package "com.magasin.dao" {
+  class ProduitDAO
+  class VenteDAO
+  class RetourDAO
+}
+
+ConsoleView --> ConsoleController : interagit
+ConsoleController --> ProduitDAO
+ConsoleController --> VenteDAO
+ConsoleController --> RetourDAO
+ConsoleController --> Produit
+ConsoleController --> Vente
+ConsoleController --> Retour
+
+@enduml

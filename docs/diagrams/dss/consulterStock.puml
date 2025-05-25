@@ -1,0 +1,18 @@
+@startuml
+title DSS – Consulter le stock
+
+actor Employe
+participant "Console (View)" as Console
+participant "ConsoleController" as Controller
+participant "ProduitDAO" as DAO
+database "SQLite"
+
+Employe -> Console : demanderStock(idProduit : int)
+Console -> Controller : consulterStock(idProduit : int)
+Controller -> DAO : consulterStock(idProduit : int)
+DAO -> SQLite : via JPA/Hibernate
+SQLite -> DAO : retourne la quantité disponible
+DAO --> Controller : stock : int
+Controller --> Console : stock : int
+Console --> Employe : afficherStock(stock)
+@enduml

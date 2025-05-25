@@ -1,0 +1,15 @@
+@startuml
+title Diagramme de déploiement – Architecture 2-tier
+
+node "Machine virtuelle (VM locale)" {
+  
+  node "Application POS (Java Console)" {
+    component "Console App\n(Model + View + Controller)"
+  }
+
+  database "Base de données SQLite\n(.db local)" as SQLite
+}
+
+"Console App\n(Model + View + Controller)" --> SQLite : Accès via ORM (Hibernate / JPA)
+
+@enduml

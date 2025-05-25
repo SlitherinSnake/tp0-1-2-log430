@@ -1,0 +1,18 @@
+@startuml
+title DSS – Rechercher un produit
+
+actor Employe
+participant "Console (View)" as Console
+participant "ConsoleController" as Controller
+participant "ProduitDAO" as DAO
+database "SQLite"
+
+Employe -> Console : saisirOptionMenu(option : String)
+Console -> Controller : rechercherProduit(option : String)
+Controller -> DAO : rechercher(option : String)
+DAO -> SQLite : via JPA/Hibernate
+SQLite -> DAO : retourne les produits récupérer selon option
+DAO --> Controller : produits : List<Produit>
+Controller --> Console : produits : List<Produit>
+Console --> Employe : afficherProduits(produits)
+@enduml
