@@ -52,7 +52,7 @@ Organisation en couches selon le modèle MVC, avec séparation claire des respon
 * Logique métier (service) : traitement des règles d’affaires (calculs, validation)
 * Accès aux données (dao) : manipulation des entités via Hibernate/JPA
 
-![di](https://img.plantuml.biz/plantuml/svg/VLBDIWCn4Bu7yWv3Jugq3-11AckFKl6mzs4pBC59fYHPHKJeEtZo4NmEtwHFOdOBxjQkEONvPhwV6RAE2KFg76kLR6A2kYCmX_sdTJl-_dBa4oOh7Wxx3zY65hsDHy1G12Ucu_nUtDSLNC7TxVPIAwrss3nXIx1enAqSjXYjNprRUbd0crO03MECK8cFmbHdNAltVtcD-1I4cS8Sk_hjbZHoJk8J-aF8qMqQWJflIcFvI4cwCDQRV0vvfPA9GPcpo4VvutA278q6Q92UN0MMovlpFU4QR1O9sFRnpzizQMezFp46cUzFOXKjYlfbyNxRDNapVBuV)
+![di](https://img.plantuml.biz/plantuml/svg/XPB1IiGm48RlXRp3i2T5jYXwyY0hrQEiUEWzD4C9JZ8bcIeYmhw39n_1v_1DzabCks2xRkcUmloJVF_yGrPHT93MaSh42Y6KBOBPRhwiQ-Zdsw4NBPOzR3UVi0wrzZRk18CH79kMqddoK1Pm1dUtwrELgQpHrREk4HOLkvoulheypwMvo5yilYxWNMK05UaOeM0VcR1Ckie-vfvMx2Km4OOfGF7NFO990oFj4Hv3oc1b4CeK6OVo2ONRCDJtQI_yXaTyZEOfbxIWVqPxoiwhbthwQ3smNDuSfeLhi0aITDqbE6ntZyRMqpU6GQRxex5cBMRvy_0kxGgzwJ_YBm00)
 
 ### v. Vue des cas d’utilisation
 

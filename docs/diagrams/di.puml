@@ -1,22 +1,22 @@
 @startuml
 title Vue d’implémentation – Organisation des modules (MVC + DAO)
 
-package "com.magasin.view" {
+package "com.log430.tp1.view" {
   class ConsoleView
 }
 
-package "com.magasin.controller" {
+package "com.log430.tp1.controller" {
   class ConsoleController
 }
 
-package "com.magasin.model" {
+package "com.log430.tp1.model" {
   class Produit
   class Vente
   class Retour
   class Employe
 }
 
-package "com.magasin.dao" {
+package "com.log430.tp1.dao" {
   class ProduitDAO
   class VenteDAO
   class RetourDAO
