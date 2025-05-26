@@ -20,14 +20,37 @@
 version: "3.8"
 
 services:
-  java-app:
-    container_name: java-hello-app
-    build:
-      context: ./java-hello-world
-      dockerfile: Dockerfile
-    image: java-hello-app
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: magasin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
-      - "8080:8080"      # Permet l'accès au serveur lorsqu'il est actif dans l'application
+      - "5432:5432"
+    networks:
+      - magasin-net
+    restart: unless-stopped
+  java-app:
+    container_name: magasin-app
+    build:
+      context: ./magasin
+      dockerfile: Dockerfile
+    image: magasin-app
+    depends_on:
+      - db
+    networks:
+      - magasin-net
     restart: unless-stopped
     stdin_open: true     # Permet l’interaction terminal
     tty: true            # Évite la fermeture immédiate du conteneur
+
+#Permet le stockaged des données de façon persistante dans PostgreSQL
+volumes:
+  pgdata:
+  
+networks:
+  magasin-net:
