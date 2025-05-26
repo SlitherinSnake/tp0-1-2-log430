@@ -7,6 +7,9 @@ import com.log430.tp1.view.MagasinView;
 
 public class MagasinApp {
     public static void main(String[] args) {
+        // Configure le logging Hibernate pour masquer les logs SQL
+        System.setProperty("java.util.logging.config.file", "src/main/resources/logging.properties");
+
         new MagasinView().start();
 
     }

@@ -28,8 +28,8 @@ public class ProduitDAO {
              * tous les produits dont le nom contient le mot-clé fourni
              * Exemple : "pom" retournera "pomme", "compote de pomme", etc.
              */
-            return session.createQuery("FROM Produit WHERE nom LIKE :nom", Produit.class)
-                    .setParameter("nom", "%" + nom + "%")
+            return session.createQuery("FROM Produit WHERE LOWER(nom) LIKE :nom", Produit.class)
+                    .setParameter("nom", "%" + nom.toLowerCase() + "%")
                     .list();
         }
     }
@@ -43,8 +43,8 @@ public class ProduitDAO {
              * tous les produits dont la catégorie contient le mot-clé fourni.
              * Exemple : "fruit" retourne "banane", "pomme", etc.
              */
-            return session.createQuery("FROM Produit WHERE categorie LIKE :cat", Produit.class)
-                    .setParameter("cat", "%" + categorie + "%")
+            return session.createQuery("FROM Produit WHERE LOWER(categorie) LIKE :cat", Produit.class)
+                    .setParameter("cat", "%" + categorie.toLowerCase() + "%")
                     .list();
         }
     }

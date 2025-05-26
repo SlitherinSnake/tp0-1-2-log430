@@ -33,7 +33,7 @@ public class HibernateUtil {
             config.setProperty("hibernate.connection.url", "jdbc:postgresql://db:5432/magasin");
 
             // Cas 2 : exécution locale (développement/test sur ton poste)
-            //config.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/magasin");
+            config.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/magasin");
             
             // Commande pour me connecter à la base depuis Docker CLI :
             // docker exec -it postgres-db psql -U admin -d magasin
@@ -52,8 +52,11 @@ public class HibernateUtil {
             // "update" : soit crée les tables si elles n'existent pas, sinon elle les met à jour si nécessaire
             config.setProperty("hibernate.hbm2ddl.auto", "update");
 
-            // Affiche les requêtes SQL générées dans la console pour debug si nécessaire
-            config.setProperty("hibernate.show_sql", "true");
+            // Pour le debuggage: Affiche les requêtes SQL, les formats et les comments générées dans la console
+            config.setProperty("hibernate.show_sql", "false");
+            config.setProperty("hibernate.format_sql", "false");
+            config.setProperty("hibernate.use_sql_comments", "false");
+
 
             // ========================
             // Enregistrer les entités:
