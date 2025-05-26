@@ -4,6 +4,10 @@
 # Log file
 *.log
 
+# Generated file by build or IDE
+inputFiles.lst
+createdFiles.lst
+
 # BlueJ files
 *.ctxt
 
