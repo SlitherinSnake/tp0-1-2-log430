@@ -3,6 +3,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "MagasinApp",
+      "request": "launch",
+      "mainClass": "com.log430.tp1.MagasinApp",
+      "projectName": ""
+    },
+    {
+      "type": "java",
+      "name": "MagasinApp",
+      "request": "launch",
+      "mainClass": "com.log430.tp0.MagasinApp",
+      "projectName": ""
+    },
+    {
+      "type": "java",
       "name": "HelloApp",
       "request": "launch",
       "mainClass": "com.log430.tp0.HelloApp",
