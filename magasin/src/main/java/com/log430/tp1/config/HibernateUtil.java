@@ -33,7 +33,7 @@ public class HibernateUtil {
             config.setProperty("hibernate.connection.url", "jdbc:postgresql://db:5432/magasin");
 
             // Cas 2 : exécution locale (développement/test sur ton poste)
-            config.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/magasin");
+            //config.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/magasin");
             
             // Commande pour me connecter à la base depuis Docker CLI :
             // docker exec -it postgres-db psql -U admin -d magasin
