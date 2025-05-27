@@ -4,7 +4,9 @@ package com.log430.tp1.config;
 import com.log430.tp1.model.Employe;
 import com.log430.tp1.model.Produit;
 import com.log430.tp1.model.Vente;
+import com.log430.tp1.model.VenteProduit;
 import com.log430.tp1.model.Retour;
+import com.log430.tp1.model.RetourProduit;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -66,7 +68,9 @@ public class HibernateUtil {
             config.addAnnotatedClass(Employe.class);
             config.addAnnotatedClass(Produit.class);
             config.addAnnotatedClass(Vente.class);
+            config.addAnnotatedClass(VenteProduit.class);
             config.addAnnotatedClass(Retour.class);
+            config.addAnnotatedClass(RetourProduit.class);
 
             // La construction de la SessionFactory ce fait à partir de la configuration ci-dessus
             sessionFactory = config.buildSessionFactory();
