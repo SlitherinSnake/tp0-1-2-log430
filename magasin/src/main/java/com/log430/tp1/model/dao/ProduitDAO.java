@@ -48,4 +48,24 @@ public class ProduitDAO {
                     .list();
         }
     }
+
+    // Met à jour la quantité en stock pour un produit donné
+    public void mettreAJourStock(Produit produit, int nouvelleQuantite) {
+        // Met à jour le champ de quantité
+        produit.setQuantite(nouvelleQuantite);
+
+        // Ouvre session Hibernate pour accès à BD
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            /*
+             * Démarre une transaction, met à jour l'entité produit 
+             * avec la nouvelle quantité,
+             * puis l'envoi pour persister les changements dans la BD
+             */
+            session.beginTransaction();
+            // merge() est utiliser pour mettre à jour un objet détaché, dans ce cas ci "produit"
+            session.merge(produit);
+            session.getTransaction().commit();
+        }
+    }
+
 }
