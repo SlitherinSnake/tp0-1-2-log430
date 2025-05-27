@@ -22,31 +22,26 @@ public class Vente {
 
     // plusieurs ventes peuvent être fait par un même employé.
     @ManyToOne
-    // Ceci précise que dans la table vente, il y a une colonne employe_id pour identifier l'employe.
+    // Ceci précise que dans la table vente, il y a une colonne employe_id pour
+    // identifier l'employe.
     @JoinColumn(name = "employe_id")
     private Employe employe;
-
-    // plusieurs produits peuvent appartenir à une vente, 
-    // et chaque produit peut apparaître dans plusieurs ventes
-    @ManyToMany
-    // Ceci est une table de jointure qui permettra de lier les IDs des produits aux IDs des ventes
-    @JoinTable(
-        name = "vente_produits",
-        joinColumns = @JoinColumn(name = "vente_id"),
-        inverseJoinColumns = @JoinColumn(name = "produit_id")
-    )
-    private List<Produit> produits;
+    
+    // Plusieurs produit sont dans une seule vente donc
+    // c'est la liste des produits associés à cette vente, avec ca quantité (via l'entité VenteProduit)
+    @OneToMany(mappedBy = "vente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VenteProduit> venteProduits = new java.util.ArrayList<>();
 
     // Constructeur par défaut requis par JPA
     public Vente() {
     }
 
     // Constructeur avec paramètre pour instancier une vente
-    public Vente(LocalDate dateVente, float montantTotal, Employe employe, List<Produit> produits) {
+    public Vente(LocalDate dateVente, float montantTotal, Employe employe, List<VenteProduit> venteProduits) {
         this.dateVente = dateVente;
         this.montantTotal = montantTotal;
         this.employe = employe;
-        this.produits = produits;
+        this.venteProduits = venteProduits;
     }
 
     // Getters / Setters
@@ -78,19 +73,19 @@ public class Vente {
         this.employe = employe;
     }
 
-    public List<Produit> getProduits() {
-        return produits;
+    public List<VenteProduit> getVenteProduits() {
+        return venteProduits;
     }
 
-    public void setProduits(List<Produit> produits) {
-        this.produits = produits;
+    public void setVenteProduits(List<VenteProduit> venteProduits) {
+        this.venteProduits = venteProduits;
     }
 
     @Override
     public String toString() {
         return "Vente{id=" + id + ", dateVente=" + dateVente +
-               ", montantTotal=" + montantTotal +
-               ", employe=" + employe +
-               ", produits=" + produits + "}";
+                ", montantTotal=" + montantTotal +
+                ", employe=" + employe +
+                ", produits=" + venteProduits + "}";
     }
 }

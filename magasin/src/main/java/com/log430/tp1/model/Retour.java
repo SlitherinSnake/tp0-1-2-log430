@@ -20,37 +20,33 @@ public class Retour {
 
     // Plusieurs retours peuvent être liés à une seule vente
     @ManyToOne
-    // Ceci précise que dans la table retour, il y a une colonne vente_id pour identifier la vente.
+    // Ceci précise que dans la table retour, il y a une colonne vente_id pour
+    // identifier la vente.
     @JoinColumn(name = "vente_id")
     private Vente vente;
 
     // Plusieurs retours peuvent être effectués par un même employé
     @ManyToOne
-    // Ceci précise que dans la table retour, il y a une colonne employe_id pour identifier l'employe.
+    // Ceci précise que dans la table retour, il y a une colonne employe_id pour
+    // identifier l'employe.
     @JoinColumn(name = "employe_id")
     private Employe employe;
 
-    // Plusieurs produits peuvent être retournés dans un même retour,
-    // et un même produit peut être retourné dans plusieurs retours
-    @ManyToMany
-    // Ceci est une table de jointure qui permettra de lier les IDs des produits aux IDs des retours
-    @JoinTable(
-        name = "retour_produits",
-        joinColumns = @JoinColumn(name = "retour_id"),
-        inverseJoinColumns = @JoinColumn(name = "produit_id")
-    )
-    private List<Produit> produitsRetournes;
+    // Plusieurs produit sont dans un seul retour donc
+    // c'est la liste des produits associés à ce retour, avec ca quantité (via l'entité RetourProduit)
+    @OneToMany(mappedBy = "retour", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RetourProduit> retourProduits = new java.util.ArrayList<>();
 
     // Constructeur par défaut requis par JPA
     public Retour() {
     }
 
-    // Constructeur avec paramètres pour instancier un retour 
-    public Retour(LocalDate dateRetour, Vente vente, Employe employe, List<Produit> produitsRetournes) {
+    // Constructeur avec paramètres pour instancier un retour
+    public Retour(LocalDate dateRetour, Vente vente, Employe employe, List<RetourProduit> retourProduits) {
         this.dateRetour = dateRetour;
         this.vente = vente;
         this.employe = employe;
-        this.produitsRetournes = produitsRetournes;
+        this.retourProduits = retourProduits;
     }
 
     // Getters / Setters
@@ -82,20 +78,20 @@ public class Retour {
         this.employe = employe;
     }
 
-    public List<Produit> getProduitsRetournes() {
-        return produitsRetournes;
+    public List<RetourProduit> getProduitsRetournes() {
+        return retourProduits;
     }
 
-    public void setProduitsRetournes(List<Produit> produitsRetournes) {
-        this.produitsRetournes = produitsRetournes;
+    public void setProduitsRetournes(List<RetourProduit> retourProduits) {
+        this.retourProduits = retourProduits;
     }
 
     @Override
     public String toString() {
         return "Retour{id=" + id +
-               ", dateRetour=" + dateRetour +
-               ", vente=" + vente +
-               ", employe=" + employe +
-               ", produitsRetournes=" + produitsRetournes + "}";
+                ", dateRetour=" + dateRetour +
+                ", vente=" + vente +
+                ", employe=" + employe +
+                ", produitsRetournes=" + retourProduits + "}";
     }
 }
