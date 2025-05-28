@@ -1,5 +1,5 @@
 # =============================================
-# Docker Compose - Usage Instructions
+# Docker Compose - Usage Instructions 1st time
 #
 # Install Docker Compose (if needed):
 # sudo apt install docker-compose
@@ -15,6 +15,21 @@
 #
 # To view container logs:
 # docker-compose logs -f
+# -------------------------------------------------
+# Docker Compose - Relaunch new project
+# 1. Supprimer les conteneurs arrêtés (donc l'ancien java-hello-app)
+#docker container prune -f
+#
+# 2. Supprimer les images obsolètes (optionnel mais utile pour éviter conflit d'image)
+#docker image prune -a -f
+#
+# 3. S’assurer d’être dans le dossier contenant ton docker-compose.yml
+#
+# 4. Rebuild ton projet 
+#docker-compose build
+#
+# 5. Lancer l'application
+#docker-compose up
 # =============================================
 
 version: "3.8"

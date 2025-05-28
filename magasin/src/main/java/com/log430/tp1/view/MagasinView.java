@@ -1,6 +1,7 @@
 package com.log430.tp1.view;
 
 import java.util.Scanner;
+
 import com.log430.tp1.controller.MagasinController;
 
 public class MagasinView {
@@ -29,5 +30,7 @@ public class MagasinView {
                 default -> System.out.println("Choix invalide.");
             }
         } while (choix != 0);
+        scanner.close();
+        System.exit(0);
     }
 }

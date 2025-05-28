@@ -1,15 +1,15 @@
 package com.log430.tp1.config;
 
 //Import pour les entités JPA à enregistrer dans la config Hibernate
-import com.log430.tp1.model.Employe;
-import com.log430.tp1.model.Produit;
-import com.log430.tp1.model.Vente;
-import com.log430.tp1.model.VenteProduit;
-import com.log430.tp1.model.Retour;
-import com.log430.tp1.model.RetourProduit;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+
+import com.log430.tp1.model.Employe;
+import com.log430.tp1.model.Produit;
+import com.log430.tp1.model.Retour;
+import com.log430.tp1.model.RetourProduit;
+import com.log430.tp1.model.Vente;
+import com.log430.tp1.model.VenteProduit;
 
 public class HibernateUtil {
     // Une seule instance de Hibernate par sessionFactory
@@ -35,7 +35,7 @@ public class HibernateUtil {
             config.setProperty("hibernate.connection.url", "jdbc:postgresql://db:5432/magasin");
 
             // Cas 2 : exécution locale (développement/test sur ton poste)
-            config.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/magasin");
+            //config.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/magasin");
             
             // Commande pour me connecter à la base depuis Docker CLI :
             // docker exec -it postgres-db psql -U admin -d magasin

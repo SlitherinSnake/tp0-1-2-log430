@@ -26,7 +26,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Package the app
-RUN mvn clean package -DskipTests
+RUN mvn clean package assembly:single -DskipTests
 
 
 # ----------------------------
@@ -38,7 +38,7 @@ FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 # Copy the built JAR from the previous stage
-COPY --from=build /build/target/*.jar app.jar
+COPY --from=build /build/target/*-jar-with-dependencies.jar app.jar
 
 # Run the app
 CMD ["java", "-jar", "app.jar"]

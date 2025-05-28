@@ -77,7 +77,8 @@ public class MagasinController {
                 // Affiche produits trouver
                 afficherListeProduits(produits);
             }
-            default -> System.out.println("Choix invalide.");
+            default ->
+                System.out.println("Choix invalide.");
         }
     }
 
@@ -110,8 +111,7 @@ public class MagasinController {
             // Si un seul résultat, on le sélectionne directement
             if (resultats.size() == 1) {
                 employe = resultats.get(0);
-            }
-            // Sinon, on laisse l'utilisateur choisir dans la liste
+            } // Sinon, on laisse l'utilisateur choisir dans la liste
             else if (resultats.size() > 1) {
                 System.out.println("Plusieurs employés trouvés :");
                 for (int i = 0; i < resultats.size(); i++) {
@@ -152,9 +152,9 @@ public class MagasinController {
             }
 
             // Affiche les infos du produit sélectionné
-            System.out.println("Produit sélectionné : " + produit.getNom() +
-                    " | Prix : " + produit.getPrix() +
-                    " | Quantité : " + produit.getQuantite());
+            System.out.println("Produit sélectionné : " + produit.getNom()
+                    + " | Prix : " + produit.getPrix()
+                    + " | Quantité : " + produit.getQuantite());
 
             // Demande la quantité désirée
             System.out.print("Quantité : ");
@@ -221,8 +221,8 @@ public class MagasinController {
             Produit produit = vp.getProduit();
             int qte = vp.getQuantite();
             float sousTotal = produit.getPrix() * qte;
-            System.out.println("- " + produit.getNom() + " x" + qte +
-                    " @ " + produit.getPrix() + " = " + String.format("%.2f", sousTotal) + "$");
+            System.out.println("- " + produit.getNom() + " x" + qte
+                    + " @ " + produit.getPrix() + " = " + String.format("%.2f", sousTotal) + "$");
         }
         System.out.println("\nTotal : " + String.format("%.2f", montantTotal) + "$");
     }
@@ -248,9 +248,9 @@ public class MagasinController {
         System.out.println("Date : " + vente.getDateVente());
         System.out.println("Produits vendus :");
         for (VenteProduit vp : vente.getVenteProduits()) {
-            System.out.println("- ID Produit: " + vp.getProduit().getId() +
-                    " | " + vp.getProduit().getNom() +
-                    " x" + vp.getQuantite());
+            System.out.println("- ID Produit: " + vp.getProduit().getId()
+                    + " | " + vp.getProduit().getNom()
+                    + " x" + vp.getQuantite());
         }
 
         // Étape 2 : Choix des produits à retourner
@@ -342,10 +342,10 @@ public class MagasinController {
             float sousTotal = prixUnitaire * qte;
             montantRembourse += sousTotal;
 
-            System.out.println("- " + produit.getNom() +
-                    " x" + qte +
-                    " @ " + String.format("%.2f", prixUnitaire) +
-                    " = " + String.format("%.2f", sousTotal) + "$");
+            System.out.println("- " + produit.getNom()
+                    + " x" + qte
+                    + " @ " + String.format("%.2f", prixUnitaire)
+                    + " = " + String.format("%.2f", sousTotal) + "$");
         }
 
         System.out.println("\nTotal remboursé : " + String.format("%.2f", montantRembourse) + "$");
@@ -358,6 +358,12 @@ public class MagasinController {
 
         // Récupération des produits depuis BD
         List<Produit> produits = produitDAO.listerProduits();
+
+        // Affichage de l'en-tête en format tabulaire
+        System.out.println(String.format(
+                "%-5s %-15s %-20s %-10s %-10s",
+                "ID", "Catégorie", "Nom", "Prix", "Quantité"));
+        System.out.println("-------------------------------------------------------------");
 
         // Si aucun, affiche message
         if (produits.isEmpty()) {
