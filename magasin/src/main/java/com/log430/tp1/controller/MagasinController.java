@@ -1,10 +1,14 @@
 package com.log430.tp1.controller;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import com.log430.tp1.model.Employe;
 import com.log430.tp1.model.Produit;
+import com.log430.tp1.model.Retour;
+import com.log430.tp1.model.RetourProduit;
 import com.log430.tp1.model.Vente;
 import com.log430.tp1.model.VenteProduit;
 import com.log430.tp1.model.dao.EmployeDAO;
@@ -26,8 +30,8 @@ public class MagasinController {
         this.venteDAO = new VenteDAO();
     }
 
-    // Méthode pour rechercher un produit selon différents critères (ID, nom ou
-    // catégorie)
+    // Méthode pour rechercher un produit selon différents
+    // critères (ID, nom ou catégorie)
     public void rechercherProduit(Scanner scanner) {
         System.out.println("Rechercher par : 1. ID  2. Nom  3. Catégorie");
         System.out.print("Choix : ");
@@ -86,6 +90,7 @@ public class MagasinController {
         }
     }
 
+    // ----- Enregistrer une vente -----
     public void enregistrerVente(Scanner scanner) {
         System.out.println("\n=== Enregistrement d'une vente ===");
 
@@ -129,7 +134,7 @@ public class MagasinController {
 
         // Étape 2 : saisie les produits et la quantités de produit venduedans
         // venteProduits
-        List<VenteProduit> venteProduits = new java.util.ArrayList<>();
+        List<VenteProduit> venteProduits = new ArrayList<>();
         // Liste des produits vendus
         float montantTotal = 0f; // Montant total <- vente
         String continuer = "y"; // Controle boucle d'ajout
@@ -161,8 +166,8 @@ public class MagasinController {
                 continue;
             }
 
-            // Création de l'objet VenteProduit sans vente pour l’instant, cela sera assigné
-            // après
+            // Création de l'objet VenteProduit sans vente pour l’instant,
+            // cela sera assigné après
             VenteProduit vp = new VenteProduit(null, produit, quantite);
             venteProduits.add(vp);
 
@@ -191,7 +196,7 @@ public class MagasinController {
         // Attribution de l’employé à vente, liste prod vendu, montant total, date vente
         vente.setEmploye(employe);
         vente.setMontantTotal(montantTotal);
-        vente.setDateVente(java.time.LocalDate.now());
+        vente.setDateVente(LocalDate.now());
 
         // Associe chaque VenteProduit à cette vente
         for (VenteProduit vp : venteProduits) {
@@ -220,11 +225,132 @@ public class MagasinController {
         System.out.println("\nTotal : " + String.format("%.2f", montantTotal) + "$");
     }
 
-    public Object gererRetour(Scanner scanner) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'gererRetour'");
+    // ----- Gerer un retour -----
+    public void gererRetour(Scanner scanner) {
+        System.out.println("\n=== Gestion d'un retour ===");
+
+        // Étape 1 : sélection de l'id de la vente à retourner
+        System.out.print("Entrez l'ID de la vente : ");
+        int venteId = Integer.parseInt(scanner.nextLine());
+        Vente vente = venteDAO.rechercherParId(venteId);
+
+        // Si la vente n'existe pas, on abandonne l'opération
+        if (vente == null) {
+            System.out.println("Vente introuvable. Abandon du retour.");
+            return;
+        }
+
+        // Affiche les détails de la vente
+        System.out.println("Id de la Vente trouvée :" + venteId);
+        System.out.println("Employé : " + vente.getEmploye().getNom());
+        System.out.println("Date : " + vente.getDateVente());
+        System.out.println("Produits vendus :");
+        for (VenteProduit vp : vente.getVenteProduits()) {
+            System.out.println("- ID Produit: " + vp.getProduit().getId() +
+                    " | " + vp.getProduit().getNom() +
+                    " x" + vp.getQuantite());
+        }
+
+        // Étape 2 : Choix des produits à retourner
+        List<RetourProduit> retourProduits = new ArrayList<>();
+        String continuer = "y"; // Contrôle de la boucle
+
+        while (continuer.equals("y")) {
+            // Demande d'ID du produit à retourner
+            System.out.print("Entrez l'ID du produit à retourner : ");
+            int produitId = Integer.parseInt(scanner.nextLine());
+
+            // Recherche du produit dans la vente d’origine
+            VenteProduit vp = vente.getVenteProduits().stream()
+                    .filter(p -> p.getProduit().getId() == produitId)
+                    .findFirst().orElse(null);
+
+            // Si le produit n'est pas dans la vente
+            if (vp == null) {
+                System.out.println("Produit non trouvé dans cette vente.");
+                continue;
+            }
+
+            // Récupçre produit et on l'associe à l'objet vp
+            Produit produit = vp.getProduit();
+
+            // Demander la quantité à retourner
+            System.out.print("Quantité à retourner (max " + vp.getQuantite() + ") : ");
+            int quantiteRetour = Integer.parseInt(scanner.nextLine());
+
+            // Validation de la quantité retournée
+            if (quantiteRetour <= 0 || quantiteRetour > vp.getQuantite()) {
+                System.out.println("Quantité invalide.");
+                continue;
+            }
+
+            // Mise à jour du stock : on remet la quantité retournée en inventaire
+            int nouvelleQuantite = produit.getQuantite() + quantiteRetour;
+            produitDAO.mettreAJourStock(produit, nouvelleQuantite);
+
+            // Création de l’objet RetourProduit, sans lien avec Retour pour l’instant
+            RetourProduit retourProduit = new RetourProduit();
+            // On insert dans l'objet RetourProduit le produit et la quantité
+            retourProduit.setProduit(produit);
+            retourProduit.setQuantite(quantiteRetour);
+
+            // Ajoute à la liste des retours
+            retourProduits.add(retourProduit);
+
+            // Relancement de la boucle si souhaiter
+            System.out.print("Souhaitez-vous retourner un autre produit ? (y/n) : ");
+            continuer = scanner.nextLine().trim().toLowerCase();
+        }
+
+        // Vérifie si aucun produit n’a été retourné
+        if (retourProduits.isEmpty()) {
+            System.out.println("Aucun produit retourné. Abandon.");
+            return;
+        }
+
+        // Étape 3 : Création du retour
+        Retour retour = new Retour();
+        retour.setDateRetour(LocalDate.now());
+        retour.setEmploye(vente.getEmploye());
+        retour.setVente(vente);
+
+        /// Association entre chaque RetourProduit et le Retour
+        for (RetourProduit rp : retourProduits) {
+            rp.setRetour(retour);
+        }
+
+        // Liste des produits retournés
+        retour.setProduitsRetournes(retourProduits);
+
+        // Enregistre (Persistance) dans la BD via DAO
+        retourDAO.enregistrerRetour(retour);
+
+        // Affichage final sous forme de facture de retour
+        System.out.println("\n=== Facture de Retour ===");
+        System.out.println("Employé : " + vente.getEmploye().getNom());
+        System.out.println("Date du retour : " + retour.getDateRetour());
+        System.out.println("\nProduits retournés :");
+
+        float montantRembourse = 0f;
+
+        for (RetourProduit rp : retourProduits) {
+            Produit produit = rp.getProduit();
+            int qte = rp.getQuantite();
+            float prixUnitaire = produit.getPrix();
+            float sousTotal = prixUnitaire * qte;
+            montantRembourse += sousTotal;
+
+            System.out.println("- " + produit.getNom() +
+                    " x" + qte +
+                    " @ " + String.format("%.2f", prixUnitaire) +
+                    " = " + String.format("%.2f", sousTotal) + "$");
+        }
+
+        System.out.println("\nTotal remboursé : " + String.format("%.2f", montantRembourse) + "$");
+
     }
 
+    // ----- Consulter le stock -----
     public Object consulterStock(Scanner scanner) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'consulterStock'");

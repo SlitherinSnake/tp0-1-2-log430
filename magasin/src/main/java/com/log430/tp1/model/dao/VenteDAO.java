@@ -10,7 +10,26 @@ import com.log430.tp1.model.Vente;
 
 public class VenteDAO {
 
-    // Enregistre la vente dans la BD, 
+    // Recherche une vente par son ID, incluant ses produits vendus (venteProduits)
+    public Vente rechercherParId(int id) {
+        // Ouvre une session Hibernate pour interagir avec la BD
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            /*
+             * Utilise une requête HQL pour charger :
+             * - la vente correspondant à l'ID fourni
+             * - ainsi que la collection associée de venteProduits grâce au JOIN FETCH
+             * 
+             * Le LEFT JOIN FETCH permet de récupérer la vente 
+             * et ses produits en une seule requête, 
+             */
+            return session.createQuery(
+                    "SELECT v FROM Vente v LEFT JOIN FETCH v.venteProduits WHERE v.id = :id", Vente.class)
+                    .setParameter("id", id) // Lie valeur du param :id à l'id passé
+                    .uniqueResult(); // Retourne la seule vente correspondante, ou null si aucune
+        }
+    }
+
+    // Enregistre la vente dans la BD,
     // en incluant les produits et leurs quantités et total de prix
     public void enregistrerVente(Vente vente) {
         // Ouvre session Hibernate pour accès à BD
