@@ -4,6 +4,9 @@
 # Log file
 *.log
 
+# Ignorer tous les fichiers compilés et dossiers de build
+magasin/target/
+
 # Generated file by build or IDE
 inputFiles.lst
 createdFiles.lst
