@@ -57,15 +57,27 @@ public class ProduitDAO {
         // Ouvre session Hibernate pour accès à BD
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             /*
-             * Démarre une transaction, met à jour l'entité produit 
+             * Démarre une transaction, met à jour l'entité produit
              * avec la nouvelle quantité,
              * puis l'envoi pour persister les changements dans la BD
              */
             session.beginTransaction();
-            // merge() est utiliser pour mettre à jour un objet détaché, dans ce cas ci "produit"
+            // merge() est utiliser pour mettre à jour un objet détaché, dans ce cas ci
+            // "produit"
             session.merge(produit);
             session.getTransaction().commit();
         }
     }
 
+    // Liste tous les produits enregistrés dans la base de données
+    public List<Produit> listerProduits() {
+        // Ouvre une session Hibernate et exécute une requête HQL simple
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            /*
+             * Requête HQL simple : "FROM Produit" pour récupérer
+             * tous les objets Produit présents dans la base
+             */
+            return session.createQuery("FROM Produit", Produit.class).list();
+        }
+    }
 }
