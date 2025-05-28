@@ -209,9 +209,11 @@ public class MagasinController {
         venteDAO.enregistrerVente(vente);
 
         System.out.println("Vente enregistrée avec succès !");
+        System.out.println("ID de la vente : " + vente.getId());
 
         // Affichage final sous forme de facture
         System.out.println("\n=== Facture ===");
+        System.out.println("ID Vente : " + vente.getId());
         System.out.println("Employé : " + employe.getNom());
         System.out.println("Date : " + vente.getDateVente());
         System.out.println("\nProduits vendus :");
@@ -351,9 +353,36 @@ public class MagasinController {
     }
 
     // ----- Consulter le stock -----
-    public Object consulterStock(Scanner scanner) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'consulterStock'");
-    }
+    public void consulterStock(Scanner scanner) {
+        System.out.println("\n=== Consultation du stock ===");
 
+        // Récupération des produits depuis BD
+        List<Produit> produits = produitDAO.listerProduits();
+
+        // Si aucun, affiche message
+        if (produits.isEmpty()) {
+            System.out.println("Aucun produit disponible en stock.");
+            return;
+        }
+
+        // Affichage de l'en-tête en format tabulaire
+        // (alignement : %-5s = 5 carac pour ID, %-15s = 15 carac pour Catégorie, %-20s = 20 carac pour Nom, %-10s = 10
+        // carac pour Prix, %-10s = 10 carac pour Quantité)
+        System.out.println(String.format(
+                "%-5s %-15s %-20s %-10s %-10s",
+                "ID", "Catégorie", "Nom", "Prix", "Quantité"));
+        System.out.println("-----------------------------------------------------");
+
+        // Affichage de chaque produit (alignement pour un rendu propre en console)
+        // (alignement : %-5d = 5 carac pour ID, %-15s = 15 carac pour Catégorie, %-20s = 20 carac pour Nom, %-10.2f =
+        // prix 2 décimale sur 10 carac pour Prix, %-10d = 10 carac pour Quantité)
+        for (Produit produit : produits) {
+            System.out.println(String.format("%-5d %-15s %-20s %-10.2f %-10d",
+                    produit.getId(),
+                    produit.getCategorie(),
+                    produit.getNom(),
+                    produit.getPrix(),
+                    produit.getQuantite()));
+        }
+    }
 }
