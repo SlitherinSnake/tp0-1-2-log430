@@ -49,6 +49,11 @@ public class Vente {
         return id;
     }
 
+    // Pour test
+    public int setId(int id) {
+        return this.id = id;
+    }
+
     public LocalDate getDateVente() {
         return dateVente;
     }

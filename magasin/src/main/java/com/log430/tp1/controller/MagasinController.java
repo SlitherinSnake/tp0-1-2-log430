@@ -30,6 +30,17 @@ public class MagasinController {
         this.venteDAO = new VenteDAO();
     }
 
+    // Pour mocker des tests
+    public MagasinController(EmployeDAO employeDAO,
+            ProduitDAO produitDAO,
+            RetourDAO retourDAO,
+            VenteDAO venteDAO) {
+        this.employeDAO = employeDAO;
+        this.produitDAO = produitDAO;
+        this.retourDAO = retourDAO;
+        this.venteDAO = venteDAO;
+    }
+
     // Méthode pour rechercher un produit selon différents
     // critères (ID, nom ou catégorie)
     public void rechercherProduit(Scanner scanner) {
@@ -372,7 +383,8 @@ public class MagasinController {
         }
 
         // Affichage de l'en-tête en format tabulaire
-        // (alignement : %-5s = 5 carac pour ID, %-15s = 15 carac pour Catégorie, %-20s = 20 carac pour Nom, %-10s = 10
+        // (alignement : %-5s = 5 carac pour ID, %-15s = 15 carac pour Catégorie, %-20s
+        // = 20 carac pour Nom, %-10s = 10
         // carac pour Prix, %-10s = 10 carac pour Quantité)
         System.out.println(String.format(
                 "%-5s %-15s %-20s %-10s %-10s",
@@ -380,7 +392,8 @@ public class MagasinController {
         System.out.println("-----------------------------------------------------");
 
         // Affichage de chaque produit (alignement pour un rendu propre en console)
-        // (alignement : %-5d = 5 carac pour ID, %-15s = 15 carac pour Catégorie, %-20s = 20 carac pour Nom, %-10.2f =
+        // (alignement : %-5d = 5 carac pour ID, %-15s = 15 carac pour Catégorie, %-20s
+        // = 20 carac pour Nom, %-10.2f =
         // prix 2 décimale sur 10 carac pour Prix, %-10d = 10 carac pour Quantité)
         for (Produit produit : produits) {
             System.out.println(String.format("%-5d %-15s %-20s %-10.2f %-10d",
