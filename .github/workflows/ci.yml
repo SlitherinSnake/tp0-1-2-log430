@@ -56,6 +56,8 @@ jobs:
       - name: Build docker-compose stack (db + 3 caisses)
         run: docker compose -f docker-compose.yml build
 
+# ──────────────────────────── Integration section maybe? To Do ────────────────────────────
+
 # ──────────────────────────── PUBLISH DOCKER HUB ────────────────────────────
   publish:
     runs-on: ubuntu-latest
