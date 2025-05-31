@@ -35,20 +35,28 @@
 version: "3.8"
 
 services:
+  # -------------------------
+  # Base de données PostgreSQL
+  # -------------------------
   db:
     image: postgres:16
     container_name: postgres-db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: magasin
+      POSTGRES_USER: admin           # Nom d’utilisateur PostgreSQL
+      POSTGRES_PASSWORD: admin       # Mot de passe PostgreSQL
+      POSTGRES_DB: magasin           # Nom de la base à créer
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data           # Permet le stockage des données de façon persistante dans PostgreSQL
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # Script de remplissage initial
     ports:
-      - "5432:5432"
+      - "5432:5432"                   # Exposition du port PostgreSQL
     networks:
       - magasin-net
     restart: unless-stopped
+
+  # -------------------------
+  # Application principale CLI
+  # -------------------------
   java-app:
     container_name: magasin-app
     build:
@@ -63,9 +71,65 @@ services:
     stdin_open: true     # Permet l’interaction terminal
     tty: true            # Évite la fermeture immédiate du conteneur
 
-#Permet le stockaged des données de façon persistante dans PostgreSQL
+  # -------------------------
+  # Caisse 1
+  # -------------------------
+  caisse1:
+    build:
+      context: ./magasin
+      dockerfile: Dockerfile
+    container_name: caisse1
+    environment:
+      CAISSE_ID: 1
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+  # -------------------------
+  # Caisse 2
+  # -------------------------
+  caisse2:
+    build:
+      context: ./magasin
+      dockerfile: Dockerfile
+    container_name: caisse2
+    environment:
+      CAISSE_ID: 2
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+  # -------------------------
+  # Caisse 3
+  # -------------------------
+  caisse3:
+    build:
+      context: ./magasin
+      dockerfile: Dockerfile
+    container_name: caisse3
+    environment:
+      CAISSE_ID: 3
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+# -------------------------
+# Volumes persistants
+# -------------------------
 volumes:
-  pgdata:
-  
+  pgdata:    # Permet le stockage persistant de PostgreSQL
+
+# -------------------------
+# Réseau partagé
+# -------------------------
 networks:
   magasin-net:
