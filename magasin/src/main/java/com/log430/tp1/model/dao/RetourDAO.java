@@ -9,6 +9,18 @@ import com.log430.tp1.model.Retour;
 
 public class RetourDAO {
 
+    // Recherche un retour par son identifiant unique (ID auto-incrémenté)
+    public Retour rechercherParId(int id) {
+        // Ouvre session Hibernate pour accès à BD
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            /*
+             * Utilise session.get() pour récupérer l'objet Retour
+             * correspondant à l'ID fourni
+             */
+            return session.get(Retour.class, id);
+        }
+    }
+
     // Enregistre un objet Retour dans la base de données
     public void enregistrerRetour(Retour retour) {
         // Ouvre session Hibernate pour accès à BD
@@ -21,18 +33,6 @@ public class RetourDAO {
             session.beginTransaction();
             session.persist(retour);
             session.getTransaction().commit();
-        }
-    }
-
-    // Recherche un retour par son identifiant unique (ID auto-incrémenté)
-    public Retour rechercherParId(int id) {
-        // Ouvre session Hibernate pour accès à BD
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            /*
-             * Utilise session.get() pour récupérer l'objet Retour
-             * correspondant à l'ID fourni
-             */
-            return session.get(Retour.class, id);
         }
     }
 

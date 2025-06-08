@@ -70,7 +70,7 @@ public class ProduitDAO {
     }
 
     // Liste tous les produits enregistrés dans la base de données
-    public List<Produit> listerProduits() {
+    public List<Produit> afficherListeProduits() {
         // Ouvre une session Hibernate et exécute une requête HQL simple
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             /*

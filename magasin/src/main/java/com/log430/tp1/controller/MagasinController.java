@@ -368,7 +368,7 @@ public class MagasinController {
         System.out.println("\n=== Consultation du stock ===");
 
         // Récupération des produits depuis BD
-        List<Produit> produits = produitDAO.listerProduits();
+        List<Produit> produits = produitDAO.afficherListeProduits();
 
         // Affichage de l'en-tête en format tabulaire
         System.out.println(String.format(

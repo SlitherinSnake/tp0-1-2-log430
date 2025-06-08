@@ -112,14 +112,14 @@ public class MagasinControllerTest {
     @Test
     void consulterStock_aucunProduit_afficheMessage() {
         // 1) Préparation
-        when(produitDAO.listerProduits()).thenReturn(List.of());
+        when(produitDAO.afficherListeProduits()).thenReturn(List.of());
 
         // 2) Exécution
         controller.consulterStock(new Scanner(""));       
 
         // 3) Vérifications
         assertTrue(console.toString().contains("Aucun produit disponible"));
-        verify(produitDAO).listerProduits();
+        verify(produitDAO).afficherListeProduits();
     }
     
     /* ---------- enregistrerVente() (chemin « pas d’employé ») ---------- */

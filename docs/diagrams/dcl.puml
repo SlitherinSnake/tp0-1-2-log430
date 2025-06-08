@@ -1,13 +1,15 @@
 @startuml
-title Diagramme de classe pour un système de caisse pour un petit magasin de quartier
+title Diagramme de classe - Système de 3 caisses - Magasin POS (Vue logique)
 
-' === Entités ===
+' === Entités principales ===
 class Employe {
   - id : int
   - nom : String
+  - identifiant : String
   --
-  + getNom() : String
   + getId() : int
+  + getNom() : String
+  + getIdentifiant(): String
 }
 
 class Produit {
@@ -17,64 +19,116 @@ class Produit {
   - prix : float
   - quantite : int
   --
+  + getId() : int
   + getNom() : String
-  + getQuantite() : int
+  + getCategorie() : String
   + getPrix() : float
+  + getQuantite() : int
 }
 
 class Vente {
   - id : int
-  - dateVente : Date
+  - dateVente : LocalDate
   - montantTotal : float
-  - listeProduitVendu : List<Produit>
+  - employe : Employe
+  - venteProduits : List<VenteProduit>
   --
-  + getDateVente() : Date
+  + getId() : int
+  + getDateVente() : LocalDate
   + getMontantTotal() : float
-  + getProduitsVendus() : List<Produit>
+  + getEmploye() : Employe
+  + getVenteProduits() : List<VenteProduit>
 }
 
 class Retour {
   - id : int
-  - preuveVente : Vente
-  - dateRetour : Date
-  - listeProduitRetourner : List<Produit>
+  - dateRetour : LocalDate
+  - vente : Vente
+  - employe : Employe
+  - retourProduits : List<RetourProduit>
   --
-  + getDateRetour() : Date
-  + getProduitsRetournes() : List<Produit>
+  + getId() : int
+  + getDateRetour() : LocalDate
+  + getVente() : Vente
+  + getEmploye() : Employe
+  + getProduitsRetournes() : List<RetourProduit>
+}
+
+class VenteProduit {
+  - id : int
+  - vente : Vente
+  - produit : Produit
+  - quantite : int
+  --
+  + getId() : int
+  + getVente() : Vente
+  + getProduit() : Produit
+  + getQuantite() : int
+}
+
+class RetourProduit {
+  - id : int
+  - retour : Retour
+  - produit : Produit
+  - quantite : int
+  --
+  + getId() : int
+  + getRetour() : Retour
+  + getProduit() : Produit
+  + getQuantite() : int
 }
 
 ' === DAO ===
 class ProduitDAO {
-  + rechercher(critere : String) : List<Produit>
-  + consulterStock(idProduit : int) : int
+  + rechercherParId(id : int) : Produit
+  + rechercherParNom(nom : String) : List<Produit>
+  + rechercherParCategorie(categorie : String) : List<Produit>
+  + mettreAJourStock(produit : Produit, nouvelleQuantite : int) : void
+  + afficherListeProduits() : List<Produit>
 }
 
+
 class VenteDAO {
-  + enregistrerVente(produits : List<Produit>, employe : Employe) : Vente
+  + rechercherParId(id : int) : Vente
+  + enregistrerVente(vente : Vente) : void
+  + calculerTotal(produitsEtQuantites : Map<Produit, Integer>) : double
 }
 
 class RetourDAO {
-  + enregistrerRetour(vente : Vente, produits : List<Produit>, employe : Employe) : Retour
+  + rechercherParId(id : int) : Retour
+  + enregistrerRetour(retour : Retour) : void
+  + getTousLesRetours() : List<Retour>
 }
 
-' === Contrôleur console ===
-class ConsoleController {
-  + rechercherProduit(critere : String) : List<Produit>
-  + enregistrerVente(produits : List<Produit>, employe : Employe) : Vente
-  + consulterStock(idProduit : int) : int
-  + traiterRetour(vente : Vente, produits : List<Produit>, employe : Employe) : Retour
+class EmployeDAO {
+  + rechercherParId(id : int) : Employe
+  + rechercherParNom(nom : String) : List<Employe>
+}
+
+' === Contrôleur ===
+class MagasinController {
+  + rechercherProduit(scanner : Scanner) : void
+  + enregistrerVente(scanner : Scanner) : void
+  + gererRetour(scanner : Scanner) : void
+  + consulterStock(scanner : Scanner) : void
+  - afficherListeProduits(produits : List<Produit>) : void
 }
 
 ' === Relations ===
-Employe --> ConsoleController : utilise
-ConsoleController --> ProduitDAO
-ConsoleController --> VenteDAO
-ConsoleController --> RetourDAO
+Employe --> MagasinController : utilise
+MagasinController --> ProduitDAO
+MagasinController --> VenteDAO
+MagasinController --> RetourDAO
+MagasinController --> EmployeDAO
 
-Vente "*" --> "1" Employe
-Retour "*" --> "1" Employe
+Vente "1" --> "1" Employe
+Retour "1" --> "1" Employe
 Retour "1" --> "1" Vente : preuve
-Vente "1" o-- "*" Produit : contient >
-Retour "1" o-- "*" Produit : retourne >
+
+Vente "1" o-- "*" VenteProduit : contient >
+Retour "1" o-- "*" RetourProduit : retourne >
+
+VenteProduit "*" --> "1" Produit
+RetourProduit "*" --> "1" Produit
 
 @enduml
