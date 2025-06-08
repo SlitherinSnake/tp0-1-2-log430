@@ -17,12 +17,23 @@ L'application doit permettre à un employé de magasin d’effectuer les opérat
 
 ## 2. Proposition d’architecture
 ### 2.1. Vue logique
-#### Diagramme de classe (DCL) représentant les entités principales :
-* Employe : id: int, nom: String
-* Produit : id: int, nom: String, catégorie: String, prix: float, quantite: int
-* Vente : id: int, dateVente: Date, montantTotal: float, listeProduitVendu: List<Produit\>
-* Retour : id: int, preuveVente: vente, dateRetour: Date, listeProduitRetourner: List<Produit\>
-![dcl](https://img.plantuml.biz/plantuml/svg/jLN9Rjim4BqBq3yCVAdJHeTSZSP84UTGe4kQ5BaJrbGbIf7ga0eQ1FsVzju_y8zrkCYYjzO1seCNpHk-cVSuf2wi4-JwLfM5aquXBAHeIBGjGesmLC9QXCxq1Bq6-s3TwaU2XCoX3davjA8HLcgFV-sPLoALHLayW_FpSxZIdBBwQVr3MGHgk6exPHuG7ii2e09PmmoaTl59cvOVRnr9tOH8vRzVG8FkdMcd9njW2B-kGpGmVFULOvLhCdNFxHrNXQKvR0n9t8ft9Bznw9Co8grbaLuKPdn_xV53MZDsce1hfW_1L20JS8VQ7J2fvcOZF8C5_u_HrcZ7PJuQ9zHcoqfQXyaGNbVt3B_XsCiKcs-fM0pyeRMXGe3UPaNonjTw0g4DLMn8s2gKARn1voTfhyIEiBzVYmo_e_QqC1UVIuomHZf2PipTrJa86RWEQuc3ldZrFf_nbEEZZv6JSFaPoN-cI-9He77IzZ3x5KkZRQyuyzQPvPUfh8UH3ZRjc_bWKrOJDM73n8GKjxDBghOBdWAcGpaRZkV9QFlEbkqlaQoyp_Vi59vOCf9iM7l98qUhNmfvoxqdXc-ipEhB60fPHYcaNSTJpMED_qUsFM4FVQeZuRlxNoxUe19ESZlHk-4Ihghv7WTdq3l9HufLx89-oJZVXpA6MJo4hoV9jnZF-UJv942JiyaWfYpIMVyZTZPYmuqHxuyrCoEcgWBBk0EyEVosqWxc6rIxYPGk0PzO5XV-RlClpzy0)
+#### Diagramme de classe représentant les entités et composants principaux du système :
+- **Employe** : id: int, nom: String, identifiant: String  
+  → Représente un employé responsable des ventes ou retours ou regarder le stock.
+- **Produit** : id: int, nom: String, catégorie: String, prix: float, quantite: int  
+  → Article en stock pouvant être vendu ou retourné.
+- **Vente** : id: int, dateVente: Date, montantTotal: float, employe: Employe, venteProduits: List<VenteProduit>  
+  → Une vente est associée à un employé et composée de plusieurs lignes de vente (`VenteProduit`).
+- **Retour** : id: int, dateRetour: Date, vente: Vente, employe: Employe, retourProduits: List<RetourProduit>  
+  → Un retour est lié à une vente précédente et contient plusieurs lignes de retour (`RetourProduit`).
+- **VenteProduit** : id: int, vente: Vente, produit: Produit, quantite: int  
+  → Représente une ligne d'achat d'un produit dans une vente.
+- **RetourProduit** : id: int, retour: Retour, produit: Produit, quantite: int  
+  → Représente une ligne de retour d'un produit dans un retour.
+- **MagasinController** : contient la logique d'orchestration (vente, retour, recherche, stock), en lien avec les DAO.
+- **DAO (Data Access Object)** : `ProduitDAO`, `VenteDAO`, `RetourDAO`, `EmployeDAO`  
+  → Gèrent les opérations de persistance sur la base de données.
+![dcl](https://img.plantuml.biz/plantuml/svg/hLVDRjiu4BuRy3iGliJUneTYRqPZj4XoQD5itRYREokFLUvIea9IGOjYtsMFSSzz0xrOXp-YI5kAZQ08ajZ3cMzcllaHzLffAdLTyF58Cys1N36QIreKG3P0CawL0Z8dwszADuzE-2V9A4EnGlaDpQbY9LbzM9FfNGs4YvpTrp0RZyQZCt9nSK6kImHkTefKafKPgoX7IpmOZomwkIugBhu1-JuU4KHa6x8WhDJkMoaA_BhMQ9gtvu20MqPBdPxCpTyN90VzTZETTI1Mz9SehApJzve1R3hhJlypqRleLb9iQgPFZIwZ6d8X6Up9CVUlADfoGRtjVKqDCH3XFIU3ozPXt-4AlLfvy6l57xthpaUKy1qoCb2C3VfonmloNcIKNw707HMYr0ZwIMZAqpp1btVH5jg97moE9rSPFARqgxj8k3nEoLKRZpr98hBdDr5GFJJuUEn959izYoDH3hudm8YsMz2YbiEy-VC3uXuydnRvISQaHTYdx3QMdiYPinaWhICqX7IKhJOe1rn2nDX-VFkTzkHyzP1JUVr5EvdFcwQXB3seFOaS71-R9C_-R6JR0axtj-OJbRH3Vsv6RczVlVaGhsblQwJV7O24x0j8yxkY4cDgiptmb2YQFHRlpT0fSG_lsNHBxd2_3jWNeBM4D--GYhKMsR_J0wBFSNtN3y0vV4p8De0FWcqS3jrkcOd2kEXP27kDdRJsYLH53GYbX1nX9KZNeCa0f87Xt6Or1-cscyzENOUQcWrnGwjN8Tkt2963N1gOZQW_S-Xfu1DZZdii2jftuLwZft5ZstqIjNeFVbiSx8fqIVXLSs9SoM8whUsyoJBf_KjySiZc9mTC8ve1Vzknfm8RH_R4vCTDPRGimP2mTfzI5WugVKGV2nVeFQAQYLBLN8Fl-oUrvmFzNUqzPTesxsmZicw1KytGgwFgp5UXsP5QCyxm_eZNognZT3nghtpp-RA7qqLhvrpyRRzO3tZxL7OlLLGUW1u26VXeRM7RDplUFEPuJPLmNpS_p9HKxQRgjm-J75lde6muTZpLa6atKNssRaW6ZQE-xxC6Jx5o70N6ORk5JADYnMl5a1VbWoIWEvSj_vEN4-jiyiU4j1UxWB3irmiN6LfhNCJAAfeO702wyHgSDJiWpV-axi8TZvnM0CJ_r-6w8viTnL8RCrDWnFLG_UfQKlDY4PHD4Du0aRRDJaAP0Re7Vv60hzZBr6xR7k2MW4e2FXQ6iZ8jnr0M4SnPZbSUysOKUkaCgPhF9yQkn6fDyFCvRcoPtda2QYjG26vxF1D59HIpKsNGF0xk894nDsmEBpl3Xa02b65PVFu75Lc9xL91kS5Cpqc1hsgMWWZI82g1_eBDr6WWZPZQ3EyUZ7W8ObwFcaS91TZ824QBsdkapEAoOjvTFwt2GpVmbbQrrKvvMFXMBKCPBh_GU_DsQQWEToQJkgEawxHGWiI_ST7MEOaf0-ya3U2ullbvZGpPD-TV)
 
 
 ### ii. Vue des processus
@@ -70,7 +81,11 @@ Cas d’usage principaux :
 ## 3. Justification des décisions d’architecture (ADR)
 ### ADR 001 – Choix de la plateforme
 ```~\tp0-1-2-log430\docs\adr\001-choix-plateforme.md```
-### ADR 002 – Choix du mécanisme de base de données (SQL vs NoSQL, local vs serveur)
+### ADR 002 – Séparation des responsabilités (SQL vs NoSQL, local vs serveur)
+`~\tp0-1-2-log430\docs\adr\002-separation-responsabilites.md`    
+### ADR 003 – Stratégie de persistance (SQL vs NoSQL, local vs serveur)
+`~\tp0-1-2-log430\docs\adr\003-strategie-persistance.md`
+### ADR 004 – Choix du mécanisme de base de données (SQL vs NoSQL, local vs serveur)
 ```~\tp0-1-2-log430\docs\adr\002-choix-bd.md```
 
 ## 4. Choix technologiques
