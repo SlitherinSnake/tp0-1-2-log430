@@ -115,20 +115,36 @@ class MagasinController {
 }
 
 ' === Relations ===
+' Employé utilise le contrôleur
 Employe --> MagasinController : utilise
-MagasinController --> ProduitDAO
-MagasinController --> VenteDAO
-MagasinController --> RetourDAO
-MagasinController --> EmployeDAO
 
-Vente "1" --> "1" Employe
-Retour "1" --> "1" Employe
-Retour "1" --> "1" Vente : preuve
+' Utilisation des DAO par le contrôleur
+MagasinController --> ProduitDAO : délègue requêtes produit
+MagasinController --> VenteDAO : délègue gestion ventes
+MagasinController --> RetourDAO : délègue gestion retours
+MagasinController --> EmployeDAO : délègue gestion employés
 
-Vente "1" o-- "*" VenteProduit : contient >
-Retour "1" o-- "*" RetourProduit : retourne >
+' Employé effectue plusieurs ventes et retours
+Employe "1" --> "*" Vente : effectue >
+Employe "1" --> "*" Retour : autorise >
 
-VenteProduit "*" --> "1" Produit
-RetourProduit "*" --> "1" Produit
+' Vente et Retour liée à un employé
+Vente "1" --> "1" Employe : réalisée par >
+Retour "1" --> "1" Employe : traitée par >
+
+' Retour référence une vente existante
+Retour "1" --> "1" Vente : preuve >
+
+' Vente et Retour contient plusieurs lignes de produit
+' "*--" et non "--", car VenteProduit et RetourProduit sont des compositions
+' et non associations, car c'est pas un objet indépendant, mais une composition
+' soit un objet (une partie) qui dépend entièrement de tout (Vente et Retour)
+Vente "1" *-- "*" VenteProduit : contient >
+Retour "1" *-- "*" RetourProduit : retourne >
+
+' Chaque ligne produit est associée à un produit
+VenteProduit "*" --> "1" Produit : concerne >
+RetourProduit "*" --> "1" Produit : concerne >
+
 
 @enduml
