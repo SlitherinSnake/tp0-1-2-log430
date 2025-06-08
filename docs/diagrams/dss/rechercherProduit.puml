@@ -1,18 +1,55 @@
 @startuml
-title DSS – Rechercher un produit
+title DSS – Rechercher un produit (via ConsoleController)
 
+' === Acteurs et composants impliqués ===
+' L'utilisateur humain (l'employé)
 actor Employe
-participant "Console (View)" as Console
-participant "ConsoleController" as Controller
+' Interface console qui lit la saisie
+participant "Console (Scanner)" as Console
+' Contrôleur principal qui orchestre les actions
+participant "MagasinController" as Controller
+' DAO qui accède à la BD via Hibernate
 participant "ProduitDAO" as DAO
-database "SQLite"
+' Base de données relationnelle utilisée (via Hibernate)
+database "PostgreSQL"
 
-Employe -> Console : saisirOptionMenu(option : String)
-Console -> Controller : rechercherProduit(option : String)
-Controller -> DAO : rechercher(option : String)
-DAO -> SQLite : via JPA/Hibernate
-SQLite -> DAO : retourne les produits récupérer selon option
-DAO --> Controller : produits : List<Produit>
-Controller --> Console : produits : List<Produit>
-Console --> Employe : afficherProduits(produits)
+' === Début du scénario ===
+Employe -> Console : saisit l'option "rechercher un produit" \n du menu dans la console
+' L’utilisateur interagit avec la console pour choisir un type de recherche (ID, nom, ou catégorie)
+
+Console -> Controller : rechercherProduit(scanner)
+' La console appelle la méthode du contrôleur avec un Scanner en paramètre
+
+' === Cas 1 : recherche par identifiant ===
+alt recherche par ID
+    Controller -> DAO : rechercherParId(id)
+    ' Le contrôleur transmet la requête au DAO (selon le choix 1)
+    
+    DAO -> PostgreSQL : SELECT * \n FROM produits \n WHERE id = ?
+    ' Hibernate génère une requête SQL pour chercher un produit selon son identifiant
+    
+    PostgreSQL --> DAO : Produit
+    ' La base renvoie un objet produit correspondant
+    
+    DAO --> Controller : Produit
+    Controller --> Console : afficher(Produit)
+    ' Le produit trouvé est affiché dans la console
+
+' === Cas 2 : recherche par nom (mot-clé) ===
+else recherche par nom
+    Controller -> DAO : rechercherParNom(nom)
+    DAO -> PostgreSQL : SELECT * \n FROM produits \n WHERE nom LIKE ?
+    PostgreSQL --> DAO : List<Produit>
+    DAO --> Controller : List<Produit>
+    Controller --> Console : afficherListeProduits()
+    ' Plusieurs produits peuvent correspondre, la liste est affichée
+
+' === Cas 3 : recherche par catégorie ===
+else recherche par catégorie
+    Controller -> DAO : rechercherParCategorie(categorie)
+    DAO -> PostgreSQL : SELECT * \n FROM produits WHERE \n categorie LIKE ?
+    PostgreSQL --> DAO : List<Produit>
+    DAO --> Controller : List<Produit>
+    Controller --> Console : afficherListeProduits()
+end
 @enduml
