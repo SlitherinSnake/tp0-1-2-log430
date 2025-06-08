@@ -1,18 +1,71 @@
 @startuml
-title DSS – Enregistrer une vente
+title DSS – Enregistrer une vente (via ConsoleController)
 
+' === Acteurs et composants impliqués ===
 actor Employe
-participant "Console (View)" as Console
-participant "ConsoleController" as Controller
-participant "VenteDAO" as DAO
-database "SQLite"
+participant "Console (Scanner)" as Console
+participant "MagasinController" as Controller
+participant "EmployeDAO" as EmployeDAO
+participant "ProduitDAO" as ProduitDAO
+participant "VenteDAO" as VenteDAO
+database "PostgreSQL"
 
-Employe -> Console : saisirProduits(produits : List<Produit>)
-Console -> Controller : enregistrerVente(produits : List<Produit>, employe : Employe)
-Controller -> DAO : enregistrerVente(produits : List<Produit>, employe : Employe)
-DAO -> SQLite : via JPA/Hibernate
-SQLite -> DAO : enregistre la vente + retourne l'objet Vente
-DAO --> Controller : vente : Vente
-Controller --> Console : vente : Vente
-Console --> Employe : afficherConfirmation(vente)
+' === Début du scénario ===
+' L'employé choisit d'enregistrer une vente via le menu console
+Employe -> Console : sélectionne "Enregistrer une vente" \n dans l'interface console
+Console -> Controller : enregistrerVente(scanner)
+
+' === Étape 1 : Identification de l'employé ===
+' Le contrôleur demande l'identification d’un employé à partir de l'id ou du nom
+Controller -> EmployeDAO : rechercherParId(id) ou rechercherParNom(nom)
+' Requête SQL pour retrouver l'employé
+EmployeDAO -> PostgreSQL : SELECT * \n FROM employes \n WHERE id = ? \n OU nom LIKE ?
+PostgreSQL --> EmployeDAO : Employe trouvé
+EmployeDAO --> Controller : Employe
+' Le contrôleur affiche les informations de l'employé dans la console
+Controller --> Console : afficher employé sélectionné
+
+' === Étape 2 : Boucle de sélection des produits ===
+' L'utilisateur entre un ou plusieurs produits avec quantités
+loop Pour chaque produit saisi
+    ' Le contrôleur demande un identifiant de produit
+    Controller -> Console : demander id produit
+    ' Recherche du produit dans la base
+    Controller -> ProduitDAO : rechercherParId(produitId)
+    ProduitDAO -> PostgreSQL : SELECT * \n FROM produits \n WHERE id = ?
+    PostgreSQL --> ProduitDAO : Produit
+    ProduitDAO --> Controller : Produit
+
+    ' Demande de quantité à l'utilisateur
+    Controller -> Console : demander quantité souhaitée
+
+    alt quantité suffisante
+        ' Mise à jour du stock si la quantité est disponible
+        Controller -> ProduitDAO : mettreAJourStock(produit, nouvelleQuantite)
+        ProduitDAO -> PostgreSQL : UPDATE produits \n SET quantite = ? \n WHERE id = ?
+        PostgreSQL --> ProduitDAO : OK
+        ProduitDAO --> Controller : confirmation
+        ' Le contrôleur ajoute le produit à la vente en cours et met à jour le total
+        Controller -> Controller : ajoute à venteProduits \n et met à jour montantTotal
+    else stock insuffisant
+        ' Affichage d'un message d'erreur si le stock est insuffisant
+        Controller --> Console : afficher "stock insuffisant"
+    end
+
+    ' Proposition d’ajouter un autre produit
+    Controller -> Console : proposer ajout d’un autre produit ?
+end
+
+' === Étape 3 : Création et enregistrement de la vente ===
+' Enregistrement complet de la vente et des produits associés
+Controller -> VenteDAO : enregistrerVente(vente)
+' Insertion SQL de la vente et des lignes de produits associées
+VenteDAO -> PostgreSQL : INSERT INTO ventes \n + \n INSERT INTO vente_produit
+PostgreSQL --> VenteDAO : OK
+VenteDAO --> Controller : confirmation
+
+' === Étape finale : affichage confirmation ===
+' Affichage du reçu de la vente à l’utilisateur
+Controller --> Console : afficher facture et détails vente
+Console --> Employe : affiche reçu de la vente
 @enduml
