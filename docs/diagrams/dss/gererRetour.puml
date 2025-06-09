@@ -1,18 +1,80 @@
 @startuml
 title DSS – Gérer un retour
 
+' === Acteurs et composants impliqués ===
+' L'utilisateur humain (l'employé)
 actor Employe
-participant "Console (View)" as Console
-participant "ConsoleController" as Controller
-participant "RetourDAO" as DAO
-database "SQLite"
+' Interface console qui lit la saisie
+participant "Console (Scanner)" as Console
+' Contrôleur principal qui orchestre les actions
+participant "MagasinController" as Controller
+' DAO pour accéder à la vente d’origine
+participant "VenteDAO" as VenteDAO
+' DAO pour mettre à jour le stock et accéder aux produits
+participant "ProduitDAO" as ProduitDAO
+' DAO pour enregistrer le retour
+participant "RetourDAO" as RetourDAO
+' Base de données relationnelle utilisée (via Hibernate)
+database "PostgreSQL"
 
-Employe -> Console : saisirRetour(vente : Vente, produits : List<Produit>)
-Console -> Controller : traiterRetour(vente : Vente, produits : List<Produit>, employe : Employe)
-Controller -> DAO : enregistrerRetour(vente : Vente, produits : List<Produit>, employe : Employe)
-DAO -> SQLite : via JPA/Hibernate
-SQLite -> DAO : enregistre le retour et met à jour le stock
-DAO --> Controller : retour : Retour
-Controller --> Console : retour : Retour
-Console --> Employe : afficherConfirmation(retour)
+' === Début du scénario ===
+Employe -> Console : sélectionne "Gérer un retour" \n dans l'interface console
+' L'utilisateur choisit dans le menu de traiter un retour de produits
+
+Console -> Controller : gererRetour(scanner)
+' La console appelle le contrôleur avec un Scanner comme paramètre
+
+' === Étape 1 : Identification de la vente concernée ===
+Controller -> VenteDAO : rechercherParId(venteId)
+' Le contrôleur demande au DAO la vente en question avec ses produits
+
+VenteDAO -> PostgreSQL : SELECT v.*, vp.* \n FROM ventes v \n LEFT JOIN vente_produit vp \n ON v.id = vp.vente_id \n WHERE v.id = ?
+' Hibernate effectue une jointure pour récupérer la vente et ses produits en une seule requête
+
+PostgreSQL --> VenteDAO : Vente (avec venteProduits)
+VenteDAO --> Controller : Vente
+Controller --> Console : afficher détails de la vente
+' La vente est affichée avec ses produits pour que l’employé vérifie les infos
+
+' === Étape 2 : Saisie des produits à retourner ===
+loop Pour chaque produit retourné
+    Controller -> Console : demander id produit à retourner
+    ' Le contrôleur demande à l'utilisateur de saisir l'ID d’un produit
+
+    alt produit trouvé dans la vente
+        ' Vérifie que le produit saisi faisait partie de la vente d'origine
+        Controller -> Console : demander quantité à retourner
+
+        alt quantité valide
+            ' Si la quantité retournée est correcte
+            Controller -> ProduitDAO : mettreAJourStock(produit, nouvelleQuantite)
+            ProduitDAO -> PostgreSQL : UPDATE produits \n SET quantite = ? \n WHERE id = ?
+            PostgreSQL --> ProduitDAO : OK
+            ProduitDAO --> Controller : confirmation
+            ' Le stock est mis à jour suite au retour
+        else quantité invalide
+            Controller --> Console : afficher "Quantité invalide"
+            ' Si la quantité retournée est incorrecte, message d’erreur
+        end
+    else produit absent de la vente
+        Controller --> Console : afficher "Produit non présent dans cette vente"
+        ' Si l'ID du produit ne fait pas partie des produits de la vente
+    end
+
+    Controller -> Console : proposer retour d’un autre produit ?
+    ' Reboucle tant que l’utilisateur veut retourner d’autres produits
+end
+
+' === Étape 3 : Création et enregistrement du retour ===
+Controller -> RetourDAO : enregistrerRetour(retour)
+' Une fois tous les produits saisis, le retour est enregistré avec les objets associés
+
+RetourDAO -> PostgreSQL : INSERT INTO retours + \n INSERT INTO retour_produit
+PostgreSQL --> RetourDAO : OK
+RetourDAO --> Controller : confirmation
+
+' === Étape finale : Affichage du reçu de retour ===
+Controller --> Console : afficher reçu avec produits retournés et total remboursé
+Console --> Employe : afficher reçu de retour
+' Affiche la facture du retour à l'utilisateur
 @enduml
