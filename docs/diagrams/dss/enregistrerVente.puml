@@ -1,13 +1,20 @@
 @startuml
-title DSS – Enregistrer une vente (via ConsoleController)
+title DSS – Enregistrer une vente
 
 ' === Acteurs et composants impliqués ===
+' L'utilisateur humain (l'employé)
 actor Employe
+' Interface console qui lit la saisie
 participant "Console (Scanner)" as Console
+' Contrôleur principal qui orchestre les actions
 participant "MagasinController" as Controller
+' DAO pour récupérer l'employé
 participant "EmployeDAO" as EmployeDAO
+' DAO pour récupérer et modifier les produits
 participant "ProduitDAO" as ProduitDAO
+' DAO pour enregistrer la vente
 participant "VenteDAO" as VenteDAO
+' Base de données relationnelle utilisée (via Hibernate)
 database "PostgreSQL"
 
 ' === Début du scénario ===
