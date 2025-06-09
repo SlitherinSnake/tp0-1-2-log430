@@ -56,6 +56,7 @@ public class VenteController {
     public String showPanier(Model model, @ModelAttribute("vente") Vente vente) {
         model.addAttribute("items", vente.getItems());
         model.addAttribute("total", vente.getMontantTotal());
+        model.addAttribute("employes", employeRepository.findAll());
         return "panier";
     }
 
