@@ -29,3 +29,15 @@ Résumé des décisions clés qui structurent l’architecture du système.
 - Documentation basée sur arc42
 - Décisions techniques tracées via ADR
 - Projet réalisé tout seul
+
+## 4.5. Vue des cas d’utilisation
+
+Acteur principal : Employé 
+
+Cas d’usage principaux :
+* Rechercher un produit
+* Enregistrer une vente
+* Gérer un retour
+* Consulter l’état du stock
+
+![cu-menu](https://img.plantuml.biz/plantuml/svg/NP0nJWD134NxbVOENzi0GYb8KgE89A9A0-80rgorZ9YTYSQUI152oXsek04vnzua9s4sMOfDuURx-VlR2r6AcbfN5chLCLQMcaXjowWPXWJrJLBhh93Qu74wV6D33OdrPL4MP3H4hDkj2tlkXSX6oJVPg7hTYtQ__qPMX75hWfUGc_TuMi45GuxlAdoM1P24yxeyzyBcdMDVI1xR6EfajKAEyhPy695h7xcnel6CCdRibGToEYAVk-C5GcGDAGxGR0GjSxZaD7FkTFZfZagAEa4qc8zXO5uMN_sPmyMOJ1ulgSR2z5gONGlptcN1lZw__Wy0)
