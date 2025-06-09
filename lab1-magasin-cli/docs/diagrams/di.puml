@@ -1,0 +1,37 @@
+@startuml
+title Vue d’implémentation – Organisation des modules (MVC + DAO)
+
+package "com.log430.tp1.view" {
+  class ConsoleView
+}
+
+package "com.log430.tp1.controller" {
+  class MagasinController
+}
+
+package "com.log430.tp1.model" {
+  class Produit
+  class Vente
+  class Retour
+  class Employe
+}
+
+package "com.log430.tp1.dao" {
+  class ProduitDAO
+  class VenteDAO
+  class RetourDAO
+  class EmployeDAO
+}
+
+ConsoleView --> MagasinController : interagit
+
+MagasinController --> ProduitDAO
+MagasinController --> VenteDAO
+MagasinController --> RetourDAO
+MagasinController --> EmployeDAO
+
+MagasinController --> Produit
+MagasinController --> Vente
+MagasinController --> Retour
+MagasinController --> Employe
+@enduml

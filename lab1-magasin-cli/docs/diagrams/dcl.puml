@@ -1,0 +1,150 @@
+@startuml
+title Diagramme de classe - Système de 3 caisses - Magasin POS (Vue logique)
+
+' === Entités principales ===
+class Employe {
+  - id : int
+  - nom : String
+  - identifiant : String
+  --
+  + getId() : int
+  + getNom() : String
+  + getIdentifiant(): String
+}
+
+class Produit {
+  - id : int
+  - nom : String
+  - categorie : String
+  - prix : float
+  - quantite : int
+  --
+  + getId() : int
+  + getNom() : String
+  + getCategorie() : String
+  + getPrix() : float
+  + getQuantite() : int
+}
+
+class Vente {
+  - id : int
+  - dateVente : LocalDate
+  - montantTotal : float
+  - employe : Employe
+  - venteProduits : List<VenteProduit>
+  --
+  + getId() : int
+  + getDateVente() : LocalDate
+  + getMontantTotal() : float
+  + getEmploye() : Employe
+  + getVenteProduits() : List<VenteProduit>
+}
+
+class Retour {
+  - id : int
+  - dateRetour : LocalDate
+  - vente : Vente
+  - employe : Employe
+  - retourProduits : List<RetourProduit>
+  --
+  + getId() : int
+  + getDateRetour() : LocalDate
+  + getVente() : Vente
+  + getEmploye() : Employe
+  + getProduitsRetournes() : List<RetourProduit>
+}
+
+class VenteProduit {
+  - id : int
+  - vente : Vente
+  - produit : Produit
+  - quantite : int
+  --
+  + getId() : int
+  + getVente() : Vente
+  + getProduit() : Produit
+  + getQuantite() : int
+}
+
+class RetourProduit {
+  - id : int
+  - retour : Retour
+  - produit : Produit
+  - quantite : int
+  --
+  + getId() : int
+  + getRetour() : Retour
+  + getProduit() : Produit
+  + getQuantite() : int
+}
+
+' === DAO ===
+class ProduitDAO {
+  + rechercherParId(id : int) : Produit
+  + rechercherParNom(nom : String) : List<Produit>
+  + rechercherParCategorie(categorie : String) : List<Produit>
+  + mettreAJourStock(produit : Produit, nouvelleQuantite : int) : void
+  + afficherListeProduits() : List<Produit>
+}
+
+
+class VenteDAO {
+  + rechercherParId(id : int) : Vente
+  + enregistrerVente(vente : Vente) : void
+  + calculerTotal(produitsEtQuantites : Map<Produit, Integer>) : double
+}
+
+class RetourDAO {
+  + rechercherParId(id : int) : Retour
+  + enregistrerRetour(retour : Retour) : void
+  + getTousLesRetours() : List<Retour>
+}
+
+class EmployeDAO {
+  + rechercherParId(id : int) : Employe
+  + rechercherParNom(nom : String) : List<Employe>
+}
+
+' === Contrôleur ===
+class MagasinController {
+  + rechercherProduit(scanner : Scanner) : void
+  + enregistrerVente(scanner : Scanner) : void
+  + gererRetour(scanner : Scanner) : void
+  + consulterStock(scanner : Scanner) : void
+  - afficherListeProduits(produits : List<Produit>) : void
+}
+
+' === Relations ===
+' Employé utilise le contrôleur
+Employe --> MagasinController : utilise
+
+' Utilisation des DAO par le contrôleur
+MagasinController --> ProduitDAO : délègue requêtes produit
+MagasinController --> VenteDAO : délègue gestion ventes
+MagasinController --> RetourDAO : délègue gestion retours
+MagasinController --> EmployeDAO : délègue gestion employés
+
+' Employé effectue plusieurs ventes et retours
+Employe "1" --> "*" Vente : effectue >
+Employe "1" --> "*" Retour : autorise >
+
+' Vente et Retour liée à un employé
+Vente "1" --> "1" Employe : réalisée par >
+Retour "1" --> "1" Employe : traitée par >
+
+' Retour référence une vente existante
+Retour "1" --> "1" Vente : preuve >
+
+' Vente et Retour contient plusieurs lignes de produit
+' "*--" et non "--", car VenteProduit et RetourProduit sont des compositions
+' et non associations, car c'est pas un objet indépendant, mais une composition
+' soit un objet (une partie) qui dépend entièrement de tout (Vente et Retour)
+Vente "1" *-- "*" VenteProduit : contient >
+Retour "1" *-- "*" RetourProduit : retourne >
+
+' Chaque ligne produit est associée à un produit
+VenteProduit "*" --> "1" Produit : concerne >
+RetourProduit "*" --> "1" Produit : concerne >
+
+
+@enduml

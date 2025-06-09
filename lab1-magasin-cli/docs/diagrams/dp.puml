@@ -1,0 +1,17 @@
+@startuml
+title Diagramme de déploiement – Architecture 2-tier
+
+' === Noeud client (VM locale ou PC) ===
+node "Machine cliente (VM locale)" {
+  component "Application POS\n(Java Console - MVC)"
+}
+
+' === Noeud serveur BD (PostgreSQL) ===
+node "Machine serveur (Docker)" {
+  database "Base de données PostgreSQL"
+}
+
+' === Connexion ORM via Hibernate/JPA ===
+"Application POS\n(Java Console - MVC)" --> "Base de données PostgreSQL" : Accès via ORM (Hibernate / JPA)
+
+@enduml
