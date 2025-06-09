@@ -30,7 +30,6 @@ public class VenteController {
     @Autowired
     private VenteRepository venteRepository;
 
-    @Autowired
     public VenteController(ProduitRepository produitRepository) {
         this.produitRepository = produitRepository;
     }
