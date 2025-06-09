@@ -174,6 +174,12 @@
       });
     });
   </script>
+  <script>
+    // Force la création de l’objet "vente" en session (si ce n'est pas encore fait)
+    fetch("/ventes", { credentials: "same-origin" }).then(() => {
+      console.log("Session initialisée.");
+    });
+  </script>
 </body>
 
 </html>
