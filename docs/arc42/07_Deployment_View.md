@@ -1,4 +1,4 @@
-# 7. Vue de déploiement - à finir
+# 7. Vue de déploiement
 
 Cette section décrit l’infrastructure technique nécessaire à l’exécution du système, ainsi que la répartition des composants logiciels sur cette infrastructure.
 
