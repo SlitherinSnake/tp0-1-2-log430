@@ -47,6 +47,8 @@ public class VenteController {
         model.addAttribute("produits", produitRepository.findAll());
         model.addAttribute("employes", employeRepository.findAll());
         model.addAttribute("vente", vente);
+        model.addAttribute("produitForm", new Produit());
+        model.addAttribute("editing", false);
         // Pour passer le nombre d’items si souhaiter :
         // model.addAttribute("nbPanier", vente.getItems().size());
         return "home";
