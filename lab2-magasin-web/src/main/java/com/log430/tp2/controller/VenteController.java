@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 
@@ -66,6 +67,7 @@ public class VenteController {
             @ModelAttribute("vente") Vente vente) {
         produitRepository.findById(produitId).ifPresent(produit -> {
             vente.ajouterProduit(produit, quantite);
+            vente.calculerMontantTotal();
         });
         // On retourne par exemple le nombre d’articles
         return ResponseEntity.ok(vente.getItems().size());
@@ -82,6 +84,12 @@ public class VenteController {
     public String clearVente(SessionStatus status) {
         status.setComplete();
         return "redirect:/panier";
+    }
+
+    @GetMapping("/panier/count")
+    @ResponseBody
+    public String getPanierCount(@ModelAttribute("vente") Vente vente) {
+        return String.valueOf(vente.getItems().size());
     }
 
     @PostMapping("/panier/valider")

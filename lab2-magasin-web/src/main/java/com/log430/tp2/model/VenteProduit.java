@@ -18,16 +18,18 @@ public class VenteProduit {
 
     // Plusieurs venteProduit peuvent être liés à une seule vente
     @ManyToOne
-    // Ceci précise que dans la table venteProduit, il y a une colonne vente_id pour identifier la vente.
-    @JoinColumn(name = "vente_id")  
+    // Ceci précise que dans la table venteProduit, il y a une colonne vente_id pour
+    // identifier la vente.
+    @JoinColumn(name = "vente_id")
     @JsonIgnore
     private Vente vente;
 
     // Plusieurs produit peuvent être effectués dans une vente produit
     @ManyToOne
-    // Ceci précise que dans la table venteProduit, il y a une colonne produit_id pour identifier les produits.
+    // Ceci précise que dans la table venteProduit, il y a une colonne produit_id
+    // pour identifier les produits.
     @JoinColumn(name = "produit_id")
-    
+
     private Produit produit;
 
     private int quantite;
@@ -36,11 +38,15 @@ public class VenteProduit {
     public VenteProduit() {
     }
 
-    // Constructeur avec paramètres pour instancier une VenteProduit 
+    // Constructeur avec paramètres pour instancier une VenteProduit
     public VenteProduit(Vente vente, Produit produit, int quantite) {
         this.vente = vente;
         this.produit = produit;
         this.quantite = quantite;
+    }
+
+    public double getSousTotal() {
+        return produit.getPrix() * quantite;
     }
 
     // Getters / Setters
@@ -75,7 +81,7 @@ public class VenteProduit {
     @Override
     public String toString() {
         return "VenteProduit{id=" + id +
-               ", produit=" + produit.getNom() +
-               ", quantite=" + quantite + "}";
+                ", produit=" + produit.getNom() +
+                ", quantite=" + quantite + "}";
     }
 }

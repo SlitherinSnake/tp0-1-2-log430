@@ -17,6 +17,10 @@
           <a class="btn btn-primary position-relative" th:href="@{/panier}">
             <i class="bi bi-cart4"></i>
             Voir mon panier
+            <span id="cart-count"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              0
+            </span>
           </a>
         </div>
         <div class="ms-2">
@@ -156,13 +160,15 @@
               btn.classList.add("btn-outline-success");
             }, 1200);
 
-            // MAJ compteur panier (optionnel)
-            const countSpan = document.getElementById("cart-count");
-            if (countSpan) {
-              let oldCount = parseInt(countSpan.innerText) || 0;
-              let addQ = parseInt(formData.get("quantite")) || 1;
-              countSpan.innerText = oldCount + addQ;
-            }
+            // MAJ compteur panier
+            fetch("/panier/count")
+              .then((res) => res.text())
+              .then((count) => {
+                const countSpan = document.getElementById("cart-count");
+                if (countSpan) {
+                  countSpan.innerText = count;
+                }
+              });
           }
         });
       });
