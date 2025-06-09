@@ -58,11 +58,11 @@ services:
   # Application principale CLI
   # -------------------------
   java-app:
-    container_name: magasin-app
+    container_name: lab1-magasin-cli-app
     build:
-      context: ./magasin
+      context: ./lab1-magasin-cli
       dockerfile: Dockerfile
-    image: magasin-app
+    image: lab1-magasin-cli-app
     depends_on:
       - db
     networks:
@@ -74,11 +74,11 @@ services:
   # -------------------------
   # Caisse 1
   # -------------------------
-  caisse1:
+  lab1-caisse1:
     build:
-      context: ./magasin
+      context: ./lab1-magasin-cli
       dockerfile: Dockerfile
-    container_name: caisse1
+    container_name: lab1-caisse1
     environment:
       CAISSE_ID: 1
     depends_on:
@@ -91,11 +91,11 @@ services:
   # -------------------------
   # Caisse 2
   # -------------------------
-  caisse2:
+  lab1-caisse2:
     build:
-      context: ./magasin
+      context: ./lab1-magasin-cli
       dockerfile: Dockerfile
-    container_name: caisse2
+    container_name: lab1-caisse2
     environment:
       CAISSE_ID: 2
     depends_on:
@@ -108,11 +108,11 @@ services:
   # -------------------------
   # Caisse 3
   # -------------------------
-  caisse3:
+  lab1-caisse3:
     build:
-      context: ./magasin
+      context: ./lab1-magasin-cli
       dockerfile: Dockerfile
-    container_name: caisse3
+    container_name: lab1-caisse3
     environment:
       CAISSE_ID: 3
     depends_on:
