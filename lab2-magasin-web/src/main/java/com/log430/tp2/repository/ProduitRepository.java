@@ -9,6 +9,6 @@ import com.log430.tp2.model.Produit;
 
 public interface ProduitRepository extends JpaRepository<Produit, Integer> {
     List<Produit> findByNomContainingIgnoreCase(String nom);
-
     List<Produit> findByCategorieContainingIgnoreCase(String categorie);
+    List<Produit> findByNomContainingIgnoreCaseAndCategorieContainingIgnoreCase(String nom, String categorie);
 }

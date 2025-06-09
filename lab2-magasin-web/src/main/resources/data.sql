@@ -1,3 +1,13 @@
+-- Drop dependent tables first to avoid foreign key constraint violations -
+DROP TABLE IF EXISTS retour_produit CASCADE;
+DROP TABLE IF EXISTS retour CASCADE;
+DROP TABLE IF EXISTS vente_produit CASCADE;
+DROP TABLE IF EXISTS vente CASCADE;
+
+-- Then drop the base tables
+DROP TABLE IF EXISTS produits CASCADE;
+DROP TABLE IF EXISTS employes CASCADE;
+
 -- Recreate table employes
 CREATE TABLE employes (
     id SERIAL PRIMARY KEY,
@@ -23,15 +33,15 @@ INSERT INTO employes (identifiant, nom) VALUES
 
 -- Insert produits
 INSERT INTO produits (categorie, nom, prix, quantite) VALUES 
-    ('Fruits','Banane',0.99,96),
-    ('Fruits','Fraise',1.99,42),
-    ('Fruits','Melon',3.99,22),
+    ('Fruits','Banane',0.99,100),
+    ('Fruits','Fraise',1.99,50),
+    ('Fruits','Melon',3.99,30),
     ('Legumes','Tomate',2.99,50),
-    ('Legumes','Concombre',0.99,72),
-    ('Legumes','Laitue',1.99,62),
-    ('Electroniques','TV',100.99,19),
-    ('Electroniques','PS5',300.99,42),
-    ('Electroniques','GTAVI',120.99,38),
+    ('Legumes','Concombre',0.99,75),
+    ('Legumes','Laitue',1.99,70),
+    ('Electroniques','TV',100.99,25),
+    ('Electroniques','PS5',300.99,50),
+    ('Electroniques','GTAVI',120.99,60),
     ('Vetements','Chandail',8.99,50),
     ('Vetements','Pantalon',10.99,50),
     ('Vetements','Manteau',250.99,90);

@@ -40,16 +40,27 @@ public class ProduitController {
         List<Produit> resultats;
 
         if (id != null) {
+            // Recherche par ID prioritaire
             Produit p = produitRepository.findById(id).orElse(null);
             resultats = (p != null) ? List.of(p) : List.of();
-        } else if (nom != null && !nom.isEmpty()) {
+        } else if (nom != null && !nom.trim().isEmpty() && categorie != null && !categorie.trim().isEmpty()) {
+            // nom + categorie
+            resultats = produitRepository.findByNomContainingIgnoreCaseAndCategorieContainingIgnoreCase(nom, categorie);
+        } else if (nom != null && !nom.trim().isEmpty()) {
+            // nom seul
             resultats = produitRepository.findByNomContainingIgnoreCase(nom);
-        } else if (categorie != null && !categorie.isEmpty()) {
+        } else if (categorie != null && !categorie.trim().isEmpty()) {
+            // categorie seule
             resultats = produitRepository.findByCategorieContainingIgnoreCase(categorie);
         } else {
+            // aucun filtre → tous les produits
             resultats = produitRepository.findAll();
         }
 
+        // Ajoute le booléen au modèle
+        model.addAttribute("aucunResultat", resultats.isEmpty());
+
+        // Utilise renderHome comme d’habitude
         return renderHome(model, resultats, false, new Produit());
     }
 

@@ -30,6 +30,10 @@
     </nav>
 
     <h1 class="mb-4 fw-bold">Produits disponibles</h1>
+    <div th:if="${aucunResultat}" class="alert alert-warning alert-dismissible fade show" role="alert">
+      <strong> Aucun produit trouvé</strong> pour les critères donnés.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
 
     <!-- Formulaire de création/modification produit -->
     <form th:action="@{${editing} ? '/produit/edit' : '/produit/add'}" th:object="${produitForm}" method="post"
@@ -61,11 +65,30 @@
       </div>
     </form>
 
-    <form th:action="@{/produit/search}" method="get" class="mb-3 d-flex gap-2">
-      <input type="text" name="nom" class="form-control" placeholder="Rechercher par nom" />
-      <input type="text" name="categorie" class="form-control" placeholder="Rechercher par catégorie" />
-      <button type="submit" class="btn btn-outline-primary">Rechercher</button>
+    <!-- Formulaire de recherche produit -->
+    <form action="/produit/search" method="get" class="row g-2 align-items-end mb-4">
+      <div class="col-md-2">
+        <label for="searchId" class="form-label visually-hidden">ID</label>
+        <input type="number" id="searchId" name="id" class="form-control" placeholder="ID" th:value="${param.id}" />
+      </div>
+      <div class="col-md-3">
+        <label for="searchNom" class="form-label visually-hidden">Nom</label>
+        <input type="text" id="searchNom" name="nom" class="form-control" placeholder="Nom du produit"
+          th:value="${param.nom}" />
+      </div>
+      <div class="col-md-3">
+        <label for="searchCategorie" class="form-label visually-hidden">Catégorie</label>
+        <input type="text" id="searchCategorie" name="categorie" class="form-control" placeholder="Catégorie"
+          th:value="${param.categorie}" />
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Rechercher</button>
+      </div>
+      <div class="col-md-2">
+        <a href="/produit/search" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+      </div>
     </form>
+
 
     <!-- Table des produits -->
     <div class="table-responsive">
