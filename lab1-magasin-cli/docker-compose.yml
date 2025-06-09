@@ -1,0 +1,135 @@
+# =============================================
+# Docker Compose - Usage Instructions 1st time
+#
+# Install Docker Compose (if needed):
+# sudo apt install docker-compose
+#
+# To build the image:
+# docker-compose build
+#
+# To run the application:
+# docker-compose up
+#
+# To run in detached mode:
+# docker-compose up -d
+#
+# To view container logs:
+# docker-compose logs -f
+# -------------------------------------------------
+# Docker Compose - Relaunch new project
+# 1. Supprimer les conteneurs arrêtés (donc l'ancien java-hello-app)
+#docker container prune -f
+#
+# 2. Supprimer les images obsolètes (optionnel mais utile pour éviter conflit d'image)
+#docker image prune -a -f
+#
+# 3. S’assurer d’être dans le dossier contenant ton docker-compose.yml
+#
+# 4. Rebuild ton projet 
+#docker-compose build
+#
+# 5. Lancer l'application
+#docker-compose up
+# =============================================
+
+version: "3.8"
+
+services:
+  # -------------------------
+  # Base de données PostgreSQL
+  # -------------------------
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin           # Nom d’utilisateur PostgreSQL
+      POSTGRES_PASSWORD: admin       # Mot de passe PostgreSQL
+      POSTGRES_DB: magasin           # Nom de la base à créer
+    volumes:
+      - pgdata:/var/lib/postgresql/data           # Permet le stockage des données de façon persistante dans PostgreSQL
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # Script de remplissage initial
+    ports:
+      - "5432:5432"                   # Exposition du port PostgreSQL
+    networks:
+      - magasin-net
+    restart: unless-stopped
+
+  # -------------------------
+  # Application principale CLI
+  # -------------------------
+  java-app:
+    container_name: lab1-magasin-cli-app
+    build:
+      context: ./lab1-magasin-cli
+      dockerfile: Dockerfile
+    image: lab1-magasin-cli-app
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    restart: unless-stopped
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+  # -------------------------
+  # Caisse 1
+  # -------------------------
+  lab1-caisse1:
+    build:
+      context: ./lab1-magasin-cli
+      dockerfile: Dockerfile
+    container_name: lab1-caisse1
+    environment:
+      CAISSE_ID: 1
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+  # -------------------------
+  # Caisse 2
+  # -------------------------
+  lab1-caisse2:
+    build:
+      context: ./lab1-magasin-cli
+      dockerfile: Dockerfile
+    container_name: lab1-caisse2
+    environment:
+      CAISSE_ID: 2
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+  # -------------------------
+  # Caisse 3
+  # -------------------------
+  lab1-caisse3:
+    build:
+      context: ./lab1-magasin-cli
+      dockerfile: Dockerfile
+    container_name: lab1-caisse3
+    environment:
+      CAISSE_ID: 3
+    depends_on:
+      - db
+    networks:
+      - magasin-net
+    stdin_open: true     # Permet l’interaction terminal
+    tty: true            # Évite la fermeture immédiate du conteneur
+
+# -------------------------
+# Volumes persistants
+# -------------------------
+volumes:
+  pgdata:    # Permet le stockage persistant de PostgreSQL
+
+# -------------------------
+# Réseau partagé
+# -------------------------
+networks:
+  magasin-net:
