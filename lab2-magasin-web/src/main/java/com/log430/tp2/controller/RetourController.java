@@ -34,7 +34,26 @@ public class RetourController {
     @GetMapping("/nouveau")
     public String formulaireRetour(@RequestParam(required = false) Integer venteId, Model model) {
         List<Vente> ventes = venteRepository.findAll();
-        model.addAttribute("ventes", ventes);
+        // Supprimer les ventes où tous les produits ont été retournés
+        List<Vente> ventesFiltrees = ventes.stream()
+                .filter(v -> {
+                    List<Object[]> retournees = retourRepository.findQuantitesRetourneesPourVente(v.getId());
+                    Map<Integer, Integer> quantitesRetournees = new HashMap<>();
+                    for (Object[] obj : retournees) {
+                        Integer produitId = (Integer) obj[0];
+                        Long qte = (Long) obj[1];
+                        quantitesRetournees.put(produitId, qte.intValue());
+                    }
+
+                    return v.getVenteProduits().stream()
+                            .anyMatch(vp -> {
+                                int dejaRetourne = quantitesRetournees.getOrDefault(vp.getProduit().getId(), 0);
+                                return vp.getQuantite() > dejaRetourne;
+                            });
+                })
+                .toList();
+
+        model.addAttribute("ventes", ventesFiltrees);
 
         if (venteId != null) {
             Vente vente = venteRepository.findById(venteId).orElse(null);
