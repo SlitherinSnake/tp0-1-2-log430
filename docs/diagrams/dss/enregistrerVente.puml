@@ -18,8 +18,10 @@ participant "VenteDAO" as VenteDAO
 database "PostgreSQL"
 
 ' === Début du scénario ===
-' L'employé choisit d'enregistrer une vente via le menu console
+' L’utilisateur interagit avec la console pour choisir l'option d'enregistrer une vente.
 Employe -> Console : sélectionne "Enregistrer une vente" \n dans l'interface console
+
+' La console appelle le contrôleur avec un Scanner comme paramètre
 Console -> Controller : enregistrerVente(scanner)
 
 ' === Étape 1 : Identification de l'employé ===

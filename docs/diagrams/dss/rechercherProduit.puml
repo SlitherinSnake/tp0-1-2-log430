@@ -14,11 +14,11 @@ participant "ProduitDAO" as DAO
 database "PostgreSQL"
 
 ' === Début du scénario ===
-Employe -> Console : saisit l'option "rechercher un produit" \n du menu dans la console
-' L’utilisateur interagit avec la console pour choisir un type de recherche (ID, nom, ou catégorie)
+' L’utilisateur interagit avec la console pour choisir l'option de recherche de produit (ID, nom, ou catégorie)
+Employe -> Console : sélectionne "Rechercher un produit" \n dans l'interface console
 
+' La console appelle le contrôleur avec un Scanner comme paramètre
 Console -> Controller : rechercherProduit(scanner)
-' La console appelle la méthode du contrôleur avec un Scanner en paramètre
 
 ' === Cas 1 : recherche par identifiant ===
 alt recherche par ID

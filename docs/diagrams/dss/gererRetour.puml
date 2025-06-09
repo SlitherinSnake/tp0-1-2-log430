@@ -18,11 +18,11 @@ participant "RetourDAO" as RetourDAO
 database "PostgreSQL"
 
 ' === Début du scénario ===
+'  L’utilisateur interagit avec la console pour choisir l'option de retour de produits
 Employe -> Console : sélectionne "Gérer un retour" \n dans l'interface console
-' L'utilisateur choisit dans le menu de traiter un retour de produits
 
-Console -> Controller : gererRetour(scanner)
 ' La console appelle le contrôleur avec un Scanner comme paramètre
+Console -> Controller : gererRetour(scanner)
 
 ' === Étape 1 : Identification de la vente concernée ===
 Controller -> VenteDAO : rechercherParId(venteId)
