@@ -44,6 +44,16 @@ J'ai pris l'architecture MVC, car je suis familier avec. Aussi elle offre une s�
 | RetourDAO     | Gestion des retours et ajustement du stock       |
 | HibernateUtil | Initialise les sessions Hibernate                |
 
+### Organisation des modules (Vue d’implémentation)
+Organisation en couches selon le modèle MVC, avec séparation claire des responsabilités :
+
+* Présentation (view) : affichage console, saisie de l'utilisateur
+* Contrôleur (controller) : coordination des interactions entre vue et logique métier
+* Logique métier (service) : traitement des règles d’affaires (calculs, validation)
+* Accès aux données (dao) : manipulation des entités via Hibernate/JPA
+
+![di](https://img.plantuml.biz/plantuml/svg/XLB1IiGm4Bq7yW_3dXJPekZ9WwnKZykAXzv3CvHWaYd9L14HzXyy-Gb-Xt-oNsAsAxPrItiAysRclJUFh2Ahm8spKh1XYr0q27gt_JIkjjzV3ZqhDkHXj_s0JQYKD_40Q8pWI3SslIVh8eSpkBlTd4eXHQtA9rKXB4focQNgwl8yu_eYUpRuie0tAG1AgsA4d7maYqN2fNYVMYt9So1hCGm8rgfIqVZyhpj3amoZ7J0yX7I3uGueqidObO_8r8Ikla-vq2lEw6X5Ooefe7z20-IWDO1-vLgiLUn51ilbpN42S0qc4GTLxQ-IudXWlzOtD3xHsHllzyoE3_IjpzYOz31jO4PTYXLwtVxl7m00)
+
 ## 5.3. Niveau 3
 
 Ce niveau de détail n’est pas nécessaire dans notre contexte. Notre application repose sur une architecture à deux couches (client-console et base de données). Aucun sous-bloc supplémentaire n’est requis à ce stade.
