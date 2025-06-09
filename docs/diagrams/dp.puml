@@ -1,15 +1,17 @@
 @startuml
 title Diagramme de déploiement – Architecture 2-tier
 
-node "Machine virtuelle (VM locale)" {
-  
-  node "Application POS (Java Console)" {
-    component "Console App\n(Model + View + Controller)"
-  }
-
-  database "Base de données SQLite\n(.db local)" as SQLite
+' === Noeud client (VM locale ou PC) ===
+node "Machine cliente (VM locale)" {
+  component "Application POS\n(Java Console - MVC)"
 }
 
-"Console App\n(Model + View + Controller)" --> SQLite : Accès via ORM (Hibernate / JPA)
+' === Noeud serveur BD (PostgreSQL) ===
+node "Machine serveur (Docker)" {
+  database "Base de données PostgreSQL"
+}
+
+' === Connexion ORM via Hibernate/JPA ===
+"Application POS\n(Java Console - MVC)" --> "Base de données PostgreSQL" : Accès via ORM (Hibernate / JPA)
 
 @enduml

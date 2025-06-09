@@ -50,9 +50,9 @@ L'application doit permettre à un employé de magasin d’effectuer les opérat
 #### Diagrammes de déploiement :
 * Architecture 2-tier :
     * Client : Application Java locale (console)
-    * Serveur : Base de données SQLite (locale)
+    * Serveur : Base de données PostgreSQL (locale ou docker)
     
-    ![dd](https://img.plantuml.biz/plantuml/svg/ZL3DIiD04Bu7yWuVEIL853nwa4OzI36qMkZ9osGpwCB-XCss7aJm7Nm9-nnv4v_4sRRYjR2x0_lzpSniZ1JYnfeyYpeQnfscbq3MCdevqsumNhDb5_7p-OKcg5STMSLDO5pMKNF8ipnpNiX5Im8wnbQB8ninAzSjZ5Tak2hmdcT0kWTsCmn6AuhQEomNAvHpsX9klHlzFnrGtWxUfVpYY46KpwvinSNW36lDRr84ZC5BQAYAfFn8VG4zHUfebBoRzAQPl7FJZaUi7Xza574wxxj3bv9AV_zvjdSuFHHrVNtKuWgDKjFtAAiWB9vQbFUwu-18i0lCbqsLl6Vi-ltcVm40)
+    ![dd](https://img.plantuml.biz/plantuml/svg/ZP5DIiD068RtWTpX9HkJHIYu52fDsuKKOwE5hjnC9nzrC9alp4oA889ty1Bs7Bs99t6cMlyG4OQi7jxdcSd8Ec5StpPnv9Hh25CbraQqBQ7sPxVj6bRKadPuUNn2OUIDSYHTRmZ7kLDauYYEZZ0S3d71rDUGZGfqkYpHi1H-adjKaomWSQJPpoQby3EQtbdw0cS9xkC8aDnshCDGKdHTewHmYZMg-U9QfpEn4PYmjkpNSvJBIPR4qSFF4ajcGxt1U8gqOklMXXQNvx-67D1qolAMpA6Y5awiXFNWE7p3Yx3MkorPV0v-L_iiJNUXTNvLOgC4pjIAZ1QE1hEgU9F_yqx8yzE_rJX18UNksUvDmPX-w3205sOXRKIwtl_ZLm00)
 
 ### iv. Vue d’implémentation
 Organisation en couches selon le modèle MVC, avec séparation claire des responsabilités :
