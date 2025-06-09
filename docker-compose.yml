@@ -1,5 +1,5 @@
 # =============================================
-# Docker Compose - Usage Instructions 1st time
+# Docker Compose - Usage Instructions – Lab 2 (Web)
 #
 # Install Docker Compose (if needed):
 # sudo apt install docker-compose
@@ -17,19 +17,19 @@
 # docker-compose logs -f
 # -------------------------------------------------
 # Docker Compose - Relaunch new project
-# 1. Supprimer les conteneurs arrêtés (donc l'ancien java-hello-app)
-#docker container prune -f
+# 1. Supprimer les conteneurs arrêtés (ex: ancien app web)
+# docker container prune -f
 #
 # 2. Supprimer les images obsolètes (optionnel mais utile pour éviter conflit d'image)
-#docker image prune -a -f
+# docker image prune -a -f
 #
-# 3. S’assurer d’être dans le dossier contenant ton docker-compose.yml
+# 3. S’assurer d’être dans le dossier contenant ce fichier docker-compose.yml
 #
 # 4. Rebuild ton projet 
-#docker-compose build
+# docker-compose build
 #
 # 5. Lancer l'application
-#docker-compose up
+# docker-compose up
 # =============================================
 
 version: "3.8"
@@ -46,81 +46,33 @@ services:
       POSTGRES_PASSWORD: admin       # Mot de passe PostgreSQL
       POSTGRES_DB: magasin           # Nom de la base à créer
     volumes:
-      - pgdata:/var/lib/postgresql/data           # Permet le stockage des données de façon persistante dans PostgreSQL
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # Script de remplissage initial
+      - pgdata:/var/lib/postgresql/data                         # Permet le stockage des données de façon persistante
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro # Script SQL d'initialisation optionnel
     ports:
-      - "5432:5432"                   # Exposition du port PostgreSQL
+      - "5432:5432"                                              # Exposition du port PostgreSQL pour connexion locale
     networks:
       - magasin-net
     restart: unless-stopped
 
   # -------------------------
-  # Application principale CLI
+  # Application principale Web (Spring Boot)
   # -------------------------
-  java-app:
-    container_name: lab1-magasin-cli-app
+  app:
+    container_name: magasin-web-app
     build:
-      context: ./lab1-magasin-cli
-      dockerfile: Dockerfile
-    image: lab1-magasin-cli-app
+      context: .                 # Répertoire du Dockerfile de l’application Spring Boot
+      dockerfile: Dockerfile    # Nom du Dockerfile (par défaut)
     depends_on:
-      - db
+      - db                      # S'assure que la BD est prête avant de démarrer l'app
+    ports:
+      - "8080:8080"             # Exposition du port HTTP de l'application Web
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/magasin
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
     networks:
       - magasin-net
     restart: unless-stopped
-    stdin_open: true     # Permet l’interaction terminal
-    tty: true            # Évite la fermeture immédiate du conteneur
-
-  # -------------------------
-  # Caisse 1
-  # -------------------------
-  lab1-caisse1:
-    build:
-      context: ./lab1-magasin-cli
-      dockerfile: Dockerfile
-    container_name: lab1-caisse1
-    environment:
-      CAISSE_ID: 1
-    depends_on:
-      - db
-    networks:
-      - magasin-net
-    stdin_open: true     # Permet l’interaction terminal
-    tty: true            # Évite la fermeture immédiate du conteneur
-
-  # -------------------------
-  # Caisse 2
-  # -------------------------
-  lab1-caisse2:
-    build:
-      context: ./lab1-magasin-cli
-      dockerfile: Dockerfile
-    container_name: lab1-caisse2
-    environment:
-      CAISSE_ID: 2
-    depends_on:
-      - db
-    networks:
-      - magasin-net
-    stdin_open: true     # Permet l’interaction terminal
-    tty: true            # Évite la fermeture immédiate du conteneur
-
-  # -------------------------
-  # Caisse 3
-  # -------------------------
-  lab1-caisse3:
-    build:
-      context: ./lab1-magasin-cli
-      dockerfile: Dockerfile
-    container_name: lab1-caisse3
-    environment:
-      CAISSE_ID: 3
-    depends_on:
-      - db
-    networks:
-      - magasin-net
-    stdin_open: true     # Permet l’interaction terminal
-    tty: true            # Évite la fermeture immédiate du conteneur
 
 # -------------------------
 # Volumes persistants
