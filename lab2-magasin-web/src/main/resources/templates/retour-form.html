@@ -10,6 +10,15 @@
 <body class="bg-light">
   <div class="container py-4">
     <h1 class="mb-4 fw-bold">Retour de Produits</h1>
+    <div th:if="${retourErreur}" class="alert alert-warning alert-dismissible fade show" role="alert">
+      <strong>Erreur :</strong> vous devez retourner au moins un produit avec une quantité supérieure à zéro.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    <div th:if="${param.erreur} == 'deja_retournee'" class="alert alert-danger alert-dismissible fade show"
+      role="alert">
+      <strong>Erreur :</strong> Cette vente a déjà été retournée. Vous ne pouvez pas faire un second retour.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
 
     <!-- Sélection d'une vente -->
     <form method="get" th:action="@{/retour/nouveau}" class="mb-4">
@@ -18,8 +27,8 @@
         <select name="venteId" id="venteId" class="form-select" required>
           <option value="" disabled selected>-- Choisir une vente --</option>
           <option th:each="v : ${ventes}" th:value="${v.id}"
-                  th:text="'Vente #' + ${v.id} + ' - Employé: ' + ${v.employe.nom}"
-                  th:selected="${vente != null and v.id == vente.id}">
+            th:text="'Vente #' + ${v.id} + ' - Employé: ' + ${v.employe.nom}"
+            th:selected="${vente != null and v.id == vente.id}">
           </option>
         </select>
         <button type="submit" class="btn btn-outline-primary">Afficher</button>
@@ -45,15 +54,15 @@
               <td th:text="${vp.quantite}"></td>
               <td>
                 <input type="hidden" name="produitIds" th:value="${vp.produit.id}" />
-                <input type="number" name="quantites" class="form-control"
-                       th:attr="max=${vp.quantite}, min=0" value="0" />
+                <input type="number" name="quantites" class="form-control" th:attr="max=${vp.quantite}, min=0"
+                  value="0" />
               </td>
             </tr>
           </tbody>
         </table>
 
         <button type="submit" class="btn btn-success">Valider le retour</button>
-        <a th:href="@{/'/'}" class="btn btn-secondary">Annuler</a>
+        <a th:href="@{/}" class="btn btn-secondary">Annuler</a>
       </form>
     </div>
   </div>
