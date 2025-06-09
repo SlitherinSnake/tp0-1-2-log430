@@ -1,5 +1,5 @@
 # Nom du flow
-name: CI/CD Pipeline – Magasin
+name: CI/CD Pipeline – Magasin Cli
 
 # Nom de la branch push sur et pull
 on:
@@ -9,8 +9,8 @@ on:
     branches: [ main ]
 
 env:
-  # Repo Docker Hub : <SlitherinSnake>/magasin-app
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/magasin-app
+  # Repo Docker Hub : <SlitherinSnake>/lab1-magasin-cli-app
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab1-magasin-cli-app
 
 jobs:
 # ──────────────────────────── LINT ────────────────────────────
@@ -25,7 +25,7 @@ jobs:
         with: { java-version: '21', distribution: 'temurin' }
 
       - name: Lint (Run Checkstyle)
-        working-directory: magasin
+        working-directory: lab1-magasin-cli
         run: mvn --batch-mode -q verify
 
 # ──────────────────────────── TEST ────────────────────────────
@@ -42,7 +42,7 @@ jobs:
 
       # Le POM est dans le dossier magasin/
       - name: Run Maven tests (module magasin)
-        working-directory: magasin
+        working-directory: lab1-magasin-cli
         run: mvn --batch-mode clean test
 
 # ──────────────────────────── BUILD DOCKER ────────────────────────────
@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v3
 
         # Rebuild l'image
-      - name: Build magasin-app image
+      - name: Build image for app only
         run: docker compose -f docker-compose.yml build java-app
 
       # Authentification Docker Hub
@@ -78,7 +78,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}  
 
       # Tag + push seulement magasin-app
-      - name: Tag & Push magasin-app  (Docker image)
+      - name: Tag & Push lab1-magasin-cli-app  (Docker image)
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
           # L’image locale s’appelle « magasin-app », ceci a été défini dans le docker-compose.yml
