@@ -1,0 +1,9 @@
+-- Drop dependent tables first to avoid foreign key constraint violations -
+DROP TABLE IF EXISTS retour_produit CASCADE;
+DROP TABLE IF EXISTS retour CASCADE;
+DROP TABLE IF EXISTS vente_produit CASCADE;
+DROP TABLE IF EXISTS vente CASCADE;
+
+-- Then drop the base tables
+DROP TABLE IF EXISTS produits CASCADE;
+DROP TABLE IF EXISTS employes CASCADE;

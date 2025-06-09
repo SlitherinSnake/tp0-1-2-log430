@@ -19,6 +19,13 @@
             Voir mon panier
           </a>
         </div>
+        <div class="ms-2">
+          <a class="btn btn-warning position-relative" th:href="@{/retour}">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Faire un retour
+          </a>
+        </div>
+
       </div>
     </nav>
 
@@ -54,33 +61,11 @@
       </div>
     </form>
 
-    <form th:action="@{/panier/valider}" method="post" class="mb-3">
-      <label for="employe" class="form-label">Employé responsable :</label>
-      <select name="employeId" id="employe" class="form-select" required>
-        <option value="" disabled selected>Choisir un employé</option>
-        <option th:each="e : ${employes}" th:value="${e.id}" th:text="${e.nom}"></option>
-      </select>
-      <button type="submit" class="btn btn-primary mt-2">Valider la vente</button>
-    </form>
-
-    <form th:action="@{/produit/search}" method="get" class="row mb-3">
-      <div class="col-md-4">
-        <input type="text" name="nom" class="form-control" placeholder="Rechercher par nom">
-      </div>
-      <div class="col-md-4">
-        <input type="text" name="categorie" class="form-control" placeholder="Rechercher par catégorie">
-      </div>
-      <div class="col-md-4">
-        <button type="submit" class="btn btn-outline-primary w-100">Rechercher</button>
-      </div>
-    </form>
-
     <form th:action="@{/produit/search}" method="get" class="mb-3 d-flex gap-2">
       <input type="text" name="nom" class="form-control" placeholder="Rechercher par nom" />
       <input type="text" name="categorie" class="form-control" placeholder="Rechercher par catégorie" />
       <button type="submit" class="btn btn-outline-primary">Rechercher</button>
     </form>
-
 
     <!-- Table des produits -->
     <div class="table-responsive">

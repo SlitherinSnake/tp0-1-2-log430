@@ -20,16 +20,16 @@ public class ProduitController {
     @Autowired
     private ProduitRepository produitRepository;
 
+    private String renderHome(Model model, List<Produit> produits, boolean editing, Produit produitForm) {
+        model.addAttribute("produits", produits);
+        model.addAttribute("produitForm", produitForm != null ? produitForm : new Produit());
+        model.addAttribute("editing", editing);
+        return "home";
+    }
+
     @GetMapping("/")
     public String listProduits(Model model) {
-        if (!model.containsAttribute("produitForm")) {
-            model.addAttribute("produitForm", new Produit());
-        }
-        if (!model.containsAttribute("editing")) {
-            model.addAttribute("editing", false);
-        }
-        model.addAttribute("produits", produitRepository.findAll());
-        return "home";
+        return renderHome(model, produitRepository.findAll(), false, new Produit());
     }
 
     @GetMapping("/produit/search")
@@ -40,23 +40,17 @@ public class ProduitController {
         List<Produit> resultats;
 
         if (id != null) {
-            // Recherche par ID (exact)
-            Produit produit = produitRepository.findById(id).orElse(null);
-            resultats = (produit != null) ? List.of(produit) : List.of();
+            Produit p = produitRepository.findById(id).orElse(null);
+            resultats = (p != null) ? List.of(p) : List.of();
         } else if (nom != null && !nom.isEmpty()) {
-            // Recherche par nom (partiel)
             resultats = produitRepository.findByNomContainingIgnoreCase(nom);
         } else if (categorie != null && !categorie.isEmpty()) {
-            // Recherche par catégorie (partiel)
             resultats = produitRepository.findByCategorieContainingIgnoreCase(categorie);
         } else {
             resultats = produitRepository.findAll();
         }
 
-        model.addAttribute("produits", resultats);
-        model.addAttribute("produitForm", new Produit());
-        model.addAttribute("editing", false);
-        return "home";
+        return renderHome(model, resultats, false, new Produit());
     }
 
     @PostMapping("/produit/add")
@@ -68,10 +62,7 @@ public class ProduitController {
     @GetMapping("/produit/edit/{id}")
     public String showEditForm(@PathVariable int id, Model model) {
         Produit produit = produitRepository.findById(id).orElse(null);
-        model.addAttribute("produitForm", produit);
-        model.addAttribute("editing", true);
-        model.addAttribute("produits", produitRepository.findAll());
-        return "home";
+        return renderHome(model, produitRepository.findAll(), true, produit);
     }
 
     @PostMapping("/produit/edit")
