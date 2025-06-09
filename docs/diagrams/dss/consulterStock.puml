@@ -1,18 +1,39 @@
 @startuml
 title DSS – Consulter le stock
 
+' === Acteurs et composants impliqués ===
+' L'utilisateur humain (l'employé)
 actor Employe
-participant "Console (View)" as Console
-participant "ConsoleController" as Controller
+' Interface console qui lit et affiche les produits
+participant "Console (Scanner)" as Console
+' Contrôleur principal qui orchestre la logique
+participant "MagasinController" as Controller
+' DAO qui accède aux produits en base
 participant "ProduitDAO" as DAO
-database "SQLite"
+' Base de données relationnelle (via Hibernate)
+database "PostgreSQL"
 
-Employe -> Console : demanderStock(idProduit : int)
-Console -> Controller : consulterStock(idProduit : int)
-Controller -> DAO : consulterStock(idProduit : int)
-DAO -> SQLite : via JPA/Hibernate
-SQLite -> DAO : retourne la quantité disponible
-DAO --> Controller : stock : int
-Controller --> Console : stock : int
-Console --> Employe : afficherStock(stock)
+' === Début du scénario ===
+' L’utilisateur interagit avec la console pour choisir l'option de consulter le stock
+Employe -> Console : sélectionne "Consulter le stock" \n depuis le menu principal
+
+' La console appelle le contrôleur avec un Scanner comme paramètre
+Console -> Controller : consulterStock(scanner)
+
+' === Récupération des produits ===
+Controller -> DAO : afficherListeProduits()
+' Le contrôleur demande au DAO tous les produits en stock
+
+DAO -> PostgreSQL : SELECT * \n FROM produits
+' Hibernate effectue une requête SQL pour récupérer tous les produits
+
+PostgreSQL --> DAO : List<Produit>
+DAO --> Controller : List<Produit>
+
+' === Affichage des produits ===
+Controller --> Console : afficher tableau formaté \n avec ID, Catégorie, Nom, Prix, Quantité
+' Le contrôleur formate l’affichage et transmet les données à la console
+
+Console --> Employe : affiche le tableau du stock
+' L'utilisateur voit la liste complète du stock en console
 @enduml
