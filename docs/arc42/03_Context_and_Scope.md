@@ -20,7 +20,7 @@ Les utilisateurs utilisent un CLI pour intéragir avec l'application.
 L’application s’exécute dans un environnement local, à l’intérieur d’une machine virtuelle. Elle suit une architecture client/serveur à deux niveaux (2-tier) :
 
 - Le **client** est une application Java console.
-- Le **serveur** est représenté par une base de données locale SQLite, accédée directement via Hibernate.
+- Le **serveur** est représenté par une base de données locale PostgreSQL, accédée directement via Hibernate.
 
-La communication se fait entièrement en mémoire locale. Hibernate est l'ORM utilisé pour mapper les entités métiers vers ma base de données relationnelle (SQLite).
+La communication se fait entièrement en mémoire locale. Hibernate est l'ORM utilisé pour mapper les entités métiers vers ma base de données relationnelle (PostgreSQL).
 
