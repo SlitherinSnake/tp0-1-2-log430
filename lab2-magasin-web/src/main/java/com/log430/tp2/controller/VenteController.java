@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 
+import com.log430.tp2.model.Magasin;
 import com.log430.tp2.model.Produit;
 import com.log430.tp2.model.Vente;
 import com.log430.tp2.repository.EmployeRepository;
+import com.log430.tp2.repository.MagasinRepository;
 import com.log430.tp2.repository.ProduitRepository;
 import com.log430.tp2.repository.VenteRepository;
 
@@ -28,6 +30,8 @@ public class VenteController {
     private EmployeRepository employeRepository;
     @Autowired
     private VenteRepository venteRepository;
+    @Autowired
+    private MagasinRepository magasinRepository;
 
     // Constructeur avec injection de dépendance explicite pour ProduitRepository
     public VenteController(ProduitRepository produitRepository) {
@@ -44,8 +48,10 @@ public class VenteController {
     }
 
     /**
-     * Affiche la page d’accueil du système de vente, avec tous les produits et employés.
-     * L’objet vente est injecté dans le modèle automatiquement (grâce à @SessionAttributes).
+     * Affiche la page d’accueil du système de vente, avec tous les produits et
+     * employés.
+     * L’objet vente est injecté dans le modèle automatiquement (grâce
+     * à @SessionAttributes).
      */
     @GetMapping("/ventes")
     public String accueil(Model model, @ModelAttribute("vente") Vente vente) {
@@ -66,13 +72,19 @@ public class VenteController {
     public String showPanier(Model model, @ModelAttribute("vente") Vente vente) {
         model.addAttribute("items", vente.getItems());
         model.addAttribute("total", vente.getMontantTotal());
+
+        // Injecte ici la liste des employés disponibles dans le formulaire
         model.addAttribute("employes", employeRepository.findAll());
+
+        // Injecte ici la liste des magasins disponibles dans le formulaire
+        model.addAttribute("magasins", magasinRepository.findAll());
         return "panier";
     }
 
     /**
      * Ajoute un produit au panier via un appel AJAX.
-     * Ne provoque pas de redirection, retourne simplement le nombre d'articles dans le panier.
+     * Ne provoque pas de redirection, retourne simplement le nombre d'articles dans
+     * le panier.
      */
     @PostMapping("/panier/add")
     public ResponseEntity<?> addToVente(@RequestParam int produitId, @RequestParam(defaultValue = "1") int quantite,
@@ -121,11 +133,14 @@ public class VenteController {
      * Affiche ensuite la facture.
      */
     @PostMapping("/panier/valider")
-    public String validerAchat(@RequestParam int employeId, @ModelAttribute("vente") Vente vente, SessionStatus status,
+    public String validerAchat(@RequestParam int employeId, @RequestParam int magasinId, @ModelAttribute("vente") Vente vente, SessionStatus status,
             Model model) {
 
         // Associer un employé à la vente
         employeRepository.findById(employeId).ifPresent(vente::setEmploye);
+
+        // Associer le magasin
+        magasinRepository.findById(magasinId).ifPresent(vente::setMagasin);
 
         // 1. Mise à jour des stocks : on diminue le stock de chaque produit vendu
         vente.getItems().forEach(ligne -> {
@@ -135,7 +150,7 @@ public class VenteController {
             produitRepository.save(produit); // sauvegarder les modifications
         });
 
-        // 2. Recalculer le total de la vente 
+        // 2. Recalculer le total de la vente
         vente.calculerMontantTotal();
 
         // 3. Ajouter la date si elle est absente

@@ -63,10 +63,18 @@
                 <button class="btn btn-warning" type="submit">Vider le panier</button>
             </form>
             <form th:action="@{/panier/valider}" method="post" class="mt-3">
+                <!-- Champ pour sélectionner l'employé associé à la vente -->
                 <div class="mb-3">
                     <label for="employeId" class="form-label fw-bold">Sélectionnez un employé</label>
                     <select name="employeId" id="employeId" class="form-select" required>
                         <option th:each="emp : ${employes}" th:value="${emp.id}" th:text="${emp.nom}">Employé</option>
+                    </select>
+                </div>
+                <!-- Champ pour sélectionner le magasin associé à la vente -->
+                <div class="mb-3">
+                    <label for="magasinId" class="form-label fw-bold">Sélectionnez un magasin</label>
+                    <select name="magasinId" id="magasinId" class="form-select" required>
+                        <option th:each="mag : ${magasins}" th:value="${mag.id}" th:text="${mag.nom}">Magasin</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-success">
