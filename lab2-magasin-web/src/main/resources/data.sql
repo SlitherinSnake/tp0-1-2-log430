@@ -39,11 +39,14 @@ INSERT INTO employes (identifiant, nom) VALUES
     ('emp004','Jennifer');
 
 -- Insérer un magasin de test (Maison Mère)
-INSERT INTO magasin (id, nom, quartier) VALUES (1, 'Magasin A', 'Centre-ville')
-    ON CONFLICT (id) DO NOTHING;
+INSERT INTO magasin (id, nom, quartier) VALUES
+    (1, 'Magasin A', 'Centre-ville'),
+    (2, 'Magasin B', 'Vietnam'),
+    (3, 'Magasin C', 'Paris');
 
 -- Mise à jour des ventes existantes pour lier au magasin par défaut
 UPDATE ventes SET magasin_id = 1 WHERE magasin_id IS NULL;
+
 
 -- Insert produits
 INSERT INTO produits (categorie, nom, prix, quantite) VALUES 
