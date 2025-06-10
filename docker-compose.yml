@@ -59,7 +59,7 @@ services:
   app:
     container_name: magasin-web-app
     build:
-      context: ./lab2-magasin-web/Dockerfile    # Répertoire du Dockerfile de l’application Spring Boot
+      context: ./lab2-magasin-web    # Répertoire du Dockerfile de l’application Spring Boot
       dockerfile: Dockerfile    # Nom du Dockerfile (par défaut)
     depends_on:
       - db                      # S'assure que la BD est prête avant de démarrer l'app
