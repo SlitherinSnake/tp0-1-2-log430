@@ -68,7 +68,7 @@ jobs:
 
         # Rebuild l'image
       - name: Build image for app only
-        run: docker compose -f docker-compose.yml build java-app
+        run: docker compose -f docker-compose.yml build app
 
       # Authentification Docker Hub
       - name: Log in to DockerHub
@@ -82,7 +82,7 @@ jobs:
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
           # L’image locale s’appelle « magasin-app », ceci a été défini dans le docker-compose.yml
-          docker tag magasin-app $IMAGE_NAME:latest
-          docker tag magasin-app $IMAGE_NAME:$DATE_TAG
+          docker tag magasin-web-app $IMAGE_NAME:latest
+          docker tag magasin-web-app $IMAGE_NAME:$DATE_TAG
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$DATE_TAG
