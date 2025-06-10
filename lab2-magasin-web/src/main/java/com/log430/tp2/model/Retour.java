@@ -14,8 +14,8 @@ public class Retour {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
 
+    private int id;
     private LocalDate dateRetour;
 
     // Plusieurs retours peuvent être liés à une seule vente
@@ -39,8 +39,7 @@ public class Retour {
     private List<RetourProduit> retourProduits = new java.util.ArrayList<>();
 
     // Constructeur par défaut requis par JPA
-    public Retour() {
-    }
+    public Retour() { }
 
     // Constructeur avec paramètres pour instancier un retour
     public Retour(LocalDate dateRetour, Vente vente, Employe employe, List<RetourProduit> retourProduits) {
@@ -50,53 +49,30 @@ public class Retour {
         this.retourProduits = retourProduits;
     }
 
+    // Ajoute un produit au retour avec la quantité spécifiée
+    // Crée un nouvel objet RetourProduit lié à ce retour, au produit donné, et à la quantité à retourner
+    // L'objet est ensuite ajouté à la liste des produits retournés
     public void ajouterProduit(Produit produit, int quantite) {
         retourProduits.add(new RetourProduit(this, produit, quantite));
     }
 
     // Getters / Setters
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
 
-    public LocalDate getDateRetour() {
-        return dateRetour;
-    }
+    public LocalDate getDateRetour() { return dateRetour; }
+    public void setDateRetour(LocalDate dateRetour) { this.dateRetour = dateRetour; }
 
-    public void setDateRetour(LocalDate dateRetour) {
-        this.dateRetour = dateRetour;
-    }
+    public Vente getVente() { return vente; }
+    public void setVente(Vente vente) { this.vente = vente; }
 
-    public Vente getVente() {
-        return vente;
-    }
+    public Employe getEmploye() { return employe; }
+    public void setEmploye(Employe employe) { this.employe = employe; }
 
-    public void setVente(Vente vente) {
-        this.vente = vente;
-    }
-
-    public Employe getEmploye() {
-        return employe;
-    }
-
-    public void setEmploye(Employe employe) {
-        this.employe = employe;
-    }
-
-    public List<RetourProduit> getProduitsRetournes() {
-        return retourProduits;
-    }
-
-    public void setProduitsRetournes(List<RetourProduit> retourProduits) {
-        this.retourProduits = retourProduits;
-    }
+    public List<RetourProduit> getProduitsRetournes() { return retourProduits; }
+    public void setProduitsRetournes(List<RetourProduit> retourProduits) { this.retourProduits = retourProduits; }
 
     @Override
     public String toString() {
-        return "Retour{id=" + id +
-                ", dateRetour=" + dateRetour +
-                ", vente=" + vente +
-                ", employe=" + employe +
-                ", produitsRetournes=" + retourProduits + "}";
+        return "Retour{id=" + id + ", dateRetour=" + dateRetour + ", vente=" + vente + ", employe=" + employe + ", produitsRetournes=" + retourProduits + "}";
     }
 }

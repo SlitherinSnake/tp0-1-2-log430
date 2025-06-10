@@ -14,6 +14,7 @@ public class VenteProduit {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private int id;
 
     // Plusieurs venteProduit peuvent être liés à une seule vente
@@ -31,12 +32,10 @@ public class VenteProduit {
     @JoinColumn(name = "produit_id")
 
     private Produit produit;
-
     private int quantite;
 
     // Constructeur par défaut requis par JPA
-    public VenteProduit() {
-    }
+    public VenteProduit() { }
 
     // Constructeur avec paramètres pour instancier une VenteProduit
     public VenteProduit(Vente vente, Produit produit, int quantite) {
@@ -44,44 +43,24 @@ public class VenteProduit {
         this.produit = produit;
         this.quantite = quantite;
     }
-
-    public double getSousTotal() {
-        return produit.getPrix() * quantite;
-    }
+    
+    // Calcule le sous-total pour un produit retourné ou vendu
+    // Multiplie le prix unitaire du produit par la quantité concernée
+    // Retourne le montant total partiel pour cet item
+    public double getSousTotal() { return produit.getPrix() * quantite; }
 
     // Getters / Setters
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
 
-    public Vente getVente() {
-        return vente;
-    }
+    public Vente getVente() { return vente; }
+    public void setVente(Vente vente) { this.vente = vente; }
 
-    public void setVente(Vente vente) {
-        this.vente = vente;
-    }
+    public Produit getProduit() { return produit; }
+    public void setProduit(Produit produit) { this.produit = produit; }
 
-    public Produit getProduit() {
-        return produit;
-    }
-
-    public void setProduit(Produit produit) {
-        this.produit = produit;
-    }
-
-    public int getQuantite() {
-        return quantite;
-    }
-
-    public void setQuantite(int quantite) {
-        this.quantite = quantite;
-    }
+    public int getQuantite() { return quantite; }
+    public void setQuantite(int quantite) { this.quantite = quantite; }
 
     @Override
-    public String toString() {
-        return "VenteProduit{id=" + id +
-                ", produit=" + produit.getNom() +
-                ", quantite=" + quantite + "}";
-    }
+    public String toString() { return "VenteProduit{id=" + id + ", produit=" + produit.getNom() + ", quantite=" + quantite + "}"; }
 }

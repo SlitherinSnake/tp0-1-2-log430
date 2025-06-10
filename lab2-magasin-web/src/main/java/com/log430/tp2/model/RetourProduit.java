@@ -12,6 +12,7 @@ public class RetourProduit {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private int id;
 
     // Plusieurs retourProduit peuvent être liés à un seul retour
@@ -31,9 +32,7 @@ public class RetourProduit {
     private int quantite;
 
     // Constructeur par défaut requis par JPA
-    public RetourProduit() {
-
-    }
+    public RetourProduit() { }
 
     // Constructeur avec paramètres pour instancier un RetourProduit
     public RetourProduit(Retour retour, Produit produit, int quantite) {
@@ -43,39 +42,18 @@ public class RetourProduit {
     }
 
     // Getters / Setters
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
 
-    public Retour getRetour() {
-        return retour;
-    }
+    public Retour getRetour() { return retour; }
+    public void setRetour(Retour retour) { this.retour = retour; }
 
-    public void setRetour(Retour retour) {
-        this.retour = retour;
-    }
+    public Produit getProduit() { return produit; }
+    public void setProduit(Produit produit) { this.produit = produit; }
 
-    public Produit getProduit() {
-        return produit;
-    }
-
-    public void setProduit(Produit produit) {
-        this.produit = produit;
-    }
-
-    public int getQuantite() {
-        return quantite;
-    }
-
-    public void setQuantite(int quantite) {
-        this.quantite = quantite;
-    }
+    public int getQuantite() { return quantite; }
+    public void setQuantite(int quantite) { this.quantite = quantite; }
 
     @Override
-    public String toString() {
-        return "RetourProduit{id=" + id +
-                ", produit=" + (produit != null ? produit.getNom() : "null") +
-                ", quantite=" + quantite + "}";
-    }
+    public String toString() { return "RetourProduit{id=" + id + ", produit=" + (produit != null ? produit.getNom() : "null") + ", quantite=" + quantite + "}"; }
 
 }

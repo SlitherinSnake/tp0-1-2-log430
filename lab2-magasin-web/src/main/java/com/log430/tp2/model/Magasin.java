@@ -13,8 +13,8 @@ public class Magasin {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    
     private int id;
-
     private String nom;
     private String quartier;
 

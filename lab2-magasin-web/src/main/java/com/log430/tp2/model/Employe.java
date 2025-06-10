@@ -12,15 +12,13 @@ public class Employe {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    
     private int id;
-
     private String nom;
-
     private String identifiant;
 
     // Constructeur par défaut requis par JPA
-    public Employe() {
-    }
+    public Employe() { }
 
     // Constructeur avec paramètres pour instancier un employé 
     public Employe(String nom, String identifiant) {
@@ -29,28 +27,14 @@ public class Employe {
     }
 
     // Getter/Setter
-    public int getId() {
-        return id;
-    }
-
-    public String getNom() {
-        return nom;
-    }
-
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
-    public String getIdentifiant() {
-        return identifiant;
-    }
-
-    public void setIdentifiant(String identifiant) {
-        this.identifiant = identifiant;
-    }
+    public int getId() { return id; }
+    
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+    
+    public String getIdentifiant() { return identifiant; }
+    public void setIdentifiant(String identifiant) { this.identifiant = identifiant; }
 
     @Override
-    public String toString() {
-        return "Employe{id=" + id + ", nom='" + nom + "', identifiant='" + identifiant + "'}";
-    }
+    public String toString() { return "Employe{id=" + id + ", nom='" + nom + "', identifiant='" + identifiant + "'}"; }
 }

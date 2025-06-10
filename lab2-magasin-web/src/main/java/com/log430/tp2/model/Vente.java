@@ -14,10 +14,9 @@ public class Vente {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private int id;
-
     private LocalDate dateVente;
-
     private Double montantTotal;
 
     // plusieurs ventes peuvent être fait par un même employé.
@@ -35,8 +34,7 @@ public class Vente {
     private Magasin magasin;
 
     // Constructeur par défaut requis par JPA
-    public Vente() {
-    }
+    public Vente() { }
 
     // Constructeur avec paramètre pour instancier une vente
     public Vente(LocalDate dateVente, Double montantTotal, Employe employe, List<VenteProduit> venteProduits) {
@@ -52,34 +50,46 @@ public class Vente {
     @OneToMany(mappedBy = "vente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VenteProduit> venteProduits = new ArrayList<>();
 
+    // Ajoute un produit à la vente avec la quantité spécifiée
+    // Si le produit est déjà présent dans la vente, on incrémente simplement sa quantité
+    // Sinon, on crée une nouvelle instance de VenteProduit et on l'ajoute à la liste
     public void ajouterProduit(Produit produit, int quantite) {
         for (VenteProduit vp : venteProduits) {
             if (vp.getProduit().getId() == produit.getId()) {
+                // Produit déjà présent dans la vente : on met à jour la quantité
                 vp.setQuantite(vp.getQuantite() + quantite);
                 return;
             }
         }
+        // Produit non présent : on crée une nouvelle ligne de vente
         VenteProduit nv = new VenteProduit(this, produit, quantite);
         venteProduits.add(nv);
     }
 
-    // Supprimer un produit de la vente
+    
+    // Supprime un produit de la vente à partir de son ID
+    // Utilise une expression lambda pour filtrer et retirer le produit correspondant
     public void removeProduit(int produitId) {
         venteProduits.removeIf(vp -> vp.getProduit().getId() == produitId);
     }
 
+    // Retourne la liste des produits associés à cette vente
+    // Représente les items actuellement dans le panier ou la vente
     public List<VenteProduit> getItems() {
         return venteProduits;
     }
 
-    // Méthode appelée lors de la validation de la vente
+    // Calcule le montant total de la vente
+    // Fait la somme des sous-totaux de chaque produit (prix * quantité)
+    // Doit être appelée avant d'enregistrer la vente pour s'assurer que le montant est correct
     public void calculerMontantTotal() {
         montantTotal = venteProduits.stream()
                 .mapToDouble(vp -> vp.getProduit().getPrix() * vp.getQuantite())
                 .sum();
     }
 
-    // Initialisation dateVente automatiquement à la date du jour
+    // Définit la date de la vente si elle n'est pas déjà définie
+    // Utile pour les cas où l'objet est créé manuellement sans passer par un formulaire complet
     public void setDateVenteIfNull() {
         if (this.dateVente == null) {
             this.dateVente = LocalDate.now();
@@ -87,60 +97,27 @@ public class Vente {
     }
 
     // Getters / Setters
-    public int getId() {
-        return id;
-    }
-
+    public int getId() { return id; }
     // Pour test
-    public int setId(int id) {
-        return this.id = id;
-    }
+    public int setId(int id) { return this.id = id; }
 
-    public LocalDate getDateVente() {
-        return dateVente;
-    }
+    public LocalDate getDateVente() { return dateVente; }
+    public void setDateVente(LocalDate dateVente) { this.dateVente = dateVente; }
 
-    public void setDateVente(LocalDate dateVente) {
-        this.dateVente = dateVente;
-    }
+    public Double getMontantTotal() { return montantTotal; }
+    public void setMontantTotal(Double montantTotal) { this.montantTotal = montantTotal; }
 
-    public Double getMontantTotal() {
-        return montantTotal;
-    }
+    public Employe getEmploye() { return employe; }
+    public void setEmploye(Employe employe) { this.employe = employe; }
 
-    public void setMontantTotal(Double montantTotal) {
-        this.montantTotal = montantTotal;
-    }
+    public List<VenteProduit> getVenteProduits() { return venteProduits; }
+    public void setVenteProduits(List<VenteProduit> venteProduits) { this.venteProduits = venteProduits; }
 
-    public Employe getEmploye() {
-        return employe;
-    }
-
-    public void setEmploye(Employe employe) {
-        this.employe = employe;
-    }
-
-    public List<VenteProduit> getVenteProduits() {
-        return venteProduits;
-    }
-
-    public void setVenteProduits(List<VenteProduit> venteProduits) {
-        this.venteProduits = venteProduits;
-    }
-
-    public Magasin getMagasin() {
-        return magasin;
-    }
-
-    public void setMagasin(Magasin magasin) {
-        this.magasin = magasin;
-    }
+    public Magasin getMagasin() { return magasin; }
+    public void setMagasin(Magasin magasin) { this.magasin = magasin; }
 
     @Override
     public String toString() {
-        return "Vente{id=" + id + ", dateVente=" + dateVente +
-                ", montantTotal=" + montantTotal +
-                ", employe=" + employe +
-                ", produits=" + venteProduits + "}";
+        return "Vente{id=" + id + ", dateVente=" + dateVente + ", montantTotal=" + montantTotal + ", employe=" + employe + ", produits=" + venteProduits + "}";
     }
 }
