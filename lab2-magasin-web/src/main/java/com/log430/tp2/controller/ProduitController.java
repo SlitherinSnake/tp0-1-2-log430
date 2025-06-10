@@ -14,9 +14,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.log430.tp2.model.Produit;
 import com.log430.tp2.repository.ProduitRepository;
 
+// Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
+// Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
 public class ProduitController {
 
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+    // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
     private ProduitRepository produitRepository;
     

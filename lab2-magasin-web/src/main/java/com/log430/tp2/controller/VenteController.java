@@ -20,10 +20,17 @@ import com.log430.tp2.repository.MagasinRepository;
 import com.log430.tp2.repository.ProduitRepository;
 import com.log430.tp2.repository.VenteRepository;
 
+// Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
+// Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
+// Indique que l’objet nommé "vente" doit être stocké dans la session HTTP.
+// Cela permet de le conserver entre plusieurs requêtes (ex : ajout au panier, validation…)
+// Très utile pour simuler un panier temporaire ou une vente en cours.
 @SessionAttributes("vente") // Maintient l’objet Vente en session entre les requêtes
 public class VenteController {
 
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+    // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
     private ProduitRepository produitRepository;
     @Autowired
@@ -133,7 +140,8 @@ public class VenteController {
      * Affiche ensuite la facture.
      */
     @PostMapping("/panier/valider")
-    public String validerAchat(@RequestParam int employeId, @RequestParam int magasinId, @ModelAttribute("vente") Vente vente, SessionStatus status,
+    public String validerAchat(@RequestParam int employeId, @RequestParam int magasinId,
+            @ModelAttribute("vente") Vente vente, SessionStatus status,
             Model model) {
 
         // Associer un employé à la vente

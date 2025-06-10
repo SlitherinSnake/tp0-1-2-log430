@@ -14,10 +14,17 @@ import org.springframework.web.bind.annotation.*;
 import com.log430.tp2.model.*;
 import com.log430.tp2.repository.*;
 
+// Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
+// Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
+// Définit le préfixe commun "/retour" pour toutes les URL gérées par ce contrôleur.
+// Par exemple, /retour/nouveau, /retour/valider…
+// Permet d’organiser les routes associées aux retours produits.
 @RequestMapping("/retour") 
 public class RetourController {
-
+    
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+    // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
     private RetourRepository retourRepository;
     @Autowired

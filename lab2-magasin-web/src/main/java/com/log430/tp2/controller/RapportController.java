@@ -8,9 +8,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+// Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
+// Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
 public class RapportController {
 
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+    // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
     private RapportService rapportService;
     @Autowired
