@@ -20,7 +20,8 @@ import java.util.List;
 @RequestMapping("/stock")
 public class StockController {
 
-    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.)
+    // correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
     private StockService stockService;
@@ -39,6 +40,12 @@ public class StockController {
         model.addAttribute("produits", produits);
         model.addAttribute("magasins", magasinRepository.findAll());
         model.addAttribute("magasinId", magasinId); // conserve le filtre sélectionné
+
+        // Pour activer l’historique dans la vue
+        if (magasinId != null) {
+            model.addAttribute("demandes", stockService.getDemandesParMagasin(magasinId));
+        }
+
         return "stock"; // → templates/stock.html
     }
 
