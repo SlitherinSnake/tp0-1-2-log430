@@ -43,7 +43,7 @@ public class RapportService {
      */
     public Map<String, Double> ventesParMagasin(Integer magasinId) {
         return venteRepository.findAll().stream()
-                .filter(v -> v.getMagasin().getId() == magasinId)
+                .filter(v -> v.getMagasin() != null) // protection contre les données corrompues
                 .collect(Collectors.groupingBy(
                         v -> v.getMagasin().getNom(),
                         Collectors.summingDouble(Vente::getMontantTotal)));

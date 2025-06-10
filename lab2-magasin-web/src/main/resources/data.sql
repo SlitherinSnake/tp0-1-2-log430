@@ -15,6 +15,13 @@ CREATE TABLE employes (
     nom VARCHAR(100) NOT NULL
 );
 
+-- Création de la table magasin (si pas déjà existante)
+CREATE TABLE IF NOT EXISTS magasin (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    quartier VARCHAR(100) NOT NULL
+);
+
 -- Recreate table produits
 CREATE TABLE produits (
     id SERIAL PRIMARY KEY,
@@ -30,6 +37,13 @@ INSERT INTO employes (identifiant, nom) VALUES
     ('emp002','Tom'),
     ('emp003','Paul'),
     ('emp004','Jennifer');
+
+-- Insérer un magasin de test (Maison Mère)
+INSERT INTO magasin (id, nom, quartier) VALUES (1, 'Magasin A', 'Centre-ville')
+    ON CONFLICT (id) DO NOTHING;
+
+-- Mise à jour des ventes existantes pour lier au magasin par défaut
+UPDATE ventes SET magasin_id = 1 WHERE magasin_id IS NULL;
 
 -- Insert produits
 INSERT INTO produits (categorie, nom, prix, quantite) VALUES 
