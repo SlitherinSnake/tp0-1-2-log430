@@ -15,7 +15,7 @@ import com.log430.tp2.model.*;
 import com.log430.tp2.repository.*;
 
 @Controller
-@RequestMapping("/retour")
+@RequestMapping("/retour") 
 public class RetourController {
 
     @Autowired
@@ -25,18 +25,28 @@ public class RetourController {
     @Autowired
     private ProduitRepository produitRepository;
 
+    /**
+     * Redirige automatiquement vers le formulaire de retour.
+     * Appelé si l'utilisateur accède directement à /retour
+     */
     @GetMapping
     public String redirectionVersFormulaire() {
         return "redirect:/retour/nouveau";
     }
 
-    // Affiche la page de sélection de la vente à retourner
+    /**
+     * Affiche le formulaire de retour pour choisir une vente.
+     * Si une vente est sélectionnée, on affiche les produits encore retournables.
+     */
     @GetMapping("/nouveau")
     public String formulaireRetour(@RequestParam(required = false) Integer venteId, Model model) {
+
         List<Vente> ventes = venteRepository.findAll();
-        // Supprimer les ventes où tous les produits ont été retournés
+        
+        // On filtre pour ne garder que les ventes où il reste des produits retournables
         List<Vente> ventesFiltrees = ventes.stream()
                 .filter(v -> {
+                    // Quantités déjà retournées pour cette vente
                     List<Object[]> retournees = retourRepository.findQuantitesRetourneesPourVente(v.getId());
                     Map<Integer, Integer> quantitesRetournees = new HashMap<>();
                     for (Object[] obj : retournees) {
@@ -45,6 +55,7 @@ public class RetourController {
                         quantitesRetournees.put(produitId, qte.intValue());
                     }
 
+                    // On garde la vente si au moins un produit n'a pas été entièrement retourné
                     return v.getVenteProduits().stream()
                             .anyMatch(vp -> {
                                 int dejaRetourne = quantitesRetournees.getOrDefault(vp.getProduit().getId(), 0);
@@ -55,10 +66,11 @@ public class RetourController {
 
         model.addAttribute("ventes", ventesFiltrees);
 
+        // Si une vente spécifique est sélectionnée, on l'affiche avec les quantités restantes
         if (venteId != null) {
             Vente vente = venteRepository.findById(venteId).orElse(null);
             if (vente != null) {
-                // Quantités déjà retournées pour chaque produit
+                // Récupère les quantités déjà retournées pour chaque produit de la vente
                 List<Object[]> retournees = retourRepository.findQuantitesRetourneesPourVente(venteId);
                 Map<Integer, Integer> quantitesRetournees = new HashMap<>();
                 for (Object[] obj : retournees) {
@@ -67,13 +79,13 @@ public class RetourController {
                     quantitesRetournees.put(produitId, qte.intValue());
                 }
 
-                // Calculer les quantités restantes
+                // Met à jour les quantités restantes à retourner pour chaque produit
                 for (VenteProduit vp : vente.getVenteProduits()) {
                     int dejaRetourne = quantitesRetournees.getOrDefault(vp.getProduit().getId(), 0);
                     vp.setQuantite(vp.getQuantite() - dejaRetourne);
                 }
 
-                // Garder seulement ceux avec quantité > 0
+                // On garde uniquement les produits ayant encore une quantité > 0 à retourner
                 List<VenteProduit> restants = vente.getVenteProduits().stream()
                         .filter(vp -> vp.getQuantite() > 0)
                         .toList();
@@ -86,44 +98,50 @@ public class RetourController {
         return "retour-form";
     }
 
-    // Traite le retour soumis
+    /**
+     * Valide le formulaire de retour soumis par l'utilisateur.
+     * Met à jour le stock, enregistre les retours, puis redirige vers la page d'accueil.
+     */
     @PostMapping("/valider")
     public String validerRetour(@RequestParam int venteId,
             @RequestParam List<Integer> produitIds,
             @RequestParam List<Integer> quantites,
             Model model) {
-        // Vérifie s’il y a au moins un produit avec une quantité > 0
+        
+        // Vérifie s'il y a au moins un produit avec une quantité > 0
         boolean hasValidQuantite = quantites.stream().anyMatch(qte -> qte != null && qte > 0);
 
         if (!hasValidQuantite) {
-            // Recharge la page avec message d'erreur
+            // Si aucune quantité n’est valide, on recharge le formulaire avec un message d’erreur
             model.addAttribute("ventes", venteRepository.findAll());
             model.addAttribute("vente", venteRepository.findById(venteId).orElse(null));
             model.addAttribute("retourErreur", true);
             return "retour-form";
         }
 
-        // Traitement normal
+        // Traitement normal du retour
         Vente vente = venteRepository.findById(venteId).orElseThrow();
-        Employe employe = vente.getEmploye();
+        Employe employe = vente.getEmploye(); // On réutilise l'employé associé à la vente
 
         Retour retour = new Retour();
-        retour.setDateRetour(LocalDate.now());
+        retour.setDateRetour(LocalDate.now()); // La Date actuelle du retour
         retour.setVente(vente);
         retour.setEmploye(employe);
 
+        // Création des lignes de retour
         List<RetourProduit> retourProduits = new ArrayList<>();
         for (int i = 0; i < produitIds.size(); i++) {
             int prodId = produitIds.get(i);
             int qte = quantites.get(i);
 
             if (qte <= 0)
-                continue;
+                continue; // On ignore les quantités nulles ou négatives
 
             Produit produit = produitRepository.findById(prodId).orElseThrow();
-            produit.setQuantite(produit.getQuantite() + qte); // mise à jour du stock
+            produit.setQuantite(produit.getQuantite() + qte); // Réintègre la quantité retournée
             produitRepository.save(produit);
 
+            // Création de la ligne de retour
             RetourProduit rp = new RetourProduit();
             rp.setProduit(produit);
             rp.setQuantite(qte);
@@ -131,8 +149,10 @@ public class RetourController {
             retourProduits.add(rp);
         }
 
+        // Association des produits au retour principal
         retour.setProduitsRetournes(retourProduits);
-        retourRepository.save(retour);
+        retourRepository.save(retour);// Sauvegarde complète en cascade
+        
         return "redirect:/"; // retour acceuil
     }
 

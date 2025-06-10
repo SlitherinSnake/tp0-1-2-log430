@@ -1,33 +1,47 @@
 package com.log430.tp2.controller;
 
+import com.log430.tp2.repository.MagasinRepository;
+import com.log430.tp2.repository.ProduitRepository;
 import com.log430.tp2.service.RapportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class RapportController {
 
     @Autowired
     private RapportService rapportService;
+    @Autowired
+    private MagasinRepository magasinRepository;
 
     /**
      * Point d'accès pour l'administrateur : affiche un rapport consolidé.
      * URL : /rapport
-     * Vue associée : templates/rapport.html (à créer plus tard)
+     * Vue associée : templates/rapport.html
+     * Permet de filtrer les rapports par magasin via un paramètre GET (?magasinId=).
      */
     @GetMapping("/rapport")
-    public String afficherRapport(Model model) {
-        // Injecte dans le modèle les ventes par magasin
-        model.addAttribute("ventesParMagasin", rapportService.ventesParMagasin());
+    public String afficherRapport(@RequestParam(required = false) Integer magasinId, Model model) {
+        // Injecte la liste des magasins pour permettre le filtrage dans le <select>
+        model.addAttribute("magasins", magasinRepository.findAll());
 
-        // Injecte la liste des produits les plus vendus
-        model.addAttribute("produitsPopulaires", rapportService.produitsLesPlusVendus());
+        if (magasinId != null) {
+            // Filtre les données du rapport pour un magasin spécifique
+            model.addAttribute("ventesParMagasin", rapportService.ventesParMagasin(magasinId));
+            model.addAttribute("produitsPopulaires", rapportService.produitsLesPlusVendus(magasinId));
+        } else {
+            // Données globales si aucun filtre sélectionné
+            model.addAttribute("ventesParMagasin", rapportService.ventesParMagasin());
+            model.addAttribute("produitsPopulaires", rapportService.produitsLesPlusVendus());
+        }
 
-        // Injecte l’état actuel du stock
+        // Liste complète des produits et leur stock
         model.addAttribute("stockActuel", rapportService.stockActuel());
-
-        return "rapport"; // Correspond à resources/templates/rapport.html
+        
+        return "rapport"; // Correspond à templates/rapport.html
     }
+
 }
