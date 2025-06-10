@@ -18,8 +18,8 @@ public class RapportService {
     @Autowired
     private ProduitRepository produitRepository;
 
-    @Autowired
-    private MagasinRepository magasinRepository; // Pour futur utilisation
+    //@Autowired
+    //private MagasinRepository magasinRepository; // Pour futur utilisation
 
     /**
      * Regroupe les ventes par magasin avec leur montant total.

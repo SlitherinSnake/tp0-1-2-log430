@@ -1,7 +1,6 @@
 package com.log430.tp2.controller;
 
 import com.log430.tp2.repository.MagasinRepository;
-import com.log430.tp2.repository.ProduitRepository;
 import com.log430.tp2.service.RapportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
