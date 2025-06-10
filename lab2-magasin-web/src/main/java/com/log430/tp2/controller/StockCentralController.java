@@ -3,6 +3,7 @@ package com.log430.tp2.controller;
 import com.log430.tp2.model.*;
 import com.log430.tp2.service.StockCentralService;
 import com.log430.tp2.repository.MagasinRepository;
+import com.log430.tp2.repository.StockMagasinRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -27,6 +28,8 @@ public class StockCentralController {
     private StockCentralService stockService;
     @Autowired
     private MagasinRepository magasinRepository;
+    @Autowired
+    private StockMagasinRepository stockMagasinRepository;
 
     /**
      * Affiche la page du stock central, avec tous les produits disponibles.
@@ -47,6 +50,10 @@ public class StockCentralController {
 
             // Prépare le nom du magasin
             magasinRepository.findById(magasinId).ifPresent(m -> model.addAttribute("nomMagasin", m.getNom()));
+
+            // Ajouter le stock local
+            List<StockMagasin> stockLocal = stockMagasinRepository.findByMagasinId(magasinId);
+            model.addAttribute("stockLocal", stockLocal);
         }
 
         return "stock"; // → templates/stock.html

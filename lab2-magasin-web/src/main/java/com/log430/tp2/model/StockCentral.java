@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 // Annotation JPA indiquant que cette classe est une entité persistante
 @Entity
 // Nom de la table dans la base de données
-@Table(name = "stock")
+@Table(name = "stockCentral")
 public class StockCentral {
     
     // Identifiant unique pour chaque employé

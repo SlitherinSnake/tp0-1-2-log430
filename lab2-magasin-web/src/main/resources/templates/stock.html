@@ -96,9 +96,33 @@
         </div>
     </div>
 
+    
     <!-- Historique des demandes si un magasin est sélectionné -->
     <div th:if="${magasinId != null}" class="mt-5">
         <h2 class="fw-bold">Historique des demandes – <span th:text="${nomMagasin}">Magasin</span>></h2>
+
+        <!-- À Fixer pour faire que chaque magasin a son propre stock -->
+        <h3 class="mt-5">Stock local du magasin</h3>
+
+        <div th:if="${stockLocal != null and !stockLocal.isEmpty()}">
+            <table class="table table-sm table-bordered mt-2">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produit</th>
+                        <th>Quantité locale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="s : ${stockLocal}">
+                        <td th:text="${s.produit.nom}"></td>
+                        <td th:text="${s.quantite}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${stockLocal == null or stockLocal.isEmpty()}" class="alert alert-secondary">
+            Aucun stock enregistré pour ce magasin.
+        </div>
 
         <div th:if="${demandes != null and !demandes.isEmpty()}">
             <table class="table table-bordered table-hover mt-3 shadow-sm">
