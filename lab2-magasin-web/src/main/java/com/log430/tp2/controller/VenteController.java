@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 
-import com.log430.tp2.model.Magasin;
+//import com.log430.tp2.model.Magasin;
 import com.log430.tp2.model.Produit;
 import com.log430.tp2.model.Vente;
 import com.log430.tp2.repository.EmployeRepository;
