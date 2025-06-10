@@ -1,5 +1,6 @@
 package com.log430.tp2.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 // VenteRepository.java
@@ -34,4 +35,41 @@ public interface VenteRepository extends JpaRepository<Vente, Integer> {
     @Query("SELECT vp.produit, SUM(vp.quantite) FROM VenteProduit vp WHERE vp.vente.magasin.id = :magasinId GROUP BY vp.produit ORDER BY SUM(vp.quantite) DESC")
     List<Object[]> produitsLesPlusVendusParMagasin(@Param("magasinId") Integer magasinId);
 
+    /**
+     * Calcule le chiffre d'affaires (montant total des ventes) par magasin.
+     * Redondant avec totalVentesParMagasin mais peut être utilisé pour des filtres.
+     * 
+     * @return liste d’objets [nom du magasin, total du chiffre d'affaires]
+     */
+    @Query("SELECT v.magasin.nom, SUM(v.montantTotal) FROM Vente v GROUP BY v.magasin.nom")
+    List<Object[]> chiffreAffaireParMagasin();
+
+     /**
+     * Calcule le chiffre d'affaires pour tous les magasins, même ceux
+     * qui n'ont réalisé aucune vente.
+     *
+     * Utilise une jointure externe (LEFT JOIN) entre Magasin et Vente
+     * afin d'inclure les magasins sans ventes (valeur par défaut : 0).
+     *
+     * @return Liste d'objets [nom du magasin, chiffre d'affaires total]
+     *         Ex : [["Magasin A", 1200.0], ["Magasin B", 0.0], ["Magasin C", 850.0]]
+     */
+    @Query("""
+            SELECT m.nom, COALESCE(SUM(v.montantTotal), 0)
+            FROM Magasin m
+            LEFT JOIN Vente v ON v.magasin.id = m.id
+            GROUP BY m.nom
+            """)
+    List<Object[]> chiffreAffaireTousMagasins();
+
+    /**
+     * Récupère toutes les ventes après une certaine date,
+     * triées par date croissante.
+     * 
+     * Utile pour le tableau de bord hebdomadaire (UC3).
+     *
+     * @param date date minimale (inclusivement)
+     * @return liste triée de ventes récentes
+     */
+    List<Vente> findByDateVenteAfterOrderByDateVenteAsc(LocalDate date);
 }

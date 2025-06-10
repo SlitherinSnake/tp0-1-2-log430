@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <div class="container py-4">
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" th:href="@{/ventes}">Magasin</a>
+                <div>
+                    <a class="btn btn-primary position-relative" th:href="@{/panier}">
+                        <i class="bi bi-cart4"></i>
+                        Voir mon panier
+                        <span id="cart-count"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                    </a>
+                </div>
+
+                <div class="ms-2">
+                    <a class="btn btn-warning position-relative" th:href="@{/retour}">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Faire un retour
+                    </a>
+                </div>
+
+                <div class="ms-2">
+                    <a class="btn btn-info text-white" th:href="@{/rapport}">
+                        <i class="bi bi-bar-chart-line-fill"></i> Rapport
+                    </a>
+                </div>
+
+                <div class="ms-2">
+                    <a class="btn btn-info position-relative" th:href="@{/stock}">
+                        <i class="bi bi-box"></i> Stock central
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- TITRE -->
+        <h1 class="fw-bold mb-4">Tableau de bord – Performances</h1>
+
+        <!-- Chiffre d'affaires -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-bold bg-dark text-white">
+                <i class="bi bi-currency-dollar"></i> Chiffre d'affaires par magasin
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between" th:each="ligne : ${chiffresAffaires}">
+                    <span th:text="${ligne[0]}">Nom Magasin</span>
+                    <span th:text="${ligne[1]} + ' $'">1000 $</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Rupture de stock -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-bold bg-danger text-white">
+                <i class="bi bi-exclamation-circle"></i> Produits en rupture de stock
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" th:each="r : ${ruptures}">
+                    <span th:text="${r.produit.nom}"></span> –
+                    <span th:text="'Magasin: ' + ${r.magasin.nom}"></span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Produits en surstock -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-bold bg-warning">
+                <i class="bi bi-box-seam"></i> Produits en surstock
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" th:each="s : ${surstocks}">
+                    <span th:text="${s.produit.nom}"></span> –
+                    <span th:text="'Quantité: ' + ${s.quantite} + ' (Magasin: ' + ${s.magasin.nom} + ')'"></span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tendances hebdomadaires -->
+        <div class="card shadow-sm">
+            <div class="card-header fw-bold bg-info text-white">
+                <i class="bi bi-calendar3"></i> Tendances des ventes (7 derniers jours)
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" th:each="v : ${ventesSemaine}">
+                    <span th:text="${v.date}">2025-06-01</span> –
+                    <span th:text="${v.total} + ' $'">200 $</span>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mise à jour du compteur du panier
+        fetch("/panier/count").then(res => res.text()).then(count => {
+            const span = document.getElementById("cart-count");
+            if (span) span.innerText = count;
+        });
+    </script>
+</body>
+
+</html>

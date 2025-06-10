@@ -14,6 +14,11 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
     <div class="container-fluid">
       <a class="navbar-brand fw-bold" th:href="@{/ventes}">Magasin</a>
+      <div class="ms-2">
+        <a class="btn btn-dark position-relative" th:href="@{/dashboard}">
+          <i class="bi bi-graph-up"></i> Tableau de bord
+        </a>
+      </div>
       <div>
         <a class="btn btn-primary position-relative" th:href="@{/panier}">
           <i class="bi bi-cart4"></i> Voir mon panier
@@ -43,7 +48,8 @@
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
     </div>
 
-    <div th:if="${param.erreur} == 'deja_retournee'" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div th:if="${param.erreur} == 'deja_retournee'" class="alert alert-danger alert-dismissible fade show"
+      role="alert">
       <strong>Erreur :</strong> Cette vente a déjà été retournée. Vous ne pouvez pas faire un second retour.
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
     </div>

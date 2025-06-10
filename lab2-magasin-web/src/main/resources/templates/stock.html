@@ -14,6 +14,11 @@
         <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
             <div class="container-fluid">
                 <a class="navbar-brand fw-bold" th:href="@{/ventes}">Magasin</a>
+                <div class="ms-2">
+                    <a class="btn btn-dark position-relative" th:href="@{/dashboard}">
+                        <i class="bi bi-graph-up"></i> Tableau de bord
+                    </a>
+                </div>
                 <div>
                     <a class="btn btn-primary position-relative" th:href="@{/panier}">
                         <i class="bi bi-cart4"></i> Voir mon panier
@@ -96,7 +101,7 @@
         </div>
     </div>
 
-    
+
     <!-- Historique des demandes si un magasin est sélectionné -->
     <div th:if="${magasinId != null}" class="mt-5">
         <h2 class="fw-bold">Historique des demandes – <span th:text="${nomMagasin}">Magasin</span>></h2>
