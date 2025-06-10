@@ -113,3 +113,11 @@ L'image généré sur DockerHub: ![alt text](image.png)
 Le pipeline: ![alt text](image-1.png)
 
 Elle sera dans le dossier de remise ou sinon voir en ligne ici : https://github.com/SlitherinSnake/tp0-1-2-log430/actions/runs/15091998205 Il est nécessaire d'accepter mon invitation à mon répo, car il est privé. 
+
+# To run docker-file 
+
+docker compose up --build
+
+## To run locally
+
+mvn spring-boot:run
