@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.log430.tp2.model.Vente;
 
-public interface VenteRepository extends JpaRepository<Vente, Integer> {}
+public interface VenteRepository extends JpaRepository<Vente, Integer> {
+    // For query
+}
