@@ -1,0 +1,70 @@
+@startuml
+title DSS – Consulter le stock central (Spring Boot Web)
+
+' === Acteur humain ===
+actor Employe
+
+' === Composants Web (MVC) ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+participant "StockCentralController" as Controller
+participant "StockCentralService" as Service
+participant "ProduitRepository" as ProduitRepo
+participant "MagasinRepository" as MagasinRepo
+database "PostgreSQL"
+
+== Sélection dans l’interface ==
+Employe -> Vue : accède à /stock \n via menu ou lien
+' L’utilisateur clique sur le bouton "Stock central" depuis l’interface web
+
+Vue -> Controller : HTTP GET /stock?magasinId=...
+' Le navigateur envoie une requête GET avec l’ID du magasin (paramètre optionnel)
+
+== Logique métier ==
+Controller -> Service : getProduitsDisponibles()
+' Le contrôleur appelle le service pour récupérer tous les produits existants
+
+Service -> ProduitRepo : findAll()
+' Le service interroge le repository JPA pour obtenir tous les produits du système
+
+ProduitRepo -> PostgreSQL : SELECT * \n FROM produits
+' Une requête SQL est générée automatiquement par Spring Data JPA
+
+PostgreSQL --> ProduitRepo : List<Produit>
+' La base de données retourne la liste complète des produits
+
+ProduitRepo --> Service : List<Produit>
+' Le repository renvoie les objets produits au service
+
+Service --> Controller : List<Produit>
+' Le service retourne la liste au contrôleur
+
+alt magasin sélectionné
+' Si l’ID d’un magasin a été fourni dans la requête
+
+Controller -> Service : getDemandesParMagasin(magasinId)
+' Le contrôleur demande au service les demandes de réapprovisionnement du magasin donné
+
+Service -> StockCentralRepository : findByMagasin(magasinId)
+' Le service interroge le repository dédié aux stocks centraux
+
+StockCentralRepository -> PostgreSQL : SELECT * \n FROM stock_central \n WHERE magasin_id = ?
+' La requête SQL cible les demandes pour le magasin spécifié
+
+PostgreSQL --> StockCentralRepository : List<StockCentral>
+' La base de données renvoie toutes les demandes liées à ce magasin
+
+StockCentralRepository --> Service : List<StockCentral>
+' Le repository transmet la liste des demandes au service
+
+Service --> Controller : List<StockCentral>
+' Le service regroupe les données à renvoyer au contrôleur
+end
+
+== Affichage ==
+Controller --> Vue : retourne "stock.html" avec produits + demandes
+' Le contrôleur prépare le modèle et sélectionne la vue HTML "stock.html"
+
+Vue --> Employe : Affiche tableau produits et historique
+' L’interface web affiche les produits disponibles et les demandes précédentes (si magasinId fourni)
+
+@enduml

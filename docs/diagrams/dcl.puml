@@ -1,7 +1,8 @@
 @startuml
-title Diagramme de classe - Système de 3 caisses - Magasin POS (Vue logique)
+title Diagramme de classe - Magasin Web (Vue logique)
 
 ' === Entités principales ===
+
 class Employe {
   - id : int
   - nom : String
@@ -10,6 +11,16 @@ class Employe {
   + getId() : int
   + getNom() : String
   + getIdentifiant(): String
+}
+
+class Magasin {
+  - id : int
+  - nom : String
+  - quartier : String
+  --
+  + getId() : int
+  + getNom() : String
+  + getQuartier() : String
 }
 
 class Produit {
@@ -30,121 +41,84 @@ class Vente {
   - id : int
   - dateVente : LocalDate
   - montantTotal : float
-  - employe : Employe
-  - venteProduits : List<VenteProduit>
   --
   + getId() : int
   + getDateVente() : LocalDate
   + getMontantTotal() : float
-  + getEmploye() : Employe
-  + getVenteProduits() : List<VenteProduit>
+}
+
+class VenteProduit {
+  - id : int
+  - quantite : int
+  --
+  + getId() : int
+  + getQuantite() : int
 }
 
 class Retour {
   - id : int
   - dateRetour : LocalDate
-  - vente : Vente
-  - employe : Employe
-  - retourProduits : List<RetourProduit>
   --
   + getId() : int
   + getDateRetour() : LocalDate
-  + getVente() : Vente
-  + getEmploye() : Employe
-  + getProduitsRetournes() : List<RetourProduit>
-}
-
-class VenteProduit {
-  - id : int
-  - vente : Vente
-  - produit : Produit
-  - quantite : int
-  --
-  + getId() : int
-  + getVente() : Vente
-  + getProduit() : Produit
-  + getQuantite() : int
 }
 
 class RetourProduit {
   - id : int
-  - retour : Retour
-  - produit : Produit
   - quantite : int
   --
   + getId() : int
-  + getRetour() : Retour
-  + getProduit() : Produit
   + getQuantite() : int
 }
 
-' === DAO ===
-class ProduitDAO {
-  + rechercherParId(id : int) : Produit
-  + rechercherParNom(nom : String) : List<Produit>
-  + rechercherParCategorie(categorie : String) : List<Produit>
-  + mettreAJourStock(produit : Produit, nouvelleQuantite : int) : void
-  + afficherListeProduits() : List<Produit>
+class StockMagasin {
+  - id : int
+  - quantite : int
+  --
+  + getId() : int
+  + getQuantite() : int
 }
 
-
-class VenteDAO {
-  + rechercherParId(id : int) : Vente
-  + enregistrerVente(vente : Vente) : void
-  + calculerTotal(produitsEtQuantites : Map<Produit, Integer>) : double
+class StockCentral {
+  - id : int
+  - quantiteDemandee : int
+  - dateDemande : LocalDate
+  --
+  + getId() : int
+  + getQuantiteDemandee() : int
+  + getDateDemande() : LocalDate
 }
 
-class RetourDAO {
-  + rechercherParId(id : int) : Retour
-  + enregistrerRetour(retour : Retour) : void
-  + getTousLesRetours() : List<Retour>
-}
+' === Relations de base ===
 
-class EmployeDAO {
-  + rechercherParId(id : int) : Employe
-  + rechercherParNom(nom : String) : List<Employe>
-}
-
-' === Contrôleur ===
-class MagasinController {
-  + rechercherProduit(scanner : Scanner) : void
-  + enregistrerVente(scanner : Scanner) : void
-  + gererRetour(scanner : Scanner) : void
-  + consulterStock(scanner : Scanner) : void
-  - afficherListeProduits(produits : List<Produit>) : void
-}
-
-' === Relations ===
-' Employé utilise le contrôleur
-Employe --> MagasinController : utilise
-
-' Utilisation des DAO par le contrôleur
-MagasinController --> ProduitDAO : délègue requêtes produit
-MagasinController --> VenteDAO : délègue gestion ventes
-MagasinController --> RetourDAO : délègue gestion retours
-MagasinController --> EmployeDAO : délègue gestion employés
-
-' Employé effectue plusieurs ventes et retours
+' Employé réalise ventes et retours
 Employe "1" --> "*" Vente : effectue >
-Employe "1" --> "*" Retour : autorise >
+Employe "1" --> "*" Retour : traite >
 
-' Vente et Retour liée à un employé
-Vente "1" --> "1" Employe : réalisée par >
-Retour "1" --> "1" Employe : traitée par >
+' Vente liée à un magasin
+Vente "*" --> "1" Magasin : lieu >
 
-' Retour référence une vente existante
-Retour "1" --> "1" Vente : preuve >
+' Retour lié à une vente
+Retour "1" --> "1" Vente : concerne >
 
-' Vente et Retour contient plusieurs lignes de produit
-' "*--" et non "--", car VenteProduit et RetourProduit sont des compositions
-' et non associations, car c'est pas un objet indépendant, mais une composition
-' soit un objet (une partie) qui dépend entièrement de tout (Vente et Retour)
+' Vente *-- VenteProduit (composition)
 Vente "1" *-- "*" VenteProduit : contient >
-Retour "1" *-- "*" RetourProduit : retourne >
 
-' Chaque ligne produit est associée à un produit
-VenteProduit "*" --> "1" Produit : concerne >
-RetourProduit "*" --> "1" Produit : concerne >
+' Retour *-- RetourProduit (composition)
+Retour "1" *-- "*" RetourProduit : contient >
 
+' Lignes de vente/retour concernent un produit
+VenteProduit "*" --> "1" Produit : cible >
+RetourProduit "*" --> "1" Produit : cible >
+
+' Magasin a un stock local
+Magasin "1" --> "*" StockMagasin : possède >
+
+' Produit présent dans stock local
+StockMagasin "*" --> "1" Produit
+
+' Stock central : une demande associe un produit à un magasin
+StockCentral "*" --> "1" Produit
+StockCentral "*" --> "1" Magasin
 
 @enduml

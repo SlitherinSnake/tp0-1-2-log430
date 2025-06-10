@@ -5,22 +5,49 @@
 ### Diagramme
 ### 2.1. Vue logique
 #### Diagramme de classe représentant les entités et composants principaux du système :
-- **Employe** : id: int, nom: String, identifiant: String  
-  → Représente un employé responsable des ventes ou retours ou regarder le stock.
-- **Produit** : id: int, nom: String, catégorie: String, prix: float, quantite: int  
-  → Article en stock pouvant être vendu ou retourné.
-- **Vente** : id: int, dateVente: Date, montantTotal: float, employe: Employe, venteProduits: List<VenteProduit>  
-  → Une vente est associée à un employé et composée de plusieurs lignes de vente (`VenteProduit`).
-- **Retour** : id: int, dateRetour: Date, vente: Vente, employe: Employe, retourProduits: List<RetourProduit>  
-  → Un retour est lié à une vente précédente et contient plusieurs lignes de retour (`RetourProduit`).
-- **VenteProduit** : id: int, vente: Vente, produit: Produit, quantite: int  
-  → Représente une ligne d'achat d'un produit dans une vente.
-- **RetourProduit** : id: int, retour: Retour, produit: Produit, quantite: int  
-  → Représente une ligne de retour d'un produit dans un retour.
-- **MagasinController** : contient la logique d'orchestration (vente, retour, recherche, stock), en lien avec les DAO.
-- **DAO (Data Access Object)** : `ProduitDAO`, `VenteDAO`, `RetourDAO`, `EmployeDAO`  
-  → Gèrent les opérations de persistance sur la base de données.
-![dcl](https://img.plantuml.biz/plantuml/svg/hLVDRjiu4BuRy3iGliJUneTYRqPZj4XoQD5itRYREokFLUvIea9IGOjYtsMFSSzz0xrOXp-YI5kAZQ08ajZ3cMzcllaHzLffAdLTyF58Cys1N36QIreKG3P0CawL0Z8dwszADuzE-2V9A4EnGlaDpQbY9LbzM9FfNGs4YvpTrp0RZyQZCt9nSK6kImHkTefKafKPgoX7IpmOZomwkIugBhu1-JuU4KHa6x8WhDJkMoaA_BhMQ9gtvu20MqPBdPxCpTyN90VzTZETTI1Mz9SehApJzve1R3hhJlypqRleLb9iQgPFZIwZ6d8X6Up9CVUlADfoGRtjVKqDCH3XFIU3ozPXt-4AlLfvy6l57xthpaUKy1qoCb2C3VfonmloNcIKNw707HMYr0ZwIMZAqpp1btVH5jg97moE9rSPFARqgxj8k3nEoLKRZpr98hBdDr5GFJJuUEn959izYoDH3hudm8YsMz2YbiEy-VC3uXuydnRvISQaHTYdx3QMdiYPinaWhICqX7IKhJOe1rn2nDX-VFkTzkHyzP1JUVr5EvdFcwQXB3seFOaS71-R9C_-R6JR0axtj-OJbRH3Vsv6RczVlVaGhsblQwJV7O24x0j8yxkY4cDgiptmb2YQFHRlpT0fSG_lsNHBxd2_3jWNeBM4D--GYhKMsR_J0wBFSNtN3y0vV4p8De0FWcqS3jrkcOd2kEXP27kDdRJsYLH53GYbX1nX9KZNeCa0f87Xt6Or1-cscyzENOUQcWrnGwjN8Tkt2963N1gOZQW_S-Xfu1DZZdii2jftuLwZft5ZstqIjNeFVbiSx8fqIVXLSs9SoM8whUsyoJBf_KjySiZc9mTC8ve1Vzknfm8RH_R4vCTDPRGimP2mTfzI5WugVKGV2nVeFQAQYLBLN8Fl-oUrvmFzNUqzPTesxsmZicw1KytGgwFgp5UXsP5QCyxm_eZNognZT3nghtpp-RA7qqLhvrpyRRzO3tZxL7OlLLGUW1u26VXeRM7RDplUFEPuJPLmNpS_p9HKxQRgjm-J75lde6muTZpLa6atKNssRaW6ZQE-xxC6Jx5o70N6ORk5JADYnMl5a1VbWoIWEvSj_vEN4-jiyiU4j1UxWB3irmiN6LfhNCJAAfeO702wyHgSDJiWpV-axi8TZvnM0CJ_r-6w8viTnL8RCrDWnFLG_UfQKlDY4PHD4Du0aRRDJaAP0Re7Vv60hzZBr6xR7k2MW4e2FXQ6iZ8jnr0M4SnPZbSUysOKUkaCgPhF9yQkn6fDyFCvRcoPtda2QYjG26vxF1D59HIpKsNGF0xk894nDsmEBpl3Xa02b65PVFu75Lc9xL91kS5Cpqc1hsgMWWZI82g1_eBDr6WWZPZQ3EyUZ7W8ObwFcaS91TZ824QBsdkapEAoOjvTFwt2GpVmbbQrrKvvMFXMBKCPBh_GU_DsQQWEToQJkgEawxHGWiI_ST7MEOaf0-ya3U2ullbvZGpPD-TV)
+![dcl](https://img.plantuml.biz/plantuml/svg/lLRBRjim4BmBq3yiV8cTmYXoDP0WG9n3WQJ8eqZFZBGMY5Aa8r95YwB_qcFz7VwnBb-Ig3ZEeqKl0SnPpixExb8vrOOrfgr5dXbk1CAIiwfXTOrG8XI2QOqmXqjMCSqbVCPxcDwr249L_A75MPxbsG4S7n_3kII2xKR3kk6ou6icK5l0HZWUEA_NGdr7-95dG9oyX0LmQVmlgMhwUMleSXLn9CeLPzAaoDp-VGSLcW_bTDQJkAEFgdPdVNo8xCYcinxzsQkB9RvGtKDBld5i_bxQTM1Ai86mgqQLBJSl5LOmWvLgE8xEgItVw6Wb53DT2RPdEE1xY_wpc70NU4LPtNcNDzRiKlSv1WNVKQkUc9AISdbu0HUgO6991nwgbJH4-aaP9f8wzzQqZ8GEIIWTVZbW7TOnbhktIQyrUgyxDsXKspnjJy37_ZphWhytjk5HulzNwArHnPUzM_dlqvrHBnkQdxtfbbWpMIAEdG_dhxF-UaIwipS1tDaS__hUe626AwdjittFwD4EJ-z1U7Qt6sYs6oOuGL_jn6f00uthgSwp-3PFZYOa-0GcXnE8YuQh5HQ67lsJtN7Tn95rjXidFg-_BlXsWx3z1Qs4sZSpppnaxpeEuefzNj05R2D5OBOSdY9epxE0T3AEUhc5aWKsSgJZS3vFDtLQg7gjDBUkpJf9n6CZk_9ZjAEbLvg-HQas6vrkneXue3Gof_6FgIzu9T5rqbNxtdUfAum2oSorlnwKHxAXfuC4_5uuFzBCpmHRAR4lpARKTaNeqqy3c6SH6Kv2ih8B81VqzdVPaSKSQvf4RSie6GrimfemxD3dYLmK565P5sumoh1zjCkgeAzVRz5u-f9DtvdZoOZBo95dfoXBzt_J7m00)
+
+###  Modèle de domaine – *Magasin Web (Spring Boot)*
+
+| Classe             | Attributs clés                                                                                   | Description                                                                                     |
+|--------------------|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `Employe`          | `id: int`, `nom: String`, `identifiant: String`                                                  | Représente un employé pouvant effectuer des ventes et des retours.                             |
+| `Produit`          | `id: int`, `nom: String`, `categorie: String`, `prix: float`, `quantite: int`                    | Article disponible en stock, vendable ou retournable.                                          |
+| `Vente`            | `id: int`, `dateVente: LocalDate`, `montantTotal: double`, `employe`, `magasin`, `venteProduits`| Vente complète validée par un employé, contenant plusieurs produits.                           |
+| `Retour`           | `id: int`, `dateRetour: LocalDate`, `vente`, `employe`, `retourProduits`                         | Retour effectué après une vente existante, validé par un employé.                              |
+| `VenteProduit`     | `id: int`, `vente`, `produit`, `quantite: int`                                                   | Ligne de vente d’un produit avec quantité.                                                     |
+| `RetourProduit`    | `id: int`, `retour`, `produit`, `quantite: int`                                                  | Ligne de retour d’un produit avec quantité.                                                    |
+| `Magasin`          | `id: int`, `nom: String`, `quartier: String`, `ventes`                                           | Point de vente physique, associé aux stocks et aux ventes.                                     |
+| `StockMagasin`     | `id: int`, `produit`, `magasin`, `quantite: int`                                                 | Stock local d’un produit dans un magasin donné.                                                |
+| `StockCentral`     | `id: int`, `produit`, `magasin`, `quantiteDemandee: int`, `dateDemande: LocalDate`              | Demande de réapprovisionnement effectuée par un magasin.                                       |
+
+---
+
+### Architecture Web MVC – *Spring Boot*
+
+| Composant                  | Rôle                                                                                     |
+|----------------------------|------------------------------------------------------------------------------------------|
+| `VenteController`          | Gère le panier, les ajouts/retraits de produits, la validation de vente (via AJAX).     |
+| `RetourController`         | Permet de sélectionner une vente passée et de retourner un ou plusieurs produits.       |
+| `ProduitController`        | Gère l’affichage, l’ajout, la suppression, la modification et la recherche de produits. |
+| `DashboardController`      | Affiche les indicateurs (ruptures, surstocks, CA, tendances hebdomadaires).             |
+| `RapportController`        | Génère les rapports consolidés : par magasin, par produit, stock global.                |
+| `StockCentralController`   | Permet de consulter le stock central et d’envoyer des demandes de réapprovisionnement.  |
+
+| Service                    | Rôle                                                                                     |
+|----------------------------|------------------------------------------------------------------------------------------|
+| `RapportService`           | Calcule les ventes par magasin, identifie les produits les plus vendus, retourne le stock actuel. |
+| `StockCentralService`      | Gère les demandes de réapprovisionnement, filtre les doublons, affiche l’historique.    |
+
+| Repository                 | Rôle                                                                                     |
+|----------------------------|------------------------------------------------------------------------------------------|
+| `ProduitRepository`        | Accès aux produits, requêtes de filtrage par nom/catégorie, stock critique.             |
+| `VenteRepository`          | Accès aux ventes, calculs de chiffre d’affaires, produits les plus vendus.              |
+| `RetourRepository`         | Accès aux retours, quantités déjà retournées par vente/produit.                         |
+| `EmployeRepository`        | Accès aux employés.                                                                      |
+| `MagasinRepository`        | Accès aux magasins.                                                                      |
+| `StockMagasinRepository`   | Accès aux stocks locaux, recherche par magasin et produit.                              |
+| `StockCentralRepository`   | Accès aux demandes de réapprovisionnement central.   
 
 ### Motivation
 J'ai pris l'architecture MVC, car je suis familier avec. Aussi elle offre une séparation claire entre l’interface utilisateur, la logique métier et la gestion des interactions utilisateurs.
@@ -44,15 +71,17 @@ J'ai pris l'architecture MVC, car je suis familier avec. Aussi elle offre une s�
 | RetourDAO     | Gestion des retours et ajustement du stock       |
 | HibernateUtil | Initialise les sessions Hibernate                |
 
-### Organisation des modules (Vue d’implémentation)
-Organisation en couches selon le modèle MVC, avec séparation claire des responsabilités :
+### Vue d’implémentation – Organisation des modules (Spring Boot Web)
+L’application suit une architecture **MVC enrichie**, avec une séparation claire des responsabilités :
 
-* Présentation (view) : affichage console, saisie de l'utilisateur
-* Contrôleur (controller) : coordination des interactions entre vue et logique métier
-* Logique métier (service) : traitement des règles d’affaires (calculs, validation)
-* Accès aux données (dao) : manipulation des entités via Hibernate/JPA
+- **Contrôleurs (`controller`)** : Gèrent les interactions utilisateur (formulaires, AJAX, vues Thymeleaf).
+- **Services (`service`)** : Appliquent les règles d’affaires (calculs, regroupements, filtrage, validations métier).
+- **Repositories (`repository`)** : Abstraction de la base de données via Spring Data JPA (équivalent DAO).
+- **Modèles (`model`)** : Entités JPA mappées aux tables de la base de données (`Produit`, `Vente`, `Retour`, etc.).
+- **Vues (`.html`)** : Templates Thymeleaf côté client (non inclus dans ce diagramme technique mais couplés aux contrôleurs).
 
-![di](https://img.plantuml.biz/plantuml/svg/XLB1IiGm4Bq7yW_3dXJPekZ9WwnKZykAXzv3CvHWaYd9L14HzXyy-Gb-Xt-oNsAsAxPrItiAysRclJUFh2Ahm8spKh1XYr0q27gt_JIkjjzV3ZqhDkHXj_s0JQYKD_40Q8pWI3SslIVh8eSpkBlTd4eXHQtA9rKXB4focQNgwl8yu_eYUpRuie0tAG1AgsA4d7maYqN2fNYVMYt9So1hCGm8rgfIqVZyhpj3amoZ7J0yX7I3uGueqidObO_8r8Ikla-vq2lEw6X5Ooefe7z20-IWDO1-vLgiLUn51ilbpN42S0qc4GTLxQ-IudXWlzOtD3xHsHllzyoE3_IjpzYOz31jO4PTYXLwtVxl7m00)
+
+![di](https://img.plantuml.biz/plantuml/svg/dPL1JiCm44NtaNo7KJU0K2i4R8ig5POLLIfrRn8hM7NYo7QGAeJK5GU05KTWpmrwavu4awHf6uyRODKc_zkPFtdZZBIXoXIf887XHZ2O5mpYpUg3fxbOVwOiCzHmcS5czGxtAg4PrzMDc6b8PLm8-tiwcO_X76PCFV68sNyXowNcHghb6Gb8S0B3uH2cD5hGnDhj1GdowWfwaKm7GYRNLnS3aryE8faP9OLWgWVF90281DKQfie-Yvjne-wakIsIOKB8Z2mKfioCZ1PZkqvHWQwaUIuL-hHRgXyV95NnllZoazANI5TjEOXJFw3k65vO8nxTNJMjnlgrUn6jVc52rIzCkRCqo2MwQ48Jgdc6IMMOBhqEkwyVpMkPOmABsWhOZkM4QVcTNQfbpkqw3vuIprOdggOWPA8S80qbwUilmGgbOVFw1ZKezO0u34A_V-E0WvDSMb6MVb56GnJVbk8CNxa_WbXh5FzYSwZ4J0Y7c0rXplQpTHfKxNIGHsrESQWBIKe2vBp0j_GPVLFaywDL7C44sReBgdyiyN4uspB_Grxea7U8k-TTk9xE7dIOVTQEuFjMt-56WX7BulAB-mq0)
 
 ## 5.3. Niveau 3
 

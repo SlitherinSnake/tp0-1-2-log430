@@ -1,80 +1,98 @@
 @startuml
-title DSS – Enregistrer une vente
+title DSS – Enregistrer une vente (Spring Boot Web)
 
-' === Acteurs et composants impliqués ===
-' L'utilisateur humain (l'employé)
+' === Acteur principal ===
 actor Employe
-' Interface console qui lit la saisie
-participant "Console (Scanner)" as Console
-' Contrôleur principal qui orchestre les actions
-participant "MagasinController" as Controller
-' DAO pour récupérer l'employé
-participant "EmployeDAO" as EmployeDAO
-' DAO pour récupérer et modifier les produits
-participant "ProduitDAO" as ProduitDAO
-' DAO pour enregistrer la vente
-participant "VenteDAO" as VenteDAO
-' Base de données relationnelle utilisée (via Hibernate)
+
+' === Composants Web (architecture MVC Spring Boot) ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+participant "VenteController" as Controller
+participant "VenteService" as Service
+participant "EmployeRepository" as EmployeRepo
+participant "ProduitRepository" as ProduitRepo
+participant "VenteRepository" as VenteRepo
 database "PostgreSQL"
 
-' === Début du scénario ===
-' L’utilisateur interagit avec la console pour choisir l'option d'enregistrer une vente.
-Employe -> Console : sélectionne "Enregistrer une vente" \n dans l'interface console
+== Étape 1 : Accès au panier ==
+Employe -> Vue : accède à /panier (GET)
+' L’employé ouvre la page du panier pour visualiser les produits sélectionnés
 
-' La console appelle le contrôleur avec un Scanner comme paramètre
-Console -> Controller : enregistrerVente(scanner)
+Vue -> Controller : HTTP GET /panier
+' Le navigateur déclenche une requête GET vers le contrôleur
 
-' === Étape 1 : Identification de l'employé ===
-' Le contrôleur demande l'identification d’un employé à partir de l'id ou du nom
-Controller -> EmployeDAO : rechercherParId(id) ou rechercherParNom(nom)
-' Requête SQL pour retrouver l'employé
-EmployeDAO -> PostgreSQL : SELECT * \n FROM employes \n WHERE id = ? \n OU nom LIKE ?
-PostgreSQL --> EmployeDAO : Employe trouvé
-EmployeDAO --> Controller : Employe
-' Le contrôleur affiche les informations de l'employé dans la console
-Controller --> Console : afficher employé sélectionné
+Controller --> Vue : retourne panier.html avec vente en cours
+' Le contrôleur prépare les données de la vente en session et rend la vue HTML
 
-' === Étape 2 : Boucle de sélection des produits ===
-' L'utilisateur entre un ou plusieurs produits avec quantités
-loop Pour chaque produit saisi
-    ' Le contrôleur demande un identifiant de produit
-    Controller -> Console : demander id produit
-    ' Recherche du produit dans la base
-    Controller -> ProduitDAO : rechercherParId(produitId)
-    ProduitDAO -> PostgreSQL : SELECT * \n FROM produits \n WHERE id = ?
-    PostgreSQL --> ProduitDAO : Produit
-    ProduitDAO --> Controller : Produit
+== Étape 2 : Ajout de produit ==
+Employe -> Vue : clique "Ajouter au panier"
+' L’employé choisit un produit et indique une quantité
 
-    ' Demande de quantité à l'utilisateur
-    Controller -> Console : demander quantité souhaitée
+Vue -> Controller : HTTP POST /panier/add {produitId, quantite}
+' La requête POST contient l’identifiant du produit et la quantité demandée
 
-    alt quantité suffisante
-        ' Mise à jour du stock si la quantité est disponible
-        Controller -> ProduitDAO : mettreAJourStock(produit, nouvelleQuantite)
-        ProduitDAO -> PostgreSQL : UPDATE produits \n SET quantite = ? \n WHERE id = ?
-        PostgreSQL --> ProduitDAO : OK
-        ProduitDAO --> Controller : confirmation
-        ' Le contrôleur ajoute le produit à la vente en cours et met à jour le total
-        Controller -> Controller : ajoute à venteProduits \n et met à jour montantTotal
-    else stock insuffisant
-        ' Affichage d'un message d'erreur si le stock est insuffisant
-        Controller --> Console : afficher "stock insuffisant"
-    end
+Controller -> Service : ajouterProduit(produitId, quantite)
+' Le contrôleur délègue la logique métier d’ajout au service
 
-    ' Proposition d’ajouter un autre produit
-    Controller -> Console : proposer ajout d’un autre produit ?
+Service -> ProduitRepo : findById(produitId)
+' Le service vérifie que le produit existe dans la base de données
+
+ProduitRepo -> PostgreSQL : SELECT * \n FROM produits \n WHERE id = ?
+' Une requête SQL est générée pour récupérer le produit par son identifiant
+
+PostgreSQL --> ProduitRepo : Produit
+' La base renvoie les détails du produit
+
+ProduitRepo --> Service : Produit
+' Le produit est renvoyé au service pour traitement
+
+alt stock suffisant
+    Service -> ProduitRepo : mise à jour stock (quantite - q)
+    ' Si la quantité est disponible, le service décrémente le stock du produit
+
+    ProduitRepo -> PostgreSQL : UPDATE produits \n SET quantite = ...
+    ' La mise à jour de la quantité est appliquée dans la base
+
+    Service --> Controller : produit ajouté
+    ' Le service confirme l’ajout du produit au panier
+else stock insuffisant
+    Service --> Controller : erreur stock
+    ' Si le stock est insuffisant, une erreur est renvoyée
 end
 
-' === Étape 3 : Création et enregistrement de la vente ===
-' Enregistrement complet de la vente et des produits associés
-Controller -> VenteDAO : enregistrerVente(vente)
-' Insertion SQL de la vente et des lignes de produits associées
-VenteDAO -> PostgreSQL : INSERT INTO ventes \n + \n INSERT INTO vente_produit
-PostgreSQL --> VenteDAO : OK
-VenteDAO --> Controller : confirmation
+Controller --> Vue : mise à jour panier (via AJAX)
+' Le contrôleur retourne une réponse partielle pour mettre à jour dynamiquement l’affichage du panier
 
-' === Étape finale : affichage confirmation ===
-' Affichage du reçu de la vente à l’utilisateur
-Controller --> Console : afficher facture et détails vente
-Console --> Employe : affiche reçu de la vente
+== Étape 3 : Finalisation ==
+Employe -> Vue : clique "Valider la vente"
+' Une fois le panier complet, l’employé clique pour finaliser la vente
+
+Vue -> Controller : HTTP POST /ventes/valider {vente}
+' La requête POST contient toutes les informations de la vente en cours
+
+Controller -> Service : enregistrerVente(vente)
+' Le contrôleur délègue l’enregistrement complet de la vente au service
+
+Service -> EmployeRepo : findById(employeId)
+' Le service vérifie que l’employé assigné à la vente existe
+
+Service -> VenteRepo : save(vente)
+' Une fois les vérifications faites, la vente est sauvegardée en base
+
+VenteRepo -> PostgreSQL : INSERT INTO ventes + vente_produit
+' Deux tables sont affectées : `ventes` et la table associative `vente_produit`
+
+PostgreSQL --> VenteRepo : OK
+' Confirmation de l’insertion des données
+
+VenteRepo --> Service : confirmation
+Service --> Controller : vente confirmée
+' Le service remonte la confirmation d’enregistrement au contrôleur
+
+== Affichage ==
+Controller --> Vue : redirection vers facture.html
+' Le contrôleur redirige l’utilisateur vers la page de facture générée
+
+Vue --> Employe : affiche reçu de la vente
+' L’employé voit la facture avec les détails de la transaction
+
 @enduml

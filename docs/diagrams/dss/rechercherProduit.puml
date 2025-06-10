@@ -1,55 +1,49 @@
 @startuml
-title DSS – Rechercher un produit
+title DSS – Rechercher un produit (Spring Boot Web)
 
-' === Acteurs et composants impliqués ===
-' L'utilisateur humain (l'employé)
+' === Acteur principal ===
 actor Employe
-' Interface console qui lit la saisie
-participant "Console (Scanner)" as Console
-' Contrôleur principal qui orchestre les actions
-participant "MagasinController" as Controller
-' DAO qui accède à la BD via Hibernate
-participant "ProduitDAO" as DAO
-' Base de données relationnelle utilisée (via Hibernate)
+
+' === Composants Web ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+participant "ProduitController" as Controller
+participant "ProduitRepository" as Repo
 database "PostgreSQL"
 
-' === Début du scénario ===
-' L’utilisateur interagit avec la console pour choisir l'option de recherche de produit (ID, nom, ou catégorie)
-Employe -> Console : sélectionne "Rechercher un produit" \n dans l'interface console
+== Étape 1 : Saisie du critère de recherche ==
+Employe -> Vue : accède à /produits (GET)
+' L’employé ouvre la page de recherche de produits depuis l’interface web
 
-' La console appelle le contrôleur avec un Scanner comme paramètre
-Console -> Controller : rechercherProduit(scanner)
+Vue -> Controller : HTTP GET /produits?query=...
+' La requête est envoyée au contrôleur avec un paramètre "query" (id, nom ou catégorie)
 
-' === Cas 1 : recherche par identifiant ===
-alt recherche par ID
-    Controller -> DAO : rechercherParId(id)
-    ' Le contrôleur transmet la requête au DAO (selon le choix 1)
-    
-    DAO -> PostgreSQL : SELECT * \n FROM produits \n WHERE id = ?
-    ' Hibernate génère une requête SQL pour chercher un produit selon son identifiant
-    
-    PostgreSQL --> DAO : Produit
-    ' La base renvoie un objet produit correspondant
-    
-    DAO --> Controller : Produit
-    Controller --> Console : afficher(Produit)
-    ' Le produit trouvé est affiché dans la console
+' Le contrôleur reçoit la requête de recherche avec le critère saisi (id, nom ou catégorie)
+Controller -> Repo : recherche personnalisée selon critère
+' Il appelle une méthode du repository en fonction du contenu de "query"
 
-' === Cas 2 : recherche par nom (mot-clé) ===
-else recherche par nom
-    Controller -> DAO : rechercherParNom(nom)
-    DAO -> PostgreSQL : SELECT * \n FROM produits \n WHERE nom LIKE ?
-    PostgreSQL --> DAO : List<Produit>
-    DAO --> Controller : List<Produit>
-    Controller --> Console : afficherListeProduits()
-    ' Plusieurs produits peuvent correspondre, la liste est affichée
+note right of Controller
+Exemples :
+- findById(id)
+- findByNomContainingIgnoreCase(nom)
+- findByCategorieContainingIgnoreCase(categorie)
+- findByNomContainingIgnoreCaseAndCategorieContainingIgnoreCase(...)
+end note
+' Le contrôleur choisit dynamiquement l’une de ces méthodes en analysant les filtres
 
-' === Cas 3 : recherche par catégorie ===
-else recherche par catégorie
-    Controller -> DAO : rechercherParCategorie(categorie)
-    DAO -> PostgreSQL : SELECT * \n FROM produits WHERE \n categorie LIKE ?
-    PostgreSQL --> DAO : List<Produit>
-    DAO --> Controller : List<Produit>
-    Controller --> Console : afficherListeProduits()
-end
+Repo -> PostgreSQL : SELECT * \n FROM produits WHERE ...
+' Le repository exécute une requête SQL vers la base de données
+
+PostgreSQL --> Repo : List<Produit>
+' PostgreSQL retourne la liste des produits correspondant aux critères
+
+Repo --> Controller : résultats correspondants
+' Les résultats sont renvoyés au contrôleur
+
+== Étape 2 : Affichage des résultats ==
+Controller --> Vue : retourne "home.html" avec liste de produits
+' Le contrôleur ajoute les résultats au modèle et renvoie la vue correspondante
+
+Vue --> Employe : affiche résultats dans un tableau filtré
+' L’interface web affiche un tableau avec les produits trouvés
+
 @enduml

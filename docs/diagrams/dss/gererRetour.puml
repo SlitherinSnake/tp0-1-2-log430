@@ -1,80 +1,86 @@
 @startuml
-title DSS – Gérer un retour
+title DSS – Gérer un retour (Spring Boot Web)
 
-' === Acteurs et composants impliqués ===
-' L'utilisateur humain (l'employé)
+' === Acteur principal ===
 actor Employe
-' Interface console qui lit la saisie
-participant "Console (Scanner)" as Console
-' Contrôleur principal qui orchestre les actions
-participant "MagasinController" as Controller
-' DAO pour accéder à la vente d’origine
-participant "VenteDAO" as VenteDAO
-' DAO pour mettre à jour le stock et accéder aux produits
-participant "ProduitDAO" as ProduitDAO
-' DAO pour enregistrer le retour
-participant "RetourDAO" as RetourDAO
-' Base de données relationnelle utilisée (via Hibernate)
+
+' === Composants du système ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+participant "RetourController" as Controller
+participant "RetourService" as Service
+participant "VenteRepository" as VenteRepo
+participant "RetourRepository" as RetourRepo
+participant "ProduitRepository" as ProduitRepo
 database "PostgreSQL"
 
-' === Début du scénario ===
-'  L’utilisateur interagit avec la console pour choisir l'option de retour de produits
-Employe -> Console : sélectionne "Gérer un retour" \n dans l'interface console
+== Étape 1 : Accès à la page de retour ==
+Employe -> Vue : accède à /retour (GET)
+' L’employé clique sur le lien ou le bouton "Retour" dans l’interface
 
-' La console appelle le contrôleur avec un Scanner comme paramètre
-Console -> Controller : gererRetour(scanner)
+Vue -> Controller : HTTP GET /retour
+' Le navigateur envoie une requête GET au contrôleur pour charger le formulaire
 
-' === Étape 1 : Identification de la vente concernée ===
-Controller -> VenteDAO : rechercherParId(venteId)
-' Le contrôleur demande au DAO la vente en question avec ses produits
+Controller -> Vue : retourne formulaire retour.html
+' Le contrôleur retourne la vue HTML contenant le formulaire de recherche de vente
 
-VenteDAO -> PostgreSQL : SELECT v.*, vp.* \n FROM ventes v \n LEFT JOIN vente_produit vp \n ON v.id = vp.vente_id \n WHERE v.id = ?
-' Hibernate effectue une jointure pour récupérer la vente et ses produits en une seule requête
+== Étape 2 : Recherche de la vente ==
+Employe -> Vue : saisit l’ID de la vente
+' L’utilisateur entre l’identifiant de la vente concernée dans le champ prévu
 
-PostgreSQL --> VenteDAO : Vente (avec venteProduits)
-VenteDAO --> Controller : Vente
-Controller --> Console : afficher détails de la vente
-' La vente est affichée avec ses produits pour que l’employé vérifie les infos
+Vue -> Controller : HTTP POST /retour/rechercheVente
+' Le formulaire est soumis au contrôleur via une requête POST
 
-' === Étape 2 : Saisie des produits à retourner ===
-loop Pour chaque produit retourné
-    Controller -> Console : demander id produit à retourner
-    ' Le contrôleur demande à l'utilisateur de saisir l'ID d’un produit
+Controller -> VenteRepo : findById(venteId)
+' Le contrôleur appelle le repository pour retrouver la vente correspondante
 
-    alt produit trouvé dans la vente
-        ' Vérifie que le produit saisi faisait partie de la vente d'origine
-        Controller -> Console : demander quantité à retourner
+VenteRepo -> PostgreSQL : SELECT * \n FROM vente \n WHERE id = ?
+' Exécution d’une requête SQL pour récupérer la vente et ses détails
 
-        alt quantité valide
-            ' Si la quantité retournée est correcte
-            Controller -> ProduitDAO : mettreAJourStock(produit, nouvelleQuantite)
-            ProduitDAO -> PostgreSQL : UPDATE produits \n SET quantite = ? \n WHERE id = ?
-            PostgreSQL --> ProduitDAO : OK
-            ProduitDAO --> Controller : confirmation
-            ' Le stock est mis à jour suite au retour
-        else quantité invalide
-            Controller --> Console : afficher "Quantité invalide"
-            ' Si la quantité retournée est incorrecte, message d’erreur
-        end
-    else produit absent de la vente
-        Controller --> Console : afficher "Produit non présent dans cette vente"
-        ' Si l'ID du produit ne fait pas partie des produits de la vente
-    end
+PostgreSQL --> VenteRepo : Vente
+' Résultat : l’objet Vente avec ses produits associés est retourné
 
-    Controller -> Console : proposer retour d’un autre produit ?
-    ' Reboucle tant que l’utilisateur veut retourner d’autres produits
-end
+VenteRepo --> Controller : Vente
+' Le repository transmet l’objet Vente au contrôleur
 
-' === Étape 3 : Création et enregistrement du retour ===
-Controller -> RetourDAO : enregistrerRetour(retour)
-' Une fois tous les produits saisis, le retour est enregistré avec les objets associés
+Controller -> Vue : affiche les produits de la vente
+' Le contrôleur passe les détails de la vente à la vue pour affichage
 
-RetourDAO -> PostgreSQL : INSERT INTO retours + \n INSERT INTO retour_produit
-PostgreSQL --> RetourDAO : OK
-RetourDAO --> Controller : confirmation
+== Étape 3 : Sélection des produits à retourner ==
+Employe -> Vue : sélectionne produits + quantités à retourner
+' L’utilisateur coche les produits à retourner et entre les quantités
 
-' === Étape finale : Affichage du reçu de retour ===
-Controller --> Console : afficher reçu avec produits retournés et total remboursé
-Console --> Employe : afficher reçu de retour
-' Affiche la facture du retour à l'utilisateur
+Vue -> Controller : HTTP POST /retour/valider
+' Le formulaire de retour est soumis pour validation et traitement
+
+Controller -> Service : enregistrerRetour(venteId, mapProduits)
+' Le contrôleur délègue la logique métier de validation et sauvegarde au service
+
+Service -> ProduitRepo : mise à jour des stocks (x produits)
+' Le service met à jour les quantités disponibles en stock pour chaque produit retourné
+
+ProduitRepo -> PostgreSQL : UPDATE produits \n SET quantite = ...
+' Exécution des requêtes SQL de mise à jour pour chaque produit
+
+Service -> RetourRepo : save(retour + lignesRetour)
+' Le service sauvegarde l’objet `Retour` et les lignes associées (produits retournés)
+
+RetourRepo -> PostgreSQL : INSERT INTO retour + retour_produit
+' Insertion dans les tables `retour` et `retour_produit` via JPA/Hibernate
+
+PostgreSQL --> RetourRepo : OK
+' Confirmation de la persistance en base
+
+RetourRepo --> Service : confirmation
+' Retour du statut de sauvegarde au service
+
+== Étape 4 : Confirmation ==
+Service --> Controller : retour enregistré
+' Le service confirme que le retour a été correctement enregistré
+
+Controller --> Vue : redirection ou affichage reçu
+' Le contrôleur redirige l’utilisateur ou génère une page de reçu
+
+Vue --> Employe : affiche reçu retour
+' L’interface affiche le reçu récapitulatif du retour à l’employé
+
 @enduml

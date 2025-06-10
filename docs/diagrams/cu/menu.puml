@@ -1,18 +1,32 @@
 @startuml
-title Diagramme de cas d'utilisation – Magasin
+title Diagramme de cas d'utilisation – Système de gestion multi-magasins (Web)
 
 actor Employe
 
-rectangle "Système de caisse (console + BD locale)" {
+rectangle "Application Web Spring Boot\n(Interface Thymeleaf + Services + BD PostgreSQL)" {
+
+  ' === Cas d'utilisation de gestion de produits ===
   usecase "Rechercher un produit" as UC1
-  usecase "Enregistrer une vente" as UC2
-  usecase "Gérer un retour" as UC3
-  usecase "Consulter l’état du stock" as UC4
+  usecase "Consulter le stock central" as UC2
+
+  ' === Cas d'utilisation de gestion des ventes ===
+  usecase "Ajouter un produit au panier" as UC3
+  usecase "Valider une vente" as UC4
+
+  ' === Cas d'utilisation de gestion des retours ===
+  usecase "Initier un retour" as UC5
+  usecase "Valider les produits retournés" as UC6
+
+  ' === Cas d'utilisation de rapport (ex : UC1 de ton projet final) ===
+  usecase "Générer un rapport consolidé des ventes" as UC7
 }
 
 Employe --> UC1
 Employe --> UC2
 Employe --> UC3
 Employe --> UC4
+Employe --> UC5
+Employe --> UC6
+Employe --> UC7
 
 @enduml

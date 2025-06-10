@@ -1,37 +1,72 @@
 @startuml
-title Vue d’implémentation – Organisation des modules (MVC + DAO)
+title Vue d’implémentation – Organisation des modules (MVC + Service + Repository)
 
-package "com.log430.tp1.view" {
-  class ConsoleView
+' === Packages ===
+package "com.log430.tp2.controller" {
+  class ProduitController
+  class VenteController
+  class RetourController
+  class StockCentralController
+  class RapportController
+  class DashboardController
 }
 
-package "com.log430.tp1.controller" {
-  class MagasinController
+package "com.log430.tp2.service" {
+  class RapportService
+  class StockCentralService
 }
 
-package "com.log430.tp1.model" {
+package "com.log430.tp2.repository" {
+  class ProduitRepository
+  class VenteRepository
+  class RetourRepository
+  class EmployeRepository
+  class MagasinRepository
+  class StockMagasinRepository
+  class StockCentralRepository
+}
+
+package "com.log430.tp2.model" {
   class Produit
   class Vente
   class Retour
   class Employe
+  class VenteProduit
+  class RetourProduit
+  class Magasin
+  class StockMagasin
+  class StockCentral
 }
 
-package "com.log430.tp1.dao" {
-  class ProduitDAO
-  class VenteDAO
-  class RetourDAO
-  class EmployeDAO
-}
+' === Relations contrôleurs → services ===
+RapportController --> RapportService
+StockCentralController --> StockCentralService
 
-ConsoleView --> MagasinController : interagit
+' === Relations contrôleurs → repositories ===
+ProduitController --> ProduitRepository
+VenteController --> ProduitRepository
+VenteController --> VenteRepository
+VenteController --> EmployeRepository
+VenteController --> MagasinRepository
 
-MagasinController --> ProduitDAO
-MagasinController --> VenteDAO
-MagasinController --> RetourDAO
-MagasinController --> EmployeDAO
+RetourController --> RetourRepository
+RetourController --> VenteRepository
+RetourController --> ProduitRepository
 
-MagasinController --> Produit
-MagasinController --> Vente
-MagasinController --> Retour
-MagasinController --> Employe
+DashboardController --> VenteRepository
+DashboardController --> StockMagasinRepository
+DashboardController --> ProduitRepository
+
+StockCentralController --> MagasinRepository
+StockCentralController --> StockMagasinRepository
+StockCentralController --> StockCentralService
+
+' === Services → Repositories ===
+RapportService --> VenteRepository
+RapportService --> ProduitRepository
+
+StockCentralService --> ProduitRepository
+StockCentralService --> MagasinRepository
+StockCentralService --> StockCentralRepository
+
 @enduml
