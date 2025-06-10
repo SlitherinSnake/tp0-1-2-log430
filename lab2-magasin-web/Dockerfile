@@ -1,37 +1,44 @@
-# =============================================
-# Dockerfile – Spring Boot Web (Multi-stage)
-#
-# Build image:
-# docker build -t magasin-web-app .
-#
-# Run container:
-# docker run --rm -p 8080:8080 magasin-web-app
-# =============================================
+# ----------------------------
+#  Docker - Usage Instructions
+# ----------------------------
 
-# --- Build stage ---
-FROM eclipse-temurin:21-jdk AS build
+# To build the image
+# docker build -t java-hello-app .
 
-WORKDIR /app
+# To run the container (console app)
+# docker run --rm java-hello-app
 
-# Copier tout le projet (src + pom + mvnw)
-COPY . .
+# To run the container (web app on port 8080)
+# docker run --rm -p 8080:8080 java-hello-app
 
-# Donner les droits si le projet est sur Unix
-RUN chmod +x mvnw
+# ----------------------------
+# Step 1: Build the project with Maven
+# ----------------------------
 
-# Compiler et empaqueter l'application Spring Boot
-RUN ./mvnw clean package -DskipTests
+FROM maven:3.9.5-eclipse-temurin-21 AS build
 
-# --- Runtime stage ---
+WORKDIR /build
+
+# Copy Maven config
+COPY pom.xml .
+
+# Copy source files
+COPY src ./src
+
+# Package the app
+RUN mvn clean package assembly:single -DskipTests
+
+
+# ----------------------------
+# Step 2: Create a lightweight runtime image
+# ----------------------------
+
 FROM eclipse-temurin:21-jdk
 
 WORKDIR /app
 
-# Copier le .jar généré (nom exact à adapter si différent)
-COPY --from=build /app/target/*SNAPSHOT.jar app.jar
+# Copy the built JAR from the previous stage
+COPY --from=build /build/target/*-jar-with-dependencies.jar app.jar
 
-# Exposer le port de l'application Spring Boot
-EXPOSE 8080
-
-# Lancer l'application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the app
+CMD ["java", "-jar", "app.jar"]
