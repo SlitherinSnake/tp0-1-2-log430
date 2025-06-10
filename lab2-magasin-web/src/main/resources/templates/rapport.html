@@ -2,102 +2,140 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta charset="UTF-8">
     <title>Rapport consolidé – Maison Mère</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
-<body class="container my-4">
+<body class="bg-light">
+    <div class="container py-4">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" th:href="@{/ventes}">Magasin</a>
+                <div>
+                    <a class="btn btn-primary position-relative" th:href="@{/panier}">
+                        <i class="bi bi-cart4"></i> Voir mon panier
+                        <span id="cart-count"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                    </a>
+                </div>
+                <div class="ms-2">
+                    <a class="btn btn-warning" th:href="@{/retour}">
+                        <i class="bi bi-arrow-counterclockwise"></i> Faire un retour
+                    </a>
+                </div>
+                <div class="ms-2">
+                    <a class="btn btn-info position-relative" th:href="@{/stock}">
+                        <i class="bi bi-box"></i> Stock central
+                    </a>
+                </div>
+            </div>
+        </nav>
 
-    <h1 class="text-center mb-5">Rapport consolidé</h1>
+        <h1 class="text-center mb-5">Rapport consolidé</h1>
 
-    <form method="get" action="/rapport" class="mb-4">
-        <div class="row g-2 align-items-center">
-            <div class="col-auto">
-                <label for="magasinId" class="col-form-label fw-bold">Filtrer par magasin :</label>
+        <!-- Filtrage par magasin -->
+        <form method="get" action="/rapport" class="mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label for="magasinId" class="col-form-label fw-bold">Filtrer par magasin :</label>
+                </div>
+                <div class="col-auto">
+                    <select class="form-select" name="magasinId" id="magasinId">
+                        <option value="">-- Tous les magasins --</option>
+                        <option th:each="m : ${magasins}" th:value="${m.id}" th:text="${m.nom}"
+                            th:selected="${m.id == magasinId}">
+                        </option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Filtrer</button>
+                </div>
             </div>
-            <div class="col-auto">
-                <select class="form-select" name="magasinId" id="magasinId">
-                    <option value="">-- Tous les magasins --</option>
-                    <option th:each="m : ${magasins}" th:value="${m.id}" th:text="${m.nom}"
-                        th:selected="${m.id == magasinId}">
-                    </option>
-                </select>
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">Filtrer</button>
-            </div>
+        </form>
+
+        <!-- Section ventes -->
+        <div class="section">
+            <h2>1. Ventes par magasin</h2>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Magasin</th>
+                        <th>Total des ventes ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${ventesParMagasin}">
+                        <td th:text="${entry.key}">Magasin A</td>
+                        <td th:text="${entry.value}">1234.56</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </form>
 
-    <div class="section">
-        <h2>1. Ventes par magasin</h2>
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Magasin</th>
-                    <th>Total des ventes ($)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="entry : ${ventesParMagasin}">
-                    <td th:text="${entry.key}">Magasin A</td>
-                    <td th:text="${entry.value}">1234.56</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>2. Produits les plus vendus</h2>
-        <div th:if="${#lists.isEmpty(produitsPopulaires)}">
-            <p class="text-muted fst-italic">Aucune vente enregistrée pour le moment.</p>
+        <!-- Section produits -->
+        <div class="section">
+            <h2>2. Produits les plus vendus</h2>
+            <div th:if="${#lists.isEmpty(produitsPopulaires)}">
+                <p class="text-muted fst-italic">Aucune vente enregistrée pour le moment.</p>
+            </div>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nom du produit</th>
+                        <th>Quantité vendue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${produitsPopulaires}">
+                        <td th:text="${entry.key.nom}">Produit X</td>
+                        <td th:text="${entry.value}">42</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Nom du produit</th>
-                    <th>Quantité vendue</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="entry : ${produitsPopulaires}">
-                    <td th:text="${entry.key.nom}">Produit X</td>
-                    <td th:text="${entry.value}">42</td>
-                </tr>
-            </tbody>
-        </table>
+
+        <!-- Section stock -->
+        <div class="section">
+            <h2>3. Stock actuel</h2>
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Catégorie</th>
+                        <th>Prix ($)</th>
+                        <th>Quantité disponible</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="produit : ${stockActuel}">
+                        <td th:text="${produit.id}">1</td>
+                        <td th:text="${produit.nom}">Produit Y</td>
+                        <td th:text="${produit.categorie}">Catégorie</td>
+                        <td th:text="${produit.prix}">9.99</td>
+                        <td th:text="${produit.quantite}">10</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            <a th:href="@{/ventes}" style="font-weight: bold; color: darkgreen;">← Retour à l’accueil</a>
+        </div>
     </div>
 
-    <div class="section">
-        <h2>3. Stock actuel</h2>
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nom</th>
-                    <th>Catégorie</th>
-                    <th>Prix ($)</th>
-                    <th>Quantité disponible</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="produit : ${stockActuel}">
-                    <td th:text="${produit.id}">1</td>
-                    <td th:text="${produit.nom}">Produit Y</td>
-                    <td th:text="${produit.categorie}">Catégorie</td>
-                    <td th:text="${produit.prix}">9.99</td>
-                    <td th:text="${produit.quantite}">10</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div style="margin-top: 30px;">
-        <a href="/" style="font-weight: bold; color: darkgreen;">← Retour à l’accueil</a>
-    </div>
-
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        fetch("/panier/count")
+            .then(res => res.text())
+            .then(count => {
+                const span = document.getElementById("cart-count");
+                if (span) span.innerText = count;
+            });
+    </script>
 </body>
 
 </html>

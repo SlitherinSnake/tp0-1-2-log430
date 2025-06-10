@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 @Entity
 // Nom de la table dans la base de données
 @Table(name = "stock")
-public class Stock {
+public class StockCentral {
     
     // Identifiant unique pour chaque employé
     @Id
@@ -32,10 +32,10 @@ public class Stock {
     private LocalDate dateDemande;
 
     // Constructeur par défaut requis par JPA
-    public Stock() { }
+    public StockCentral() { }
 
     // Constructeur avec paramètres pour initialiser une demande
-    public Stock(Produit produit, Magasin magasin, int quantiteDemandee, LocalDate dateDemande) {
+    public StockCentral(Produit produit, Magasin magasin, int quantiteDemandee, LocalDate dateDemande) {
         this.produit = produit;
         this.magasin = magasin;
         this.quantiteDemandee = quantiteDemandee;

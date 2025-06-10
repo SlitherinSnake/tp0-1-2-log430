@@ -1,7 +1,7 @@
 package com.log430.tp2.controller;
 
 import com.log430.tp2.model.*;
-import com.log430.tp2.service.StockService;
+import com.log430.tp2.service.StockCentralService;
 import com.log430.tp2.repository.MagasinRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +18,13 @@ import java.util.List;
 // Par exemple : "/stock", "/stock/demander"…
 // Cela permet de regrouper logiquement les fonctionnalités liées au stock.
 @RequestMapping("/stock")
-public class StockController {
+public class StockCentralController {
 
     // Injecte automatiquement une instance du composant (Repository, Service, etc.)
     // correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
-    private StockService stockService;
+    private StockCentralService stockService;
     @Autowired
     private MagasinRepository magasinRepository;
 
@@ -44,6 +44,9 @@ public class StockController {
         // Pour activer l’historique dans la vue
         if (magasinId != null) {
             model.addAttribute("demandes", stockService.getDemandesParMagasin(magasinId));
+
+            // Prépare le nom du magasin
+            magasinRepository.findById(magasinId).ifPresent(m -> model.addAttribute("nomMagasin", m.getNom()));
         }
 
         return "stock"; // → templates/stock.html

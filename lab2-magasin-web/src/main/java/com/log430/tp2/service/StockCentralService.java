@@ -10,10 +10,10 @@ import com.log430.tp2.model.*;
 import com.log430.tp2.repository.*;
 
 @Service
-public class StockService {
+public class StockCentralService {
 
     @Autowired
-    private StockRepository stockRepository;
+    private StockCentralRepository stockRepository;
     @Autowired
     private ProduitRepository produitRepository;
     @Autowired
@@ -52,7 +52,7 @@ public class StockService {
         }
 
         // Création et sauvegarde de la demande
-        Stock demande = new Stock(produit, magasin, quantite, LocalDate.now());
+        StockCentral demande = new StockCentral(produit, magasin, quantite, LocalDate.now());
         stockRepository.save(demande);
         return true;
     }
@@ -61,7 +61,7 @@ public class StockService {
      * Récupère l’historique des demandes de stock faites par un magasin donné.
      * Les plus récentes sont affichées en premier.
      */
-    public List<Stock> getDemandesParMagasin(int magasinId) {
+    public List<StockCentral> getDemandesParMagasin(int magasinId) {
         return stockRepository.findByMagasin(magasinId);
     }
 
@@ -69,7 +69,7 @@ public class StockService {
      * Récupère l’historique des demandes effectuées pour un produit spécifique.
      * Utile pour voir quels magasins en ont demandé récemment.
      */
-    public List<Stock> getDemandesParProduit(int produitId) {
+    public List<StockCentral> getDemandesParProduit(int produitId) {
         return stockRepository.findByProduit(produitId);
     }
 }
