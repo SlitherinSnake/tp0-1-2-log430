@@ -5,12 +5,12 @@ Cette section présente les principes techniques et conceptuels appliqués globa
 ## 8.1. Modèle architectural
 
 - Utilisation du **pattern MVC** pour séparer présentation, logique métier et persistance.
-- Couche de persistance isolée via DAO, manipulant des entités JPA.
+- Couche de persistance isolée via Repostory, manipulant des entités JPA.
 
 ## 8.2. ORM et persistance
 
 - Utilisation de **Hibernate avec JPA** pour abstraire l’accès aux données SQLite.
-- Les entités sont annotées (`@Entity`, `@Id`, etc.) et gérées via des DAO.
+- Les entités sont annotées (`@Entity`, `@Id`, etc.) et gérées via des Repostory.
 
 ## 8.3. Transactions
 
