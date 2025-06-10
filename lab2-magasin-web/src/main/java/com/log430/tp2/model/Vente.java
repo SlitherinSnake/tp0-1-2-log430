@@ -27,6 +27,13 @@ public class Vente {
     @JoinColumn(name = "employe_id")
     private Employe employe;
 
+    // Plusieurs ventes peuvent être effectuées dans un même magasin.
+    @ManyToOne
+    // Ceci précise que dans la table vente, il y a une colonne magasin_id
+    // servant de clé étrangère vers l'entité Magasin.
+    @JoinColumn(name = "magasin_id")
+    private Magasin magasin;
+
     // Constructeur par défaut requis par JPA
     public Vente() {
     }
@@ -119,6 +126,14 @@ public class Vente {
 
     public void setVenteProduits(List<VenteProduit> venteProduits) {
         this.venteProduits = venteProduits;
+    }
+
+    public Magasin getMagasin() {
+        return magasin;
+    }
+
+    public void setMagasin(Magasin magasin) {
+        this.magasin = magasin;
     }
 
     @Override
