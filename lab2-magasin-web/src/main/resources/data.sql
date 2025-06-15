@@ -68,6 +68,22 @@ CREATE TABLE IF NOT EXISTS vente_produit (
     vente_id INTEGER REFERENCES ventes(id)
 );
 
+-- Création de la table retours
+CREATE TABLE IF NOT EXISTS retours (
+    id SERIAL PRIMARY KEY,
+    date_retour DATE,
+    vente_id INTEGER REFERENCES ventes(id),
+    employe_id INTEGER REFERENCES employes(id)
+);
+
+-- Création de la table retour_produit
+CREATE TABLE IF NOT EXISTS retour_produit (
+    id SERIAL PRIMARY KEY,
+    quantite INTEGER NOT NULL,
+    retour_id INTEGER REFERENCES retours(id),
+    produit_id INTEGER REFERENCES produits(id)
+);
+
 -- Insertion des employés
 INSERT INTO employes (id, identifiant, nom) VALUES 
     (1, 'emp001', 'Alice'),
@@ -144,7 +160,10 @@ INSERT INTO stock_magasin (produit_id, magasin_id, quantite) VALUES
     (11, 3, 35), -- Pantalon
     (12, 3, 75); -- Manteau
 
--- Vider les anciennes ventes et les lignes associées
+-- Important : respecter l’ordre des dépendances pour éviter les violations de contraintes
+-- Vider les données liées aux ventes dans l’ordre des dépendances
+DELETE FROM retour_produit;
+DELETE FROM retours;
 DELETE FROM vente_produit;
 DELETE FROM ventes;
 
