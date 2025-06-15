@@ -14,9 +14,16 @@ public class Vente {
     @Id
     // BD auto-génère les IDs
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private int id;
+
+    // Ceci précise que dans la table vente, il y a une colonne date_vente pour
+    // identifier la date de vente.
+    @Column(name = "date_vente")
     private LocalDate dateVente;
+
+    // Ceci précise que dans la table vente, il y a une colonne montant_total pour
+    // identifier le montant de vente.
+    @Column(name = "montant_total")
     private Double montantTotal;
 
     // plusieurs ventes peuvent être fait par un même employé.
@@ -65,7 +72,6 @@ public class Vente {
         VenteProduit nv = new VenteProduit(this, produit, quantite);
         venteProduits.add(nv);
     }
-
     
     // Supprime un produit de la vente à partir de son ID
     // Utilise une expression lambda pour filtrer et retirer le produit correspondant
