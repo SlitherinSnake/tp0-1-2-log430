@@ -1,11 +1,31 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org" xml:lang="fr" lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <title>Tableau de bord</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .navbar .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .navbar .nav-link:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        .navbar .nav-link.active {
+            background-color: rgba(0,0,0,0.1);
+        }
+        .store-badge {
+            font-size: 0.9rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            border-radius: 0.25rem;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -14,33 +34,53 @@
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
             <div class="container-fluid">
-                <a class="navbar-brand fw-bold" th:href="@{/ventes}">Magasin</a>
-                <div>
-                    <a class="btn btn-primary position-relative" th:href="@{/panier}">
-                        <i class="bi bi-cart4"></i>
-                        Voir mon panier
-                        <span id="cart-count"
-                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
-                    </a>
-                </div>
+                <a class="navbar-brand fw-bold" th:href="@{/ventes}">
+                    <i class="bi bi-shop me-2"></i>Magasin
+                </a>
 
-                <div class="ms-2">
-                    <a class="btn btn-warning position-relative" th:href="@{/retour}">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                        Faire un retour
-                    </a>
-                </div>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-                <div class="ms-2">
-                    <a class="btn btn-info text-white" th:href="@{/rapport}">
-                        <i class="bi bi-bar-chart-line-fill"></i> Rapport
-                    </a>
-                </div>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" th:href="@{/ventes}">
+                                <i class="bi bi-house-door me-1"></i> Accueil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center active" th:href="@{/dashboard}">
+                                <i class="bi bi-graph-up me-1"></i> Tableau de bord
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" th:href="@{/rapport}">
+                                <i class="bi bi-bar-chart-line-fill me-1"></i> Rapport
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" th:href="@{/stock}">
+                                <i class="bi bi-box me-1"></i> Stock central
+                            </a>
+                        </li>
+                    </ul>
 
-                <div class="ms-2">
-                    <a class="btn btn-info position-relative" th:href="@{/stock}">
-                        <i class="bi bi-box"></i> Stock central
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-warning d-flex align-items-center" th:href="@{/retour}">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            Retour
+                        </a>
+                        <a class="btn btn-primary position-relative d-flex align-items-center" th:href="@{/panier}">
+                            <i class="bi bi-cart4 me-1"></i>
+                            Panier
+                            <span id="cart-count"
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                0
+                            </span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -48,17 +88,49 @@
         <!-- TITRE -->
         <h1 class="fw-bold mb-4">Tableau de bord – Performances</h1>
 
-        <!-- Chiffre d'affaires -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header fw-bold bg-dark text-white">
-                <i class="bi bi-currency-dollar"></i> Chiffre d'affaires par magasin
+        <!-- Graphique en camembert des ventes par magasin -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header fw-bold bg-primary text-white">
+                        <i class="bi bi-pie-chart"></i> Répartition des ventes par magasin
+                    </div>
+                    <div class="card-body">
+                        <canvas id="salesPieChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between" th:each="ligne : ${chiffresAffaires}">
-                    <span th:text="${ligne[0]}">Nom Magasin</span>
-                    <span th:text="${ligne[1]} + ' $'">1000 $</span>
-                </li>
-            </ul>
+            <!-- Chiffre d'affaires -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header fw-bold bg-dark text-white">
+                        <i class="bi bi-currency-dollar"></i> Chiffre d'affaires par magasin
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Magasin</th>
+                                    <th>Montant</th>
+                                    <th>Pourcentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="magasin : ${ventesParMagasin}">
+                                    <td th:text="${magasin.nom}">Magasin A</td>
+                                    <td th:text="${magasin.montant} + ' $'">1000 $</td>
+                                    <td th:text="${magasin.pourcentage} + '%'">33.3%</td>
+                                </tr>
+                                <tr class="table-dark">
+                                    <td class="fw-bold">Total</td>
+                                    <td class="fw-bold" th:text="${totalVentes} + ' $'">3000 $</td>
+                                    <td class="fw-bold">100%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Rupture de stock -->
@@ -70,6 +142,9 @@
                 <li class="list-group-item" th:each="r : ${ruptures}">
                     <span th:text="${r.produit.nom}"></span> –
                     <span th:text="'Magasin: ' + ${r.magasin.nom}"></span>
+                </li>
+                <li class="list-group-item text-muted" th:if="${ruptures.isEmpty()}">
+                    Aucun produit en rupture de stock
                 </li>
             </ul>
         </div>
@@ -84,6 +159,9 @@
                     <span th:text="${s.produit.nom}"></span> –
                     <span th:text="'Quantité: ' + ${s.quantite} + ' (Magasin: ' + ${s.magasin.nom} + ')'"></span>
                 </li>
+                <li class="list-group-item text-muted" th:if="${surstocks.isEmpty()}">
+                    Aucun produit en surstock
+                </li>
             </ul>
         </div>
 
@@ -97,6 +175,9 @@
                     <span th:text="${v.date}">2025-06-01</span> –
                     <span th:text="${v.total} + ' $'">200 $</span>
                 </li>
+                <li class="list-group-item text-muted" th:if="${ventesSemaine.isEmpty()}">
+                    Aucune vente sur les 7 derniers jours
+                </li>
             </ul>
         </div>
 
@@ -104,11 +185,58 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+    <script th:inline="javascript">
         // Mise à jour du compteur du panier
         fetch("/panier/count").then(res => res.text()).then(count => {
             const span = document.getElementById("cart-count");
             if (span) span.innerText = count;
+        });
+        
+        // Données pour le graphique en camembert
+        const ventesParMagasin = /*[[${ventesParMagasin}]]*/ [];
+        
+        // Préparer les données pour Chart.js
+        const labels = ventesParMagasin.map(m => m.nom);
+        const data = ventesParMagasin.map(m => m.montant);
+        const backgroundColors = [
+            'rgba(54, 162, 235, 0.8)',  // Bleu
+            'rgba(255, 99, 132, 0.8)',  // Rose
+            'rgba(255, 206, 86, 0.8)',  // Jaune
+            'rgba(75, 192, 192, 0.8)',  // Vert menthe
+            'rgba(153, 102, 255, 0.8)', // Violet
+            'rgba(255, 159, 64, 0.8)'   // Orange
+        ];
+        
+        // Créer le graphique
+        const ctx = document.getElementById('salesPieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors.slice(0, labels.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = ventesParMagasin[context.dataIndex].pourcentage;
+                                return `${label}: ${value} $ (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
         });
     </script>
 </body>
