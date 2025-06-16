@@ -26,11 +26,11 @@ public class RetourController {
     // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
-    private RetourRepository retourRepository;
+    private RetourRepository retourRepository; // Accès aux retours
     @Autowired
-    private VenteRepository venteRepository;
+    private VenteRepository venteRepository; // Accès aux ventes
     @Autowired
-    private ProduitRepository produitRepository;
+    private ProduitRepository produitRepository; // Accès aux produits
 
     /**
      * Redirige automatiquement vers le formulaire de retour.

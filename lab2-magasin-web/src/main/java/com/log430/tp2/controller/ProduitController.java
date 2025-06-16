@@ -1,6 +1,8 @@
 package com.log430.tp2.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,20 +12,52 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttributes;
 
+import com.log430.tp2.model.Magasin;
 import com.log430.tp2.model.Produit;
+import com.log430.tp2.model.StockMagasin;
+import com.log430.tp2.repository.MagasinRepository;
 import com.log430.tp2.repository.ProduitRepository;
+import com.log430.tp2.repository.StockMagasinRepository;
 
 // Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
 // Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
+// Garde "selectedMagasinId" en session pour le réutiliser entre les requêtes (ex : lors des ventes ou retours).
+@SessionAttributes("selectedMagasinId")
 public class ProduitController {
 
     // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
-    private ProduitRepository produitRepository;
+    private ProduitRepository produitRepository; // Accès aux produits
+    @Autowired
+    private MagasinRepository magasinRepository; // Accès aux magasin
+    @Autowired
+    private StockMagasinRepository stockMagasinRepository;
+
+    // Initialise "selectedMagasinId" dans la session avec la valeur par défaut (1)
+    @ModelAttribute("selectedMagasinId")
+    public Integer initSelectedMagasinId() {
+        return 1;
+    }
     
+    // Charge la liste complète des magasins pour les rendre disponibles dans toutes les vues
+    @ModelAttribute("allMagasins")
+    public List<Magasin> getAllMagasins() {
+        return magasinRepository.findAll();
+    }
+    
+    // Met à jour le magasin sélectionné dans la session et redirige vers l’accueil
+    @GetMapping("/selectMagasin/{id}")
+    public String selectMagasin(@PathVariable int id, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId, Model model) {
+        // Met à jour le magasin sélectionné dans la session
+        model.addAttribute("selectedMagasinId", id);
+        // Retour à la page d'acceuil
+        return "redirect:/";
+    }
+
      /**
      * Méthode utilitaire privée pour afficher la page principale avec la liste des produits.
      * Elle permet aussi de pré-remplir le formulaire d'édition si nécessaire.
@@ -32,12 +66,44 @@ public class ProduitController {
      * @param produits      la liste des produits à afficher
      * @param editing       vrai si l’utilisateur est en train de modifier un produit
      * @param produitForm   l’objet Produit prérempli dans le formulaire (édition)
+     * @param magasinId     l'ID du magasin sélectionné
      * @return              le nom du template Thymeleaf à afficher ("home")
      */
     private String renderHome(Model model, List<Produit> produits, boolean editing, Produit produitForm) {
-        model.addAttribute("produits", produits);
-        model.addAttribute("produitForm", produitForm != null ? produitForm : new Produit());
-        model.addAttribute("editing", editing);
+        // Récupérer le magasin sélectionné à partir de son ID (magasinId)
+        Magasin selectedMagasin = magasinRepository.findById(magasinId).orElse(null);
+        
+        // Récupérer les stocks associés à ce magasin
+        List<StockMagasin> stockItems = stockMagasinRepository.findByMagasinId(magasinId);
+        
+        // Préparer une nouvelle liste de produits, chacun avec la quantité en stock du magasin sélectionné
+        List<Produit> productsWithStock = new ArrayList<>();
+        for (Produit produit : produits) {
+            Optional<StockMagasin> stockItem = stockItems.stream()
+                .filter(s -> s.getProduit().getId() == produit.getId())
+                .findFirst();
+            
+            if (stockItem.isPresent()) {
+                // Créer une copie du produit avec sa quantité disponible en stock
+                Produit productWithStock = new Produit();
+                productWithStock.setId(produit.getId());
+                productWithStock.setNom(produit.getNom());
+                productWithStock.setCategorie(produit.getCategorie());
+                productWithStock.setPrix(produit.getPrix());
+                productWithStock.setQuantite(stockItem.get().getQuantite());
+
+                // Ajouter ce produit enrichi à la liste
+                productsWithStock.add(productWithStock);
+            }
+        }
+        
+        // Ajouter les données au modèle pour affichage dans la vue
+        model.addAttribute("produits", productsWithStock);                     // Liste des produits avec stock magasin
+        model.addAttribute("produitForm", produitForm != null ? produitForm : new Produit()); // Formulaire produit vide ou en édition
+        model.addAttribute("editing", editing);                                // Indique si on est en mode édition
+        model.addAttribute("selectedMagasin", selectedMagasin);                // Magasin actuellement sélectionné
+
+        // Afficher la page d’accueil (home.html)
         return "home";
     }
 
@@ -45,8 +111,8 @@ public class ProduitController {
      * Affiche tous les produits sur la page d'accueil.
      */
     @GetMapping("/")
-    public String listProduits(Model model) {
-        return renderHome(model, produitRepository.findAll(), false, new Produit());
+    public String listProduits(@ModelAttribute("selectedMagasinId") Integer selectedMagasinId, Model model) {
+        return renderHome(model, produitRepository.findAll(), false, new Produit(), selectedMagasinId);
     }
 
     /**
@@ -60,6 +126,7 @@ public class ProduitController {
     public String rechercherProduit(@RequestParam(required = false) Integer id,
             @RequestParam(required = false) String nom,
             @RequestParam(required = false) String categorie,
+            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId,
             Model model) {
         List<Produit> resultats;
 
@@ -85,7 +152,7 @@ public class ProduitController {
         model.addAttribute("aucunResultat", resultats.isEmpty());
 
         // Utilise renderHome comme d’habitude
-        return renderHome(model, resultats, false, new Produit());
+        return renderHome(model, resultats, false, new Produit(), selectedMagasinId);
     }
 
     /**
@@ -103,9 +170,9 @@ public class ProduitController {
      * Le formulaire est pré-rempli avec les données du produit existant.
      */
     @GetMapping("/produit/edit/{id}")
-    public String showEditForm(@PathVariable int id, Model model) {
+    public String showEditForm(@PathVariable int id, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId, Model model) {
         Produit produit = produitRepository.findById(id).orElse(null);
-        return renderHome(model, produitRepository.findAll(), true, produit);
+        return renderHome(model, produitRepository.findAll(), true, produit, selectedMagasinId);
     }
 
     /**

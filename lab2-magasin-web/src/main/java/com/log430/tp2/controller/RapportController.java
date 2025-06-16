@@ -1,12 +1,13 @@
 package com.log430.tp2.controller;
 
-import com.log430.tp2.repository.MagasinRepository;
-import com.log430.tp2.service.RapportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.log430.tp2.repository.MagasinRepository;
+import com.log430.tp2.service.RapportService;
 
 // Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
 // Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
@@ -16,9 +17,9 @@ public class RapportController {
     // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
-    private RapportService rapportService;
+    private RapportService rapportService; // Accès aux rapports
     @Autowired
-    private MagasinRepository magasinRepository;
+    private MagasinRepository magasinRepository; // Accès aux magasin
 
     /**
      * Point d'accès pour l'administrateur : affiche un rapport consolidé.

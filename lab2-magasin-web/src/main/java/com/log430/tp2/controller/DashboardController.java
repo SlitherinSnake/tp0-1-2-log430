@@ -1,8 +1,10 @@
 package com.log430.tp2.controller;
 
+import com.log430.tp2.model.Magasin;
 import com.log430.tp2.model.Produit;
 import com.log430.tp2.model.StockMagasin;
 import com.log430.tp2.model.Vente;
+import com.log430.tp2.repository.MagasinRepository;
 import com.log430.tp2.repository.ProduitRepository;
 import com.log430.tp2.repository.StockMagasinRepository;
 import com.log430.tp2.repository.VenteRepository;
@@ -29,7 +31,9 @@ public class DashboardController {
     @Autowired
     private StockMagasinRepository stockMagasinRepository; // Accès au stock des magasins
     @Autowired
-    private ProduitRepository produitRepository;
+    private ProduitRepository produitRepository; // Accès aux produits
+    @Autowired
+    private MagasinRepository magasinRepository; // Accès aux magasin
 
     // Route pour afficher la page du tableau de bord
     @GetMapping("/dashboard")
@@ -74,6 +78,38 @@ public class DashboardController {
         }
 
         model.addAttribute("ventesSemaine", ventesSemaine); // Passé à la vue
+
+        // 5. Données pour le graphique en camembert des ventes par magasin
+        List<Magasin> magasins = magasinRepository.findAll();
+        List<Map<String, Object>> ventesParMagasin = new ArrayList<>();
+        double totalVentes = 0;
+        
+        // Calculer le total des ventes pour tous les magasins
+        for (Object[] ca : caParMagasin) {
+            if (ca[1] instanceof Number) {
+                totalVentes += ((Number) ca[1]).doubleValue();
+            }
+        }
+        
+        // Préparer les données pour le graphique
+        for (Object[] ca : caParMagasin) {
+            Map<String, Object> magasinData = new HashMap<>();
+            magasinData.put("nom", ca[0]);
+            magasinData.put("montant", ca[1]);
+            
+            // Calculer le pourcentage pour le graphique
+            if (ca[1] instanceof Number && totalVentes > 0) {
+                double pourcentage = (((Number) ca[1]).doubleValue() / totalVentes) * 100;
+                magasinData.put("pourcentage", Math.round(pourcentage * 10) / 10.0); // Arrondir à 1 décimale
+            } else {
+                magasinData.put("pourcentage", 0);
+            }
+            
+            ventesParMagasin.add(magasinData);
+        }
+        
+        model.addAttribute("ventesParMagasin", ventesParMagasin);
+        model.addAttribute("totalVentes", totalVentes);
 
         // Affiche la vue Thymeleaf "dashboard.html"
         return "dashboard";

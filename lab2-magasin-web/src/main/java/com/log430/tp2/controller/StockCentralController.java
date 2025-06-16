@@ -25,11 +25,18 @@ public class StockCentralController {
     // correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
-    private StockCentralService stockService;
+    private StockCentralService stockService; // Accès aux stock
     @Autowired
-    private MagasinRepository magasinRepository;
+    private MagasinRepository magasinRepository; // Accès aux magasin
     @Autowired
-    private StockMagasinRepository stockMagasinRepository;
+    private StockMagasinRepository stockMagasinRepository; // Accès au stock des magasins
+
+    // Rend la liste complète des magasins disponible dans le modèle pour toutes les vues.
+    // Cela permet d’afficher dynamiquement les magasins dans un menu déroulant ou une sélection.
+    @ModelAttribute("allMagasins")
+    public List<Magasin> getAllMagasins() {
+        return magasinRepository.findAll();
+    }
 
     /**
      * Affiche la page du stock central, avec tous les produits disponibles.
@@ -38,10 +45,16 @@ public class StockCentralController {
      * précis).
      */
     @GetMapping
-    public String afficherStockCentral(@RequestParam(required = false) Integer magasinId, Model model) {
+    public String afficherStockCentral(@RequestParam(required = false) Integer magasinId, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId, Model model) {
         List<Produit> produits = stockService.getProduitsDisponibles();
         model.addAttribute("produits", produits);
         model.addAttribute("magasins", magasinRepository.findAll());
+        
+        // If magasinId is not provided, use the selectedMagasinId from session
+        if (magasinId == null) {
+            magasinId = selectedMagasinId;
+        }
+        
         model.addAttribute("magasinId", magasinId); // conserve le filtre sélectionné
 
         // Pour activer l’historique dans la vue
@@ -55,6 +68,10 @@ public class StockCentralController {
             List<StockMagasin> stockLocal = stockMagasinRepository.findByMagasinId(magasinId);
             model.addAttribute("stockLocal", stockLocal);
         }
+
+        // Ajoute le magasin choisi
+        Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
+        model.addAttribute("selectedMagasin", selectedMagasin);
 
         return "stock"; // → templates/stock.html
     }

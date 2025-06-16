@@ -1,44 +1,47 @@
 package com.log430.tp2.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 
-//import com.log430.tp2.model.Magasin;
+import com.log430.tp2.model.Magasin;
+import com.log430.tp2.model.StockMagasin;
 import com.log430.tp2.model.Produit;
 import com.log430.tp2.model.Vente;
 import com.log430.tp2.repository.EmployeRepository;
 import com.log430.tp2.repository.MagasinRepository;
 import com.log430.tp2.repository.ProduitRepository;
+import com.log430.tp2.repository.StockMagasinRepository;
 import com.log430.tp2.repository.VenteRepository;
 
 // Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
 // Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
-// Indique que l’objet nommé "vente" doit être stocké dans la session HTTP.
-// Cela permet de le conserver entre plusieurs requêtes (ex : ajout au panier, validation…)
-// Très utile pour simuler un panier temporaire ou une vente en cours.
-@SessionAttributes("vente") // Maintient l’objet Vente en session entre les requêtes
+// Indique que les objets "vente" et "selectedMagasinId" doivent être stockés dans la session HTTP.
+// Cela permet de conserver la vente en cours (panier) et le magasin sélectionné entre plusieurs requêtes.
+// Utile pour gérer un panier temporaire tout au long du processus d'achat.
+@SessionAttributes({"vente", "selectedMagasinId"}) // Maintient l’objet Vente et le magasin sélectionné en session entre les requêtes
 public class VenteController {
 
     // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
-    private ProduitRepository produitRepository;
+    private ProduitRepository produitRepository; // Accès aux produits
     @Autowired
-    private EmployeRepository employeRepository;
+    private EmployeRepository employeRepository; // Accès aux employés
     @Autowired
-    private VenteRepository venteRepository;
+    private VenteRepository venteRepository; // Accès aux ventes
     @Autowired
-    private MagasinRepository magasinRepository;
+    private MagasinRepository magasinRepository; // Accès aux magasin
+    @Autowired
+    private StockMagasinRepository stockMagasinRepository; // Accès aux stock du magasin
 
     // Constructeur avec injection de dépendance explicite pour ProduitRepository
     public VenteController(ProduitRepository produitRepository) {
@@ -55,13 +58,59 @@ public class VenteController {
     }
 
     /**
+     * Initialise l'ID du magasin sélectionné dans la session si inexistant.
+     */
+    @ModelAttribute("selectedMagasinId")
+    public Integer initSelectedMagasinId() {
+        // Premier magasin ID par défaut (ID 1)
+        return 1;
+    }
+
+    /**
+     * Fournit la liste de tous les magasins pour l'affichage dans le menu déroulant.
+     */
+    @ModelAttribute("allMagasins")
+    public List<Magasin> getAllMagasins() {
+        return magasinRepository.findAll();
+    }
+
+    /**
      * Affiche la page d’accueil du système de vente, avec tous les produits et
      * employés.
      * L’objet vente est injecté dans le modèle automatiquement (grâce
      * à @SessionAttributes).
      */
     @GetMapping("/ventes")
-    public String accueil(Model model, @ModelAttribute("vente") Vente vente) {
+    public String accueil(Model model, @ModelAttribute("vente") Vente vente, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+        // Obtient tous les produits
+        List<Produit> allProducts = produitRepository.findAll();
+
+        // Obtient le magasn choisie
+        Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
+        model.addAttribute("selectedMagasin", selectedMagasin);
+
+        // Récupère le stock du magasin choisie
+        List<StockMagasin> stockItems = stockMagasinRepository.findByMagasinId(selectedMagasinId);
+
+        // Crée une liste des produits avec leur propre quantité pour le magasin choisie
+        List<Produit> productsWithStock = new ArrayList<>();
+        for (Produit produit : allProducts) {
+            Optional<StockMagasin> stockItem = stockItems.stream()
+                .filter(s -> s.getProduit().getId() == produit.getId())
+                .findFirst();
+            
+            if (stockItem.isPresent()) {
+                // Crée une copie du produit avec sa quantité présente dans le stock
+                Produit productWithStock = new Produit();
+                productWithStock.setId(produit.getId());
+                productWithStock.setNom(produit.getNom());
+                productWithStock.setCategorie(produit.getCategorie());
+                productWithStock.setPrix(produit.getPrix());
+                productWithStock.setQuantite(stockItem.get().getQuantite());
+                productsWithStock.add(productWithStock);
+            }
+        }
+
         model.addAttribute("produits", produitRepository.findAll());
         model.addAttribute("employes", employeRepository.findAll());
         model.addAttribute("vente", vente);
@@ -76,7 +125,7 @@ public class VenteController {
      * Affiche le contenu du panier (lignes de vente) avec le total actuel.
      */
     @GetMapping("/panier")
-    public String showPanier(Model model, @ModelAttribute("vente") Vente vente) {
+    public String showPanier(Model model, @ModelAttribute("vente") Vente vente, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
         model.addAttribute("items", vente.getItems());
         model.addAttribute("total", vente.getMontantTotal());
 
@@ -85,6 +134,11 @@ public class VenteController {
 
         // Injecte ici la liste des magasins disponibles dans le formulaire
         model.addAttribute("magasins", magasinRepository.findAll());
+
+        // Ajoute le magasin choisie au model
+        Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
+        model.addAttribute("selectedMagasin", selectedMagasin);
+
         return "panier";
     }
 
@@ -120,7 +174,7 @@ public class VenteController {
      * Vide complètement le panier en supprimant l’objet Vente de la session.
      */
     @PostMapping("/panier/clear")
-    public String clearVente(SessionStatus status) {
+    public String clearVente(SessionStatus status, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
         status.setComplete(); // Invalide l’objet vente dans la session
         return "redirect:/panier";
     }
@@ -141,7 +195,7 @@ public class VenteController {
      */
     @PostMapping("/panier/valider")
     public String validerAchat(@RequestParam int employeId, @RequestParam int magasinId,
-            @ModelAttribute("vente") Vente vente, SessionStatus status,
+            @ModelAttribute("vente") Vente vente, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId, SessionStatus status,
             Model model) {
 
         // Associer un employé à la vente
@@ -169,6 +223,10 @@ public class VenteController {
 
         // 5. Préparer la page de confirmation/facture
         model.addAttribute("venteConfirmee", vente);
+
+        // Ajoute magasin choisie au model
+        Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
+        model.addAttribute("selectedMagasin", selectedMagasin);
 
         // Nettoyer la session (vider le panier)
         status.setComplete();
