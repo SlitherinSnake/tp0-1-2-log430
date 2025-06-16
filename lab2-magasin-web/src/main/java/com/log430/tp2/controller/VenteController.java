@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 
 import com.log430.tp2.model.Magasin;
-import com.log430.tp2.model.StockMagasin;
 import com.log430.tp2.model.Produit;
+import com.log430.tp2.model.StockMagasin;
 import com.log430.tp2.model.Vente;
 import com.log430.tp2.repository.EmployeRepository;
 import com.log430.tp2.repository.MagasinRepository;
@@ -22,26 +22,26 @@ import com.log430.tp2.repository.StockMagasinRepository;
 import com.log430.tp2.repository.VenteRepository;
 
 // Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
-// Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
+// Les méthodes à l'intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
-// Indique que les objets "vente" et "selectedMagasinId" doivent être stockés dans la session HTTP.
-// Cela permet de conserver la vente en cours (panier) et le magasin sélectionné entre plusieurs requêtes.
-// Utile pour gérer un panier temporaire tout au long du processus d'achat.
-@SessionAttributes({"vente", "selectedMagasinId"}) // Maintient l’objet Vente et le magasin sélectionné en session entre les requêtes
+// Indique que l'objet nommé "vente" doit être stocké dans la session HTTP.
+// Cela permet de le conserver entre plusieurs requêtes (ex : ajout au panier, validation…)
+// Très utile pour simuler un panier temporaire ou une vente en cours.
+@SessionAttributes({"vente", "selectedMagasinId"}) // Maintient l'objet Vente et le magasin sélectionné en session
 public class VenteController {
 
     // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
-    // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
+    // Permet d'éviter d'écrire un constructeur ou un setter manuellement.
     @Autowired
-    private ProduitRepository produitRepository; // Accès aux produits
+    private ProduitRepository produitRepository;
     @Autowired
-    private EmployeRepository employeRepository; // Accès aux employés
+    private EmployeRepository employeRepository;
     @Autowired
-    private VenteRepository venteRepository; // Accès aux ventes
+    private VenteRepository venteRepository;
     @Autowired
-    private MagasinRepository magasinRepository; // Accès aux magasin
+    private MagasinRepository magasinRepository;
     @Autowired
-    private StockMagasinRepository stockMagasinRepository; // Accès aux stock du magasin
+    private StockMagasinRepository stockMagasinRepository;
 
     // Constructeur avec injection de dépendance explicite pour ProduitRepository
     public VenteController(ProduitRepository produitRepository) {
@@ -56,16 +56,16 @@ public class VenteController {
     public Vente vente() {
         return new Vente();
     }
-
+    
     /**
      * Initialise l'ID du magasin sélectionné dans la session si inexistant.
      */
     @ModelAttribute("selectedMagasinId")
     public Integer initSelectedMagasinId() {
-        // Premier magasin ID par défaut (ID 1)
+        // Default to first store (ID 1)
         return 1;
     }
-
+    
     /**
      * Fournit la liste de tous les magasins pour l'affichage dans le menu déroulant.
      */
@@ -75,24 +75,24 @@ public class VenteController {
     }
 
     /**
-     * Affiche la page d’accueil du système de vente, avec tous les produits et
+     * Affiche la page d'accueil du système de vente, avec tous les produits et
      * employés.
-     * L’objet vente est injecté dans le modèle automatiquement (grâce
+     * L'objet vente est injecté dans le modèle automatiquement (grâce
      * à @SessionAttributes).
      */
     @GetMapping("/ventes")
-    public String accueil(Model model, @ModelAttribute("vente") Vente vente, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
-        // Obtient tous les produits
+    public String accueil(Model model, @ModelAttribute("vente") Vente vente,@ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+        // Get all products
         List<Produit> allProducts = produitRepository.findAll();
-
-        // Obtient le magasn choisie
+        
+        // Get the selected store
         Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
         model.addAttribute("selectedMagasin", selectedMagasin);
-
-        // Récupère le stock du magasin choisie
+        
+        // Get stock for the selected store
         List<StockMagasin> stockItems = stockMagasinRepository.findByMagasinId(selectedMagasinId);
-
-        // Crée une liste des produits avec leur propre quantité pour le magasin choisie
+        
+        // Create a list of products with their stock quantities for the selected store
         List<Produit> productsWithStock = new ArrayList<>();
         for (Produit produit : allProducts) {
             Optional<StockMagasin> stockItem = stockItems.stream()
@@ -100,7 +100,7 @@ public class VenteController {
                 .findFirst();
             
             if (stockItem.isPresent()) {
-                // Crée une copie du produit avec sa quantité présente dans le stock
+                // Create a copy of the product with the stock quantity
                 Produit productWithStock = new Produit();
                 productWithStock.setId(produit.getId());
                 productWithStock.setNom(produit.getNom());
@@ -110,13 +110,13 @@ public class VenteController {
                 productsWithStock.add(productWithStock);
             }
         }
-
-        model.addAttribute("produits", produitRepository.findAll());
+        
+        model.addAttribute("produits", productsWithStock);
         model.addAttribute("employes", employeRepository.findAll());
         model.addAttribute("vente", vente);
         model.addAttribute("produitForm", new Produit()); // formulaire vide
         model.addAttribute("editing", false);
-        // Pour passer le nombre d’items si souhaiter :
+        // Pour passer le nombre d'items si souhaiter :
         // model.addAttribute("nbPanier", vente.getItems().size());
         return "home";
     }
@@ -125,7 +125,9 @@ public class VenteController {
      * Affiche le contenu du panier (lignes de vente) avec le total actuel.
      */
     @GetMapping("/panier")
-    public String showPanier(Model model, @ModelAttribute("vente") Vente vente, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+    public String showPanier(Model model, 
+                            @ModelAttribute("vente") Vente vente,
+                            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
         model.addAttribute("items", vente.getItems());
         model.addAttribute("total", vente.getMontantTotal());
 
@@ -134,11 +136,11 @@ public class VenteController {
 
         // Injecte ici la liste des magasins disponibles dans le formulaire
         model.addAttribute("magasins", magasinRepository.findAll());
-
-        // Ajoute le magasin choisie au model
+        
+        // Add selected store to model
         Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
         model.addAttribute("selectedMagasin", selectedMagasin);
-
+        
         return "panier";
     }
 
@@ -157,7 +159,7 @@ public class VenteController {
             vente.calculerMontantTotal();
         });
 
-        // Retourne le nombre d’items pour mise à jour UI côté client
+        // Retourne le nombre d'items pour mise à jour UI côté client
         return ResponseEntity.ok(vente.getItems().size());
     }
 
@@ -171,11 +173,12 @@ public class VenteController {
     }
 
     /**
-     * Vide complètement le panier en supprimant l’objet Vente de la session.
+     * Vide complètement le panier en supprimant l'objet Vente de la session.
      */
     @PostMapping("/panier/clear")
-    public String clearVente(SessionStatus status, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
-        status.setComplete(); // Invalide l’objet vente dans la session
+    public String clearVente(SessionStatus status, 
+                            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+        status.setComplete(); // Invalide l'objet vente dans la session
         return "redirect:/panier";
     }
 
@@ -195,7 +198,9 @@ public class VenteController {
      */
     @PostMapping("/panier/valider")
     public String validerAchat(@RequestParam int employeId, @RequestParam int magasinId,
-            @ModelAttribute("vente") Vente vente, @ModelAttribute("selectedMagasinId") Integer selectedMagasinId, SessionStatus status,
+            @ModelAttribute("vente") Vente vente, 
+            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId,
+            SessionStatus status,
             Model model) {
 
         // Associer un employé à la vente
@@ -223,8 +228,8 @@ public class VenteController {
 
         // 5. Préparer la page de confirmation/facture
         model.addAttribute("venteConfirmee", vente);
-
-        // Ajoute magasin choisie au model
+        
+        // Add selected store to model
         Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
         model.addAttribute("selectedMagasin", selectedMagasin);
 
