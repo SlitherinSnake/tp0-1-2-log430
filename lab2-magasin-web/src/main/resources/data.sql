@@ -209,3 +209,14 @@ INSERT INTO stock_central (produit_id, magasin_id, quantite_demandee, date_deman
     (1, 1, 20, '2025-06-01'),  -- Magasin A demande 20 Bananes
     (7, 2, 5, '2025-06-02'),   -- Magasin B demande 5 Télévisions
     (8, 3, 10, '2025-06-03');  -- Magasin C demande 10 PS5
+
+    -- Réinitialisation des séquences après insertion manuelle d'ID
+SELECT setval('employes_id_seq', (SELECT MAX(id) FROM employes));
+SELECT setval('magasin_id_seq', (SELECT MAX(id) FROM magasin));
+SELECT setval('produits_id_seq', (SELECT MAX(id) FROM produits));
+SELECT setval('ventes_id_seq', (SELECT MAX(id) FROM ventes));
+SELECT setval('vente_produit_id_seq', (SELECT MAX(id) FROM vente_produit));
+SELECT setval('retours_id_seq', (SELECT MAX(id) FROM retours));
+SELECT setval('retour_produit_id_seq', (SELECT MAX(id) FROM retour_produit));
+SELECT setval('stock_magasin_id_seq', (SELECT MAX(id) FROM stock_magasin));
+SELECT setval('stock_central_id_seq', (SELECT MAX(id) FROM stock_central));

@@ -17,13 +17,15 @@ import com.log430.tp2.repository.*;
 // Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
 // Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
-// Définit le préfixe commun "/retour" pour toutes les URL gérées par ce contrôleur.
+// Définit le préfixe commun "/retour" pour toutes les URL gérées par ce
+// contrôleur.
 // Par exemple, /retour/nouveau, /retour/valider…
 // Permet d’organiser les routes associées aux retours produits.
-@RequestMapping("/retour") 
+@RequestMapping("/retour")
 public class RetourController {
-    
-    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.)
+    // correspondant.
     // Permet d’éviter d’écrire un constructeur ou un setter manuellement.
     @Autowired
     private RetourRepository retourRepository; // Accès aux retours
@@ -31,6 +33,8 @@ public class RetourController {
     private VenteRepository venteRepository; // Accès aux ventes
     @Autowired
     private ProduitRepository produitRepository; // Accès aux produits
+    @Autowired
+    private StockMagasinRepository stockMagasinRepository;
 
     /**
      * Redirige automatiquement vers le formulaire de retour.
@@ -49,7 +53,7 @@ public class RetourController {
     public String formulaireRetour(@RequestParam(required = false) Integer venteId, Model model) {
 
         List<Vente> ventes = venteRepository.findAll();
-        
+
         // On filtre pour ne garder que les ventes où il reste des produits retournables
         List<Vente> ventesFiltrees = ventes.stream()
                 .filter(v -> {
@@ -73,7 +77,8 @@ public class RetourController {
 
         model.addAttribute("ventes", ventesFiltrees);
 
-        // Si une vente spécifique est sélectionnée, on l'affiche avec les quantités restantes
+        // Si une vente spécifique est sélectionnée, on l'affiche avec les quantités
+        // restantes
         if (venteId != null) {
             Vente vente = venteRepository.findById(venteId).orElse(null);
             if (vente != null) {
@@ -107,19 +112,21 @@ public class RetourController {
 
     /**
      * Valide le formulaire de retour soumis par l'utilisateur.
-     * Met à jour le stock, enregistre les retours, puis redirige vers la page d'accueil.
+     * Met à jour le stock, enregistre les retours, puis redirige vers la page
+     * d'accueil.
      */
     @PostMapping("/valider")
     public String validerRetour(@RequestParam int venteId,
             @RequestParam List<Integer> produitIds,
             @RequestParam List<Integer> quantites,
             Model model) {
-        
+
         // Vérifie s'il y a au moins un produit avec une quantité > 0
         boolean hasValidQuantite = quantites.stream().anyMatch(qte -> qte != null && qte > 0);
 
         if (!hasValidQuantite) {
-            // Si aucune quantité n’est valide, on recharge le formulaire avec un message d’erreur
+            // Si aucune quantité n’est valide, on recharge le formulaire avec un message
+            // d’erreur
             model.addAttribute("ventes", venteRepository.findAll());
             model.addAttribute("vente", venteRepository.findById(venteId).orElse(null));
             model.addAttribute("retourErreur", true);
@@ -144,11 +151,26 @@ public class RetourController {
             if (qte <= 0)
                 continue; // On ignore les quantités nulles ou négatives
 
+            // On récupère l'objet Produit pour l'identifiant donné
             Produit produit = produitRepository.findById(prodId).orElseThrow();
-            produit.setQuantite(produit.getQuantite() + qte); // Réintègre la quantité retournée
-            produitRepository.save(produit);
 
-            // Création de la ligne de retour
+            // On récupère l'entrée de stock local correspondant au produit et au magasin lié à la vente
+            StockMagasin stock = stockMagasinRepository
+                    .findByProduitAndMagasin(produit.getId(), vente.getMagasin().getId())
+                    .orElseThrow(() -> new RuntimeException("Stock introuvable"));
+
+            // Mise à jour du stock local : on réintègre la quantité retournée
+            stock.setQuantite(stock.getQuantite() + qte);
+            stockMagasinRepository.save(stock); //Sauvegarde dans la base
+
+            /*
+             * Pour Stock Cenntral
+             * produit.setQuantite(produit.getQuantite() + qte); // Réintègre la quantité
+             * retournée
+             * produitRepository.save(produit);
+             */
+
+            // On crée et associe une ligne de retour pour ce produit
             RetourProduit rp = new RetourProduit();
             rp.setProduit(produit);
             rp.setQuantite(qte);
@@ -159,7 +181,7 @@ public class RetourController {
         // Association des produits au retour principal
         retour.setProduitsRetournes(retourProduits);
         retourRepository.save(retour);// Sauvegarde complète en cascade
-        
+
         return "redirect:/"; // retour acceuil
     }
 

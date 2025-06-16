@@ -25,12 +25,14 @@ import com.log430.tp2.repository.VenteRepository;
 // Les méthodes à l'intérieur renvoient généralement vers des vues Thymeleaf (HTML).
 @Controller
 // Indique que l'objet nommé "vente" doit être stocké dans la session HTTP.
-// Cela permet de le conserver entre plusieurs requêtes (ex : ajout au panier, validation…)
+// Cela permet de le conserver entre plusieurs requêtes (ex : ajout au panier,
+// validation…)
 // Très utile pour simuler un panier temporaire ou une vente en cours.
-@SessionAttributes({"vente", "selectedMagasinId"}) // Maintient l'objet Vente et le magasin sélectionné en session
+@SessionAttributes({ "vente", "selectedMagasinId" }) // Maintient l'objet Vente et le magasin sélectionné en session
 public class VenteController {
 
-    // Injecte automatiquement une instance du composant (Repository, Service, etc.) correspondant.
+    // Injecte automatiquement une instance du composant (Repository, Service, etc.)
+    // correspondant.
     // Permet d'éviter d'écrire un constructeur ou un setter manuellement.
     @Autowired
     private ProduitRepository produitRepository;
@@ -56,7 +58,7 @@ public class VenteController {
     public Vente vente() {
         return new Vente();
     }
-    
+
     /**
      * Initialise l'ID du magasin sélectionné dans la session si inexistant.
      */
@@ -65,9 +67,10 @@ public class VenteController {
         // Default to first store (ID 1)
         return 1;
     }
-    
+
     /**
-     * Fournit la liste de tous les magasins pour l'affichage dans le menu déroulant.
+     * Fournit la liste de tous les magasins pour l'affichage dans le menu
+     * déroulant.
      */
     @ModelAttribute("allMagasins")
     public List<Magasin> getAllMagasins() {
@@ -81,24 +84,25 @@ public class VenteController {
      * à @SessionAttributes).
      */
     @GetMapping("/ventes")
-    public String accueil(Model model, @ModelAttribute("vente") Vente vente,@ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+    public String accueil(Model model, @ModelAttribute("vente") Vente vente,
+            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
         // Get all products
         List<Produit> allProducts = produitRepository.findAll();
-        
+
         // Get the selected store
         Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
         model.addAttribute("selectedMagasin", selectedMagasin);
-        
+
         // Get stock for the selected store
         List<StockMagasin> stockItems = stockMagasinRepository.findByMagasinId(selectedMagasinId);
-        
+
         // Create a list of products with their stock quantities for the selected store
         List<Produit> productsWithStock = new ArrayList<>();
         for (Produit produit : allProducts) {
             Optional<StockMagasin> stockItem = stockItems.stream()
-                .filter(s -> s.getProduit().getId() == produit.getId())
-                .findFirst();
-            
+                    .filter(s -> s.getProduit().getId() == produit.getId())
+                    .findFirst();
+
             if (stockItem.isPresent()) {
                 // Create a copy of the product with the stock quantity
                 Produit productWithStock = new Produit();
@@ -110,7 +114,7 @@ public class VenteController {
                 productsWithStock.add(productWithStock);
             }
         }
-        
+
         model.addAttribute("produits", productsWithStock);
         model.addAttribute("employes", employeRepository.findAll());
         model.addAttribute("vente", vente);
@@ -125,9 +129,9 @@ public class VenteController {
      * Affiche le contenu du panier (lignes de vente) avec le total actuel.
      */
     @GetMapping("/panier")
-    public String showPanier(Model model, 
-                            @ModelAttribute("vente") Vente vente,
-                            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+    public String showPanier(Model model,
+            @ModelAttribute("vente") Vente vente,
+            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
         model.addAttribute("items", vente.getItems());
         model.addAttribute("total", vente.getMontantTotal());
 
@@ -136,11 +140,11 @@ public class VenteController {
 
         // Injecte ici la liste des magasins disponibles dans le formulaire
         model.addAttribute("magasins", magasinRepository.findAll());
-        
+
         // Add selected store to model
         Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
         model.addAttribute("selectedMagasin", selectedMagasin);
-        
+
         return "panier";
     }
 
@@ -176,8 +180,8 @@ public class VenteController {
      * Vide complètement le panier en supprimant l'objet Vente de la session.
      */
     @PostMapping("/panier/clear")
-    public String clearVente(SessionStatus status, 
-                            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
+    public String clearVente(SessionStatus status,
+            @ModelAttribute("selectedMagasinId") Integer selectedMagasinId) {
         status.setComplete(); // Invalide l'objet vente dans la session
         return "redirect:/panier";
     }
@@ -198,7 +202,7 @@ public class VenteController {
      */
     @PostMapping("/panier/valider")
     public String validerAchat(@RequestParam int employeId, @RequestParam int magasinId,
-            @ModelAttribute("vente") Vente vente, 
+            @ModelAttribute("vente") Vente vente,
             @ModelAttribute("selectedMagasinId") Integer selectedMagasinId,
             SessionStatus status,
             Model model) {
@@ -211,10 +215,29 @@ public class VenteController {
 
         // 1. Mise à jour des stocks : on diminue le stock de chaque produit vendu
         vente.getItems().forEach(ligne -> {
-            Produit produit = ligne.getProduit();
             int qteVendue = ligne.getQuantite();
-            produit.decreaseStock(qteVendue);
-            produitRepository.save(produit); // sauvegarder les modifications
+
+            // On récupère le stock du produit dans le magasin où la vente a lieu
+            StockMagasin stock = stockMagasinRepository
+                    .findByProduitAndMagasin(ligne.getProduit().getId(), vente.getMagasin().getId())
+                    .orElseThrow(() -> new RuntimeException("Stock introuvable"));
+
+            int stockActuel = stock.getQuantite();
+
+            // Vérifie qu'on a suffisamment de stock pour effectuer la vente
+            if (stockActuel < qteVendue) {
+                throw new RuntimeException("Stock insuffisant pour " + ligne.getProduit().getNom());
+            }
+
+            // Mise à jour du stock local : on retire la quantité vendue
+            stock.setQuantite(stockActuel - qteVendue);
+            stockMagasinRepository.save(stock); // Sauvegarde en base du nouveau stock
+            /*
+             * Pour stock central
+             * Produit produit = ligne.getProduit();
+             * produit.decreaseStock(qteVendue);
+             * produitRepository.save(produit); // sauvegarder les modifications
+             */
         });
 
         // 2. Recalculer le total de la vente
@@ -228,7 +251,7 @@ public class VenteController {
 
         // 5. Préparer la page de confirmation/facture
         model.addAttribute("venteConfirmee", vente);
-        
+
         // Add selected store to model
         Magasin selectedMagasin = magasinRepository.findById(selectedMagasinId).orElse(null);
         model.addAttribute("selectedMagasin", selectedMagasin);
