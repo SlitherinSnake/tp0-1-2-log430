@@ -7,12 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.annotation.*;
 
 import com.log430.tp2.model.Magasin;
 import com.log430.tp2.model.Produit;
@@ -40,6 +35,7 @@ public class ProduitController {
     // Initialise "selectedMagasinId" dans la session avec la valeur par défaut (1)
     @ModelAttribute("selectedMagasinId")
     public Integer initSelectedMagasinId() {
+        // ID defaut du premier magasin
         return 1;
     }
     
@@ -69,7 +65,7 @@ public class ProduitController {
      * @param magasinId     l'ID du magasin sélectionné
      * @return              le nom du template Thymeleaf à afficher ("home")
      */
-    private String renderHome(Model model, List<Produit> produits, boolean editing, Produit produitForm) {
+    private String renderHome(Model model, List<Produit> produits, boolean editing, Produit produitForm, Integer magasinId) {
         // Récupérer le magasin sélectionné à partir de son ID (magasinId)
         Magasin selectedMagasin = magasinRepository.findById(magasinId).orElse(null);
         
