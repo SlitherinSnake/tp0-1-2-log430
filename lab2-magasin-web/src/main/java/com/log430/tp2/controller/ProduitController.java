@@ -30,7 +30,7 @@ public class ProduitController {
     @Autowired
     private MagasinRepository magasinRepository; // Accès aux magasin
     @Autowired
-    private StockMagasinRepository stockMagasinRepository;
+    private StockMagasinRepository stockMagasinRepository; // Accès au stock du magasin
 
     // Initialise "selectedMagasinId" dans la session avec la valeur par défaut (1)
     @ModelAttribute("selectedMagasinId")
