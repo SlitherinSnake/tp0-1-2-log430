@@ -1,10 +1,10 @@
 package com.log430.tp2.controller;
 
-import com.log430.tp2.model.Magasin;
+//import com.log430.tp2.model.Magasin;
 import com.log430.tp2.model.Produit;
 import com.log430.tp2.model.StockMagasin;
 import com.log430.tp2.model.Vente;
-import com.log430.tp2.repository.MagasinRepository;
+//import com.log430.tp2.repository.MagasinRepository;
 import com.log430.tp2.repository.ProduitRepository;
 import com.log430.tp2.repository.StockMagasinRepository;
 import com.log430.tp2.repository.VenteRepository;
@@ -32,8 +32,8 @@ public class DashboardController {
     private StockMagasinRepository stockMagasinRepository; // Accès au stock des magasins
     @Autowired
     private ProduitRepository produitRepository; // Accès aux produits
-    @Autowired
-    private MagasinRepository magasinRepository; // Accès aux magasin
+    //@Autowired
+    //private MagasinRepository magasinRepository; // Accès aux magasin
 
     // Route pour afficher la page du tableau de bord
     @GetMapping("/dashboard")
@@ -80,7 +80,8 @@ public class DashboardController {
         model.addAttribute("ventesSemaine", ventesSemaine); // Passé à la vue
 
         // 5. Données pour le graphique en camembert des ventes par magasin
-        List<Magasin> magasins = magasinRepository.findAll();
+        // À revoir pour magasins
+        //List<Magasin> magasins = magasinRepository.findAll();
         List<Map<String, Object>> ventesParMagasin = new ArrayList<>();
         double totalVentes = 0;
         
