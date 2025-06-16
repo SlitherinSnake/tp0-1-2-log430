@@ -1,16 +1,16 @@
 package com.log430.tp2.controller;
 
-import com.log430.tp2.model.*;
-import com.log430.tp2.service.StockCentralService;
-import com.log430.tp2.repository.MagasinRepository;
-import com.log430.tp2.repository.StockMagasinRepository;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.log430.tp2.model.*;
+import com.log430.tp2.repository.MagasinRepository;
+import com.log430.tp2.repository.StockMagasinRepository;
+import com.log430.tp2.service.StockCentralService;
 
 // Indique que cette classe est un contrôleur Spring MVC, responsable de gérer les requêtes web.
 // Les méthodes à l’intérieur renvoient généralement vers des vues Thymeleaf (HTML).
@@ -19,6 +19,8 @@ import java.util.List;
 // Par exemple : "/stock", "/stock/demander"…
 // Cela permet de regrouper logiquement les fonctionnalités liées au stock.
 @RequestMapping("/stock")
+// Garde "selectedMagasinId" en session pour le réutiliser entre les requêtes 
+@SessionAttributes("selectedMagasinId")
 public class StockCentralController {
 
     // Injecte automatiquement une instance du composant (Repository, Service, etc.)
