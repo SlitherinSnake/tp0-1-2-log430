@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xml:lang="fr" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xml:lang="fr"
+  lang="fr">
 
 <head>
   <meta charset="UTF-8">
@@ -12,17 +13,49 @@
       border-radius: 0.375rem;
       transition: all 0.2s ease-in-out;
     }
+
     .navbar .nav-link:hover {
       background-color: rgba(0, 0, 0, 0.05);
     }
+
     .navbar .nav-link.active {
       background-color: rgba(0, 0, 0, 0.1);
     }
+
     .store-badge {
       font-size: 0.9rem;
       padding: 0.25rem 0.5rem;
       margin-left: 0.5rem;
       border-radius: 0.25rem;
+    }
+
+    .user-info {
+      background-color: #f8f9fa;
+      border-radius: 0.375rem;
+      padding: 0.5rem 1rem;
+      margin-right: 1rem;
+      border: 1px solid #dee2e6;
+    }
+
+    .navbar .btn,
+    .navbar .user-info,
+    .navbar .nav-link {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1400px) {
+      .navbar .user-info {
+        max-width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .navbar .container-fluid {
+        flex-wrap: wrap;
+      }
+
+      .navbar-collapse {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
@@ -33,7 +66,6 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
       <div class="container-fluid">
         <a class="navbar-brand fw-bold" th:href="@{/}">
-          <i class="bi bi-shop me-2"></i>Magasin
           <span th:if="${selectedMagasin}" class="store-badge bg-success text-white"
             th:text="${selectedMagasin.nom}">Magasin A</span>
         </a>
@@ -45,11 +77,6 @@
 
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center active" th:href="@{/}">
-                <i class="bi bi-house-door me-1"></i> Accueil
-              </a>
-            </li>
             <li class="nav-item">
               <a class="nav-link d-flex align-items-center" th:href="@{/dashboard}">
                 <i class="bi bi-graph-up me-1"></i> Tableau de bord
@@ -84,24 +111,54 @@
                 </li>
               </ul>
             </li>
+            <!-- API Lien documentation -->
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center" href="/api-docs/swagger-ui.html" target="_blank">
+                <i class="bi bi-code-slash me-1"></i> API Docs
+              </a>
+            </li>
           </ul>
 
-          <div class="d-flex gap-2">
-            <a class="btn btn-warning d-flex align-items-center" th:href="@{/retour}">
-              <i class="bi bi-arrow-counterclockwise me-1"></i>
-              Retour
-            </a>
-            <a class="btn btn-primary position-relative d-flex align-items-center" th:href="@{/panier}">
-              <i class="bi bi-cart4 me-1"></i>
-              Panier
-              <span id="cart-count"
-                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                0
-              </span>
-            </a>
+          <div class="d-flex flex-wrap gap-2 align-items-center justify-content-end ms-auto">
+            <!-- Information de l'utilisateur lorsque connecté -->
+            <div sec:authorize="isAuthenticated()" class="user-info d-flex align-items-center">
+              <i class="bi bi-person-circle me-2"></i>
+              <span sec:authentication="name">Utilisateur</span>
+              <span class="badge bg-primary ms-2" sec:authentication="principal.authorities">Roles</span>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a class="btn btn-warning d-flex align-items-center" th:href="@{/retour}">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Retour
+              </a>
+              <a class="btn btn-primary position-relative d-flex align-items-center" th:href="@{/panier}">
+                <i class="bi bi-cart4 me-1"></i>
+                Panier
+                <span id="cart-count"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  0
+                </span>
+              </a>
+
+              <!-- Boutton de connexion quand non authentifié -->
+              <a sec:authorize="!isAuthenticated()" class="btn btn-outline-primary d-flex align-items-center"
+                href="/login">
+                <i class="bi bi-box-arrow-in-right me-1"></i>
+                Login
+              </a>
+
+              <!-- Boutton de déconnexion quand authentifié -->
+              <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-outline-danger d-flex align-items-center">
+                  <i class="bi bi-box-arrow-left me-1"></i>
+                  Logout
+                </button>
+              </form>
+
+            </div>
           </div>
         </div>
-      </div>
     </nav>
 
     <h1 class="mb-4 fw-bold">
@@ -261,6 +318,98 @@
     // Force la création de l’objet "vente" en session (si ce n'est pas encore fait)
     fetch("/ventes", { credentials: "same-origin" }).then(() => {
       console.log("Session initialisée.");
+    });
+  </script>
+
+  <!-- Script pour interagir avec l'API REST -->
+  <script>
+    // Cette fonction permet de tester l'API REST
+    function testRestApi() {
+      // Exemple d'appel à l'API REST pour récupérer tous les produits
+      fetch('/api/v1/produits')
+        .then(response => response.json())
+        .then(data => {
+          // Affiche les données reçues dans la console
+          console.log('Produits récupérés via API REST:', data);
+        })
+        .catch(error => {
+          // Affiche les erreurs réseau ou serveur dans la console
+          console.error('Erreur lors de l\'appel à l\'API REST:', error);
+        });
+    }
+
+    // Fonction pour ajouter un produit via l'API REST
+    function addProductViaApi(productData) {
+      // Envoie une requête POST à l’API avec les données du produit à ajouter
+      fetch('/api/v1/produits', {
+        method: 'POST',
+        headers: {
+          // Déclare le type de contenu envoyé (JSON)
+          'Content-Type': 'application/json',
+          // Ajoute le jeton JWT pour l’authentification sécurisée (si disponible)
+          'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        },
+        body: JSON.stringify(productData)  // Convertit l'objet JS en JSON
+      })
+        .then(response => {
+          if (response.ok) {
+            // Si la requête a réussi, on parse et retourne la réponse JSON
+            return response.json();
+          }
+          // Sinon, on déclenche une erreur personnalisée
+          throw new Error('Erreur lors de l\'ajout du produit');
+        })
+        .then(data => {
+          console.log('Produit ajouté avec succès:', data);
+          // Recharger la page pour afficher le nouveau produit
+          window.location.reload();
+        })
+        .catch(error => {
+          console.error('Erreur:', error);
+          // Alerte utilisateur si erreur côté client ou serveur
+          alert('Erreur lors de l\'ajout du produit. Veuillez vérifier que vous êtes connecté.');
+        });
+    }
+
+    // Gestion de l'authentification
+    function checkAuthStatus() {
+      const token = localStorage.getItem('jwt_token');
+      const username = localStorage.getItem('username');
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const usernameDisplay = document.getElementById('username-display');
+
+      if (token) {
+        // Si un token est présent, on considère l’utilisateur comme connecté
+        loginBtn.classList.add('d-none'); // Cache le bouton login
+        logoutBtn.classList.remove('d-none'); // Affiche le bouton logout
+        if (usernameDisplay) {
+          usernameDisplay.textContent = username || 'Logout';
+        }
+      } else {
+        // Si aucun token : utilisateur non connecté
+        loginBtn.classList.remove('d-none');
+        logoutBtn.classList.add('d-none');
+      }
+    }
+
+    // Gérer la déconnexion
+    document.getElementById('logout-btn').addEventListener('click', function () {
+      // Nettoie le localStorage (données de session locale)
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('username');
+      // Met à jour l'affichage des boutons
+      checkAuthStatus();
+    });
+
+    // Initialiser l'API au chargement de la page
+    document.addEventListener('DOMContentLoaded', function () {
+      // Vérifier le statut d'authentification
+      checkAuthStatus();
+
+      // Effectue un test d’appel à l’API REST
+      testRestApi();
     });
   </script>
 </body>
