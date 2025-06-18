@@ -1,3 +1,35 @@
+-- Supprimer les tables existantes si elles existent (dans l'ordre pour éviter les conflits de clés étrangères)
+DROP TABLE IF EXISTS user_roles CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Créer la table des rôles
+CREATE TABLE IF NOT EXISTS roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) NOT NULL
+);
+
+-- Créer la table des utilisateurs
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+-- Créer la table de liaison entre utilisateurs et rôles (relation plusieurs-à-plusieurs)
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+-- Insérer les rôles par défaut
+INSERT INTO roles (name) VALUES ('ROLE_ADMIN');
+INSERT INTO roles (name) VALUES ('ROLE_EMPLOYEE');
+INSERT INTO roles (name) VALUES ('ROLE_VIEWER')
+
 -- Supprimer d'abord les tables dépendantes pour éviter les violations de contraintes de clé étrangère
 DROP TABLE IF EXISTS retour_produit CASCADE;
 DROP TABLE IF EXISTS retour CASCADE;
