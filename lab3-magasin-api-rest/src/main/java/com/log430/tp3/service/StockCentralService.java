@@ -29,9 +29,13 @@ public class StockCentralService {
     }
 
     /**
-     * Enregistre une demande de réapprovisionnement pour un produit spécifique  par un magasin donné, avec une quantité précise.
-     * Protection : bloque les doublons si une demande pour ce produit et ce magasin  a déjà été faite aujourd’hui.
-     * @return true si la demande est bien enregistrée, false si elle est ignorée (déjà faite).
+     * Enregistre une demande de réapprovisionnement pour un produit spécifique par
+     * un magasin donné, avec une quantité précise.
+     * Protection : bloque les doublons si une demande pour ce produit et ce magasin
+     * a déjà été faite aujourd’hui.
+     * 
+     * @return true si la demande est bien enregistrée, false si elle est ignorée
+     *         (déjà faite).
      */
     public boolean demanderReapprovisionnement(int produitId, int magasinId, int quantite) {
         // Vérifie si une demande identique a déjà été faite aujourd’hui

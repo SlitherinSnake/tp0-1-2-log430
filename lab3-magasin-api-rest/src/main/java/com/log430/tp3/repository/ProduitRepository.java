@@ -5,9 +5,11 @@ import java.util.List;
 // ProduitRepository.java
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import com.log430.tp3.model.Produit;
 
+@Repository
 public interface ProduitRepository extends JpaRepository<Produit, Integer> {
 
     // Recherche tp3 produits dont le nom contient une chaîne de caractères

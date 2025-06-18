@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 // Annotation JPA indiquant que cette classe est une entité persistante
 @Entity
 // Nom de la table dans la base de données
-@Table(name = "stockCentral")
+@Table(name = "stock_central")
 public class StockCentral {
     
     // Identifiant unique pour chaque employé
@@ -26,9 +26,13 @@ public class StockCentral {
     // Plusieurs demandes peuvent concerner un même magasin
     @ManyToOne
     // Cela génère une colonne "magasin_id" dans la table stock
+    @JoinColumn(name = "magasin_id")
     private Magasin magasin;
 
+    @Column(name = "quantite_demandee")
     private int quantiteDemandee;
+
+    @Column(name = "date_demande")
     private LocalDate dateDemande;
 
     // Constructeur par défaut requis par JPA

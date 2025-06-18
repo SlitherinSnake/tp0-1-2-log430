@@ -18,8 +18,8 @@ public class RapportService {
     @Autowired
     private ProduitRepository produitRepository;
 
-    //@Autowired
-    //private MagasinRepository magasinRepository; // Pour futur utilisation
+    // @Autowired
+    // private MagasinRepository magasinRepository; // Pour futur utilisation
 
     /**
      * Regroupe les ventes par magasin avec leur montant total.
@@ -28,8 +28,9 @@ public class RapportService {
      */
     public Map<String, Double> ventesParMagasin() {
         List<Vente> ventes = venteRepository.findAll();
-        
-        // On regroupe les ventes par nom de magasin, et on somme les montants de chaque groupe.
+
+        // On regroupe les ventes par nom de magasin, et on somme les montants de chaque
+        // groupe.
         return ventes.stream()
                 .collect(Collectors.groupingBy(
                         v -> v.getMagasin().getNom(), // clé = nom du magasin
