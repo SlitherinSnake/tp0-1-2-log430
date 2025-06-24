@@ -10,7 +10,7 @@ public class ProduitTest {
 
     @Test
     public void testConstructorAndGetters() {
-        // Test constructor and getters
+        // Tester le constructeur et les getters
         Produit produit = new Produit("Test Produit", "Test Catégorie", 123.45f, 10);
         
         assertEquals("Test Produit", produit.getNom());
@@ -21,7 +21,7 @@ public class ProduitTest {
     
     @Test
     public void testSetters() {
-        // Test setters
+        // Tester les setters
         Produit produit = new Produit();
         
         produit.setNom("Test Produit");
@@ -39,52 +39,52 @@ public class ProduitTest {
     
     @Test
     public void testHasStock() {
-        // Test hasStock method
+        // Tester la méthode hasStock
         Produit produit = new Produit("Test Produit", "Test Catégorie", 123.45f, 10);
         
-        // Test with sufficient stock
+        // Cas de stock suffisant
         assertTrue(produit.hasStock(5));
         assertTrue(produit.hasStock(10));
         
-        // Test with insufficient stock
+        // Cas de stock insuffisant
         assertFalse(produit.hasStock(11));
         assertFalse(produit.hasStock(20));
     }
     
     @Test
     public void testDecreaseStock() {
-        // Test decreaseStock method
+        // Tester la méthode decreaseStock
         Produit produit = new Produit("Test Produit", "Test Catégorie", 123.45f, 10);
         
-        // Test decreasing stock with valid quantity
+        // Diminution du stock avec une quantité valide
         produit.decreaseStock(5);
         assertEquals(5, produit.getQuantite());
         
         produit.decreaseStock(3);
         assertEquals(2, produit.getQuantite());
         
-        // Test decreasing stock with exact remaining quantity
+        // Diminution du stock avec la quantité restante exacte
         produit.decreaseStock(2);
         assertEquals(0, produit.getQuantite());
     }
     
     @Test
     public void testDecreaseStockWithInsufficientStock() {
-        // Test decreaseStock method with insufficient stock
+        // Tester la méthode decreaseStock avec stock insuffisant
         Produit produit = new Produit("Test Produit", "Test Catégorie", 123.45f, 10);
         
-        // Test decreasing stock with invalid quantity
+        // Diminution du stock avec une quantité invalide
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             produit.decreaseStock(15);
         });
         
         assertEquals("Stock insuffisant", exception.getMessage());
-        assertEquals(10, produit.getQuantite()); // Stock should remain unchanged
+        assertEquals(10, produit.getQuantite());  // Le stock doit rester inchangé
     }
     
     @Test
     public void testToString() {
-        // Test toString method
+        // Tester la méthode toString
         Produit produit = new Produit("Test Produit", "Test Catégorie", 123.45f, 10);
         produit.setId(1);
         

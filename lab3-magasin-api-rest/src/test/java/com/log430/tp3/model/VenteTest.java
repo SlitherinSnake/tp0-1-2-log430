@@ -20,7 +20,7 @@ public class VenteTest {
 
     @BeforeEach
     public void setUp() {
-        // Create test data
+        // Création des données de test
         employe = new Employe("John Doe", "JD001");
         magasin = new Magasin();
         magasin.setNom("Magasin Test");
@@ -31,7 +31,7 @@ public class VenteTest {
         produit2 = new Produit("Smartphone", "Électronique", 599.99f, 20);
         produit2.setId(2);
 
-        // Create a new sale
+        // Création d’une nouvelle vente
         vente = new Vente();
         vente.setDateVente(LocalDate.now());
         vente.setEmploye(employe);
@@ -40,27 +40,27 @@ public class VenteTest {
 
     @Test
     public void testAjouterProduit() {
-        // Test adding a product to the sale
+        // Ajouter un produit à la vente
         vente.ajouterProduit(produit1, 2);
-        
-        // Verify product was added
+
+        // Vérifier que le produit a été ajouté
         List<VenteProduit> items = vente.getItems();
         assertEquals(1, items.size());
         assertEquals(produit1.getId(), items.get(0).getProduit().getId());
         assertEquals(2, items.get(0).getQuantite());
-        
-        // Test adding the same product again (should update quantity)
+
+        // Ajouter à nouveau le même produit (devrait mettre à jour la quantité)
         vente.ajouterProduit(produit1, 3);
-        
-        // Verify quantity was updated
+
+        // Vérifier que la quantité a été mise à jour
         items = vente.getItems();
         assertEquals(1, items.size());
         assertEquals(5, items.get(0).getQuantite());
-        
-        // Test adding a different product
+
+        // Ajouter un autre produit
         vente.ajouterProduit(produit2, 1);
-        
-        // Verify second product was added
+
+        // Vérifier que le second produit a été ajouté
         items = vente.getItems();
         assertEquals(2, items.size());
         assertEquals(1, items.get(1).getQuantite());
@@ -68,17 +68,17 @@ public class VenteTest {
 
     @Test
     public void testRemoveProduit() {
-        // Add products to the sale
+        // Ajouter des produits à la vente
         vente.ajouterProduit(produit1, 2);
         vente.ajouterProduit(produit2, 1);
-        
-        // Verify products were added
+
+        // Vérifier qu’ils ont bien été ajoutés
         assertEquals(2, vente.getItems().size());
-        
-        // Remove a product
+
+        // Retirer un produit
         vente.removeProduit(produit1.getId());
-        
-        // Verify product was removed
+
+        // Vérifier que le produit a été retiré
         List<VenteProduit> items = vente.getItems();
         assertEquals(1, items.size());
         assertEquals(produit2.getId(), items.get(0).getProduit().getId());
@@ -86,56 +86,56 @@ public class VenteTest {
 
     @Test
     public void testCalculerMontantTotal() {
-        // Add products to the sale
+        // Ajouter des produits à la vente
         vente.ajouterProduit(produit1, 2); // 2 * 999.99 = 1999.98
         vente.ajouterProduit(produit2, 3); // 3 * 599.99 = 1799.97
-        
-        // Calculate total amount
+
+        // Calculer le montant total
         vente.calculerMontantTotal();
-        
-        // Expected total: 1999.98 + 1799.97 = 3799.95
-        // Using delta for float comparison
+
+        // Total attendu : 1999.98 + 1799.97 = 3799.95
+        // Utilisation d’un delta pour la comparaison des floats
         assertEquals(3799.95, vente.getMontantTotal(), 0.01);
     }
 
     @Test
     public void testSetDateVenteIfNull() {
-        // Create a sale with null date
+        // Vente sans date (null)
         Vente venteWithNullDate = new Vente();
         assertNull(venteWithNullDate.getDateVente());
-        
-        // Set date if null
+
+        // Fixer la date si elle est nulle
         venteWithNullDate.setDateVenteIfNull();
-        
-        // Verify date was set to today
+
+        // Vérifier que la date a été fixée à aujourd’hui
         assertNotNull(venteWithNullDate.getDateVente());
         assertEquals(LocalDate.now(), venteWithNullDate.getDateVente());
-        
-        // Create a sale with a specific date
+
+        // Vente avec une date spécifique
         LocalDate specificDate = LocalDate.of(2023, 1, 1);
         Vente venteWithDate = new Vente();
         venteWithDate.setDateVente(specificDate);
-        
-        // Set date if null (should not change)
+
+        // Tenter de fixer la date alors qu’elle existe déjà (ne doit rien changer)
         venteWithDate.setDateVenteIfNull();
-        
-        // Verify date was not changed
+
+        // Vérifier que la date n’a pas été modifiée
         assertEquals(specificDate, venteWithDate.getDateVente());
     }
 
     @Test
     public void testConstructorAndGetters() {
-        // Create a sale using constructor with parameters
+        // Créer une vente via le constructeur paramétré
         List<VenteProduit> venteProduits = new ArrayList<>();
         VenteProduit venteProduit = new VenteProduit(null, produit1, 2);
         venteProduits.add(venteProduit);
-        
+
         LocalDate today = LocalDate.now();
         Double montantTotal = 1999.98;
-        
+
         Vente venteWithParams = new Vente(today, montantTotal, employe, venteProduits);
-        
-        // Verify attributes
+
+        // Vérifier les attributs
         assertEquals(today, venteWithParams.getDateVente());
         assertEquals(montantTotal, venteWithParams.getMontantTotal());
         assertEquals(employe, venteWithParams.getEmploye());
@@ -144,20 +144,20 @@ public class VenteTest {
 
     @Test
     public void testSetters() {
-        // Test setters
+        // Tester les setters
         LocalDate date = LocalDate.of(2023, 1, 1);
         Double montant = 1000.0;
         List<VenteProduit> venteProduits = new ArrayList<>();
-        
+
         vente.setId(1);
         vente.setDateVente(date);
         vente.setMontantTotal(montant);
         vente.setVenteProduits(venteProduits);
-        
-        // Verify attributes
+
+        // Vérifier les attributs
         assertEquals(1, vente.getId());
         assertEquals(date, vente.getDateVente());
         assertEquals(montant, vente.getMontantTotal());
         assertEquals(venteProduits, vente.getVenteProduits());
     }
-} 
+}
