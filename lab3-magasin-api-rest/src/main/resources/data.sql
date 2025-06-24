@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 -- Insérer les rôles par défaut
 INSERT INTO roles (name) VALUES ('ROLE_ADMIN');
 INSERT INTO roles (name) VALUES ('ROLE_EMPLOYEE');
-INSERT INTO roles (name) VALUES ('ROLE_VIEWER')
+INSERT INTO roles (name) VALUES ('ROLE_VIEWER');
 
 -- Supprimer d'abord les tables dépendantes pour éviter les violations de contraintes de clé étrangère
 DROP TABLE IF EXISTS retour_produit CASCADE;
