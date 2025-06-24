@@ -29,6 +29,8 @@ import jakarta.servlet.http.HttpServletResponse;
  *    les placer dans le contexte de sécurité Spring
  */
 public class AuthTokenFilter extends OncePerRequestFilter {
+
+    /*  Dépendances injectées automatiquement par Spring  */
     @Autowired
     private JwtUtils jwtUtils;
 
