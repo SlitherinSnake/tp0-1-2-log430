@@ -9,8 +9,8 @@ on:
     branches: [ main ]
 
 env:
-  # Repo Docker Hub : <SlitherinSnake>/lab2-magasin-web
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab2-magasin-web
+  # Repo Docker Hub : <SlitherinSnake>/lab3-magasin-api-rest
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab3-magasin-api-rest
 
 jobs:
 # ──────────────────────────── LINT ────────────────────────────
@@ -25,7 +25,7 @@ jobs:
         with: { java-version: '21', distribution: 'temurin' }
 
       - name: Lint (Run Checkstyle)
-        working-directory: lab2-magasin-web
+        working-directory: lab3-magasin-api-rest
         run: mvn --batch-mode -q verify
 
 # ──────────────────────────── TEST ────────────────────────────
@@ -42,7 +42,7 @@ jobs:
 
       # Le POM est dans le dossier magasin/
       - name: Run Maven tests (module magasin)
-        working-directory: lab2-magasin-web
+        working-directory: lab3-magasin-api-rest
         run: mvn --batch-mode clean test
 
 # ──────────────────────────── BUILD DOCKER ────────────────────────────
@@ -78,11 +78,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}  
 
       # Tag + push seulement magasin-app
-      - name: Tag & Push lab2-magasin-web  (Docker image)
+      - name: Tag & Push image
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
-          # L’image locale s’appelle « magasin-app », ceci a été défini dans le docker-compose.yml
-          docker tag magasin-web-app $IMAGE_NAME:latest
-          docker tag magasin-web-app $IMAGE_NAME:$DATE_TAG
+          docker tag magasin-api-app $IMAGE_NAME:latest
+          docker tag magasin-api-app $IMAGE_NAME:$DATE_TAG
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$DATE_TAG

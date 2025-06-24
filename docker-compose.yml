@@ -56,11 +56,11 @@ services:
   # -------------------------
   # Application principale Web (Spring Boot)
   # -------------------------
-  app:
-    image: magasin-web-app  # ← Ajout essentiel pour CI/CD
-    container_name: magasin-web-app
+  api:
+    image: magasin-api-app  # ← Ajout essentiel pour CI/CD
+    container_name: magasin-api-app
     build:
-      context: ./lab2-magasin-web
+      context: ./lab3-magasin-api-rest
       dockerfile: Dockerfile
     depends_on:
       - db
