@@ -68,7 +68,7 @@ jobs:
 
         # Rebuild l'image
       - name: Build image for app only
-        run: docker compose -f docker-compose.yml build app
+        run: docker compose -f docker-compose.yml build api
 
       # Authentification Docker Hub
       - name: Log in to DockerHub
