@@ -2,21 +2,24 @@
 title Vue d’implémentation – Organisation des modules (MVC + Service + Repository)
 
 ' === Packages ===
-package "com.log430.tp2.controller" {
+package "com.log430.tp3.controller" {
   class ProduitController
   class VenteController
   class RetourController
   class StockCentralController
   class RapportController
   class DashboardController
+  class AuthController
+  class ProduitApiController
+  class AuthViewController
 }
 
-package "com.log430.tp2.service" {
+package "com.log430.tp3.service" {
   class RapportService
   class StockCentralService
 }
 
-package "com.log430.tp2.repository" {
+package "com.log430.tp3.repository" {
   class ProduitRepository
   class VenteRepository
   class RetourRepository
@@ -24,9 +27,11 @@ package "com.log430.tp2.repository" {
   class MagasinRepository
   class StockMagasinRepository
   class StockCentralRepository
+  class UserRepository
+  class RoleRepository
 }
 
-package "com.log430.tp2.model" {
+package "com.log430.tp3.model" {
   class Produit
   class Vente
   class Retour
@@ -36,6 +41,33 @@ package "com.log430.tp2.model" {
   class Magasin
   class StockMagasin
   class StockCentral
+  class User
+  class Role
+}
+
+' --- Bloc sécurité & auth --------------------------------------------------
+
+package "com.log430.tp3.security.jwt" {
+  class JwtUtils
+  class AuthTokenFilter
+  class AuthEntryPointJwt
+}
+
+package "com.log430.tp3.security.services" {
+  class UserDetailsImpl
+  class UserDetailsServiceImpl
+}
+
+package "com.log430.tp3.config" {
+  class WebSecurityConfig
+  class CorsConfig
+  class OpenApiConfig
+  class DataInitializer
+}
+
+package "com.log430.tp3.api.controller" {
+  class AuthController
+  class ProduitApiController
 }
 
 ' === Relations contrôleurs → services ===
@@ -68,5 +100,24 @@ RapportService --> ProduitRepository
 StockCentralService --> ProduitRepository
 StockCentralService --> MagasinRepository
 StockCentralService --> StockCentralRepository
+
+' --- Relations principales -------------------------------------------------
+
+AuthController --> JwtUtils
+AuthController --> UserRepository
+AuthController --> RoleRepository
+
+AuthTokenFilter --> JwtUtils
+UserDetailsServiceImpl --> UserRepository
+
+WebSecurityConfig --> AuthTokenFilter
+WebSecurityConfig --> UserDetailsServiceImpl
+
+AuthViewController --> JwtUtils
+AuthViewController --> UserDetailsImpl
+
+UserDetailsImpl "*" --> "*" Role : authorities >
+UserRepository --> User
+RoleRepository --> Role
 
 @enduml

@@ -29,6 +29,9 @@ public class JwtResponse {
     // Getter/Setter
     public String getToken() {    return token;}
     public void setToken(String token) {    this.token = token;}
+    
+    // Alias for accessToken - for compatibility with tests
+    public String getAccessToken() {    return token;}
 
     public String getType() {    return type;}
     public void setType(String type) {    this.type = type;}

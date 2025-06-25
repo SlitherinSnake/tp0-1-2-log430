@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,12 +20,12 @@ import jakarta.servlet.http.HttpServletRequest;
 /**
  * Centralise la gestion des erreurs pour toute la couche API.
  * Avantage : le code métier reste lisible et toutes les réponses
- * d’erreur suivent le même format (status, message, path…).
+ * d'erreur suivent le même format (status, message, path…).
  */
 @ControllerAdvice(basePackages = "com.log430.tp3.api")
 public class GlobalExceptionHandler {
 
-    /*  Erreur “custom” levée via ResponseStatusException  */
+    /*  Erreur "custom" levée via ResponseStatusException  */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -48,13 +49,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
+    /*  Authentification échouée (login/mot de passe invalide)  */
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "UNAUTHORIZED",
+                "Invalid credentials",
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
     /*  Validation des champs (DTO)  */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         
-        // Construit un dictionnaire : champ -> message d’erreur
+        // Construit un dictionnaire : champ -> message d'erreur
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
@@ -73,4 +86,4 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-} 
+}

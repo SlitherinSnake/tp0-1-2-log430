@@ -1,0 +1,23 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor #eef
+  BorderColor     #447
+}
+actor Employe
+actor Admin
+actor Viewer
+actor "Client API" as Api
+
+rectangle "Spring Boot App\n(Thymeleaf + REST/JWT)" as App {
+  rectangle "Session\n(Form Login)" as Session
+  rectangle "API REST\nJSON + JWT" as Rest
+}
+
+database "PostgreSQL\n(Docker)" as Pg
+
+Employe --> Session : Vue Web\n(HTML / HTTPS)
+Admin   --> Session
+Viewer  --> Session
+Api     --> Rest    : JSON / HTTPS\nBearer JWT
+App --> Pg : JDBC\nHibernate
+@enduml

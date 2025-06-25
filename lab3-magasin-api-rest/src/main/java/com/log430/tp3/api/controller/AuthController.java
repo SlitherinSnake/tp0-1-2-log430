@@ -94,7 +94,7 @@ public class AuthController {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Erreur : le nom d'utilisateur est déjà pris !"));
+                    .body(new MessageResponse("Error: Username is already taken!"));
         }
 
         // Crée l’objet User et chiffre le mot de passe
@@ -110,24 +110,24 @@ public class AuthController {
 
         if (strRoles == null) { // Aucun rôle fourni
             Role viewerRole = roleRepository.findByName(ERole.ROLE_VIEWER)
-                    .orElseThrow(() -> new RuntimeException("Erreur : le rôle n’est pas trouvé."));
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(viewerRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role) {
                 case "admin":
                     Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                            .orElseThrow(() -> new RuntimeException("Erreur : le rôle n’est pas trouvé."));
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                     roles.add(adminRole);
                     break;
                 case "employee":
                     Role empRole = roleRepository.findByName(ERole.ROLE_EMPLOYEE)
-                            .orElseThrow(() -> new RuntimeException("Erreur : le rôle n’est pas trouvé."));
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                     roles.add(empRole);
                     break;
                 default:
                     Role viewerRole = roleRepository.findByName(ERole.ROLE_VIEWER)
-                            .orElseThrow(() -> new RuntimeException("Erreur : le rôle n’est pas trouvé."));
+                            .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                     roles.add(viewerRole);
                 }
             });
@@ -136,6 +136,6 @@ public class AuthController {
         user.setRoles(roles);
         userRepository.save(user);  // Persistance en base
 
-        return ResponseEntity.ok(new MessageResponse("Utilisateur enregistré avec succès !"));
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 } 

@@ -105,7 +105,7 @@ public class Vente {
     // Getters / Setters
     public int getId() { return id; }
     // Pour test
-    public int setId(int id) { return this.id = id; }
+    public void setId(int id) { this.id = id; }
 
     public LocalDate getDateVente() { return dateVente; }
     public void setDateVente(LocalDate dateVente) { this.dateVente = dateVente; }

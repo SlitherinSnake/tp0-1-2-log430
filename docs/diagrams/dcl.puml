@@ -89,6 +89,17 @@ class StockCentral {
   + getDateDemande() : LocalDate
 }
 
+class User {
+  - id : long
+  - username : String
+  - password : String
+}
+
+class Role {
+  - id : int
+  - name : ERole
+}
+
 ' === Relations de base ===
 
 ' Employé réalise ventes et retours
@@ -120,5 +131,12 @@ StockMagasin "*" --> "1" Produit
 ' Stock central : une demande associe un produit à un magasin
 StockCentral "*" --> "1" Produit
 StockCentral "*" --> "1" Magasin
+
+' Many-to-Many User ↔ Role
+User "1" --> "*" Role : a pour rôles >
+
+' (Optionnel) Employé possède un User
+Employe "1" --> "1" User : compte >
+
 
 @enduml

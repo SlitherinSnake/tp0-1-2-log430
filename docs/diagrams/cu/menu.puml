@@ -1,26 +1,55 @@
 @startuml
-title Diagramme de cas d'utilisation – Système de gestion multi-magasins (Web)
+title Diagramme de cas d'utilisation – Système de gestion multi-magasins (API-REST)
 
-actor Employe
+' === Acteurs principaux ===
+actor "Employé"   as Employe
+actor "Administrateur" as Admin
+actor "Viewer (lecture seule)" as Viewer
+actor "Client API externe" as ApiClient
 
-rectangle "Application Web Spring Boot\n(Interface Thymeleaf + Services + BD PostgreSQL)" {
+' -----------------------------------------------------------------
+rectangle "Application Web Spring Boot\n(Thymeleaf + API REST/JWT + PostgreSQL)" {
 
-  ' === Cas d'utilisation de gestion de produits ===
-  usecase "Rechercher un produit" as UC1
-  usecase "Consulter le stock central" as UC2
+  ' === Authentification & autorisation ===
+  usecase "Se connecter (login)" as UC_AUTH_LOGIN
+  usecase "S'inscrire (signup)" as UC_AUTH_SIGNUP
+  usecase "Obtenir un token JWT" as UC_AUTH_TOKEN
+  UC_AUTH_TOKEN <|-- UC_AUTH_LOGIN : <<include>>
 
-  ' === Cas d'utilisation de gestion des ventes ===
-  usecase "Ajouter un produit au panier" as UC3
-  usecase "Valider une vente" as UC4
+  ' === Gestion des utilisateurs (réservé ADMIN) ===
+  usecase "Gérer les utilisateurs & rôles" as UC_ADMIN_USERS
 
-  ' === Cas d'utilisation de gestion des retours ===
-  usecase "Initier un retour" as UC5
-  usecase "Valider les produits retournés" as UC6
+  ' === Gestion de produits ===
+  usecase "Rechercher un produit"              as UC1
+  usecase "Consulter le stock central"         as UC2
 
-  ' === Cas d'utilisation de rapport (ex : UC1 de ton projet final) ===
+  ' === Gestion des ventes ===
+  usecase "Ajouter un produit au panier"       as UC3
+  usecase "Valider une vente"                  as UC4
+
+  ' === Gestion des retours ===
+  usecase "Initier un retour"                  as UC5
+  usecase "Valider les produits retournés"     as UC6
+
+  ' === Rapports ===
   usecase "Générer un rapport consolidé des ventes" as UC7
 }
 
+' -----------------------------------------------------------------
+' Droits & relations
+' Authentication (tout le monde)
+Employe  --> UC_AUTH_LOGIN
+Viewer   --> UC_AUTH_LOGIN
+Admin    --> UC_AUTH_LOGIN
+ApiClient --> UC_AUTH_TOKEN
+
+' Inscription (optionnel : si tu l’ouvres uniquement aux admins, conserve la flèche Admin)
+Admin  --> UC_AUTH_SIGNUP
+
+' Gestion des utilisateurs
+Admin  --> UC_ADMIN_USERS
+
+' Cas d’utilisation existants
 Employe --> UC1
 Employe --> UC2
 Employe --> UC3
@@ -28,5 +57,17 @@ Employe --> UC4
 Employe --> UC5
 Employe --> UC6
 Employe --> UC7
+
+Viewer  --> UC1
+Viewer  --> UC2
+Viewer  --> UC7
+
+Admin   --> UC1
+Admin   --> UC2
+Admin   --> UC3
+Admin   --> UC4
+Admin   --> UC5
+Admin   --> UC6
+Admin   --> UC7
 
 @enduml

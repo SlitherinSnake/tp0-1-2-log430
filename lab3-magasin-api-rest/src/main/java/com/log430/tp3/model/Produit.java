@@ -45,7 +45,7 @@ public class Produit {
     // Getter/Setter
     public int getId() { return id; }
     // Pour test
-    public int setId(int id) { return this.id = id; }
+    public void setId(int id) { this.id = id; }
 
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }
