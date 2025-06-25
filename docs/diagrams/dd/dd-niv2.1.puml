@@ -1,0 +1,35 @@
+@startuml
+title Diagramme de déploiement – Application Web (Spring Boot + PostgreSQL + JWT)
+
+' === Noeud client (navigateur web) ===
+node "Client (navigateur Web)" as Browser {
+  artifact "Vue Thymeleaf\nHTML + AJAX"
+  artifact "Cookie JSESSIONID"
+}
+
+' === Noeud client API externe (mobile / intégration) ===
+node "Client API externe" as ApiClient {
+  artifact "Requêtes JSON\nAuthorization: Bearer <JWT>"
+}
+
+' === Noeud serveur applicatif (conteneur Docker) ===
+node "Conteneur Spring Boot\n(app:8080)" as App {
+  component "Spring Boot MVC" as MVC
+  component "REST Controllers\n(/api/**)" as Rest
+  component "Spring Security\n• Form login\n• JWT filter" as Security
+}
+
+' === Noeud base de données (conteneur Docker) ===
+database "PostgreSQL\n(db:5432)" as PG
+
+
+' --- Relations --------------------------------------------------------------
+Browser  --> MVC     : HTTPS GET/POST\n(cookie session)
+Browser  --> Rest    : fetch JSON (si SPA)<br/>Authorization: Bearer JWT
+ApiClient --> Rest   : HTTPS JSON\nBearer JWT
+Rest     --> Security
+MVC      --> Security
+Security --> Rest    : requêtes authentifiées
+App      --> PG      : JDBC (Spring Data JPA)
+
+@enduml

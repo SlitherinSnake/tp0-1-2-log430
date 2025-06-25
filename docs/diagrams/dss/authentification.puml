@@ -1,0 +1,19 @@
+@startuml
+actor Employe
+boundary Browser
+control "AuthController\n(/api/v1/auth/login)" as AuthCtl
+participant "JwtUtils" as Jwt
+control "AuthTokenFilter" as Filter
+
+Employe -> Browser : Saisie login/password
+Browser -> AuthCtl   : POST /api/v1/auth/login (JSON)
+AuthCtl  -> Jwt      : generateJwtToken()
+Jwt      --> AuthCtl : JWT
+AuthCtl  --> Browser : 200 OK { token: JWT }
+
+' Appel API ultérieur
+Browser -> Filter    : GET /api/v1/produits  (Authorization: Bearer JWT)
+Filter   -> Jwt      : validateJwtToken()
+Jwt      --> Filter  : OK
+Filter   --> "ProduitApiController" : requête authentifiée
+@enduml

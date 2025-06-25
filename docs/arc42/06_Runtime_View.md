@@ -92,3 +92,20 @@ Les données sont agrégées à partir des `VenteRepository`, `ProduitRepository
 
 ### Diagramme de séquence  
 ![dss-visualiserDashboard](https://img.plantuml.biz/plantuml/svg/bLZBRXit5DqRy3zSU1EfaDFtnaYCE8wRfB5hLr8S52ZWK3EKH7HU9ZbgZA90jbrtrLsNTjVz0_r9lgJdafodbBfT6F3Cy77kkUSUNkg9iKBRCarsTwooYQHdambzUFyxNIfJYaGPgIcHXWgfvxbEHHRX8SPVAXR2gCpGO59ebIteQPvRUYDdmzsTtPq7zFZnOpgAh2mryVT85IBXbxix8hAvfkVIM9LdcL1QylXJIOlMAzAoqEix8pChgSoej0fWX5jFt8ZCugMaLIaf_l3-3vaPcSw0tfGURbwixxJWrRfe7pRWZlEqo0rMCeoQ1a97IsLbP4liVdPvJAsuXXvv0QeKHuBjzxuJAxNmWDpywV8cbOaKy-4U2KENfGlh9V3hkOWa_On1FehrdQGYvq3cSnKj0yCgYrNarZEq0lao0RTM82fHlXlHGejYgQvBQKOa4gcjD4CNJGVKM1H5hkrndbcT9nZci3IF3CazhVzE67c8SS5iOJxZqFAwNF-5vUd5T7f1YG9SGwAaW0LyqYpNyKStdqYzKf5qEuV_UTlmBwNhEwiGCxBB-lBRajK2vAT8zuWIP5Giy7tXCaZI-bUPI6wCTFcC8HF6jGdYaXKpbaYjWinkV2wgTuoZ-LQd8sGZYjPtCP21Rrhn54CoqtAX3FXY4WPGo7oklUQGF1Ogqc5b5hl2605gz71BMYvq7fVAzc2rtZAmmNdXv2yJmiHX6oYgBvNMybfWFzAvgyis4IWojvWXemXlWCOml4qi4vj7FvtvUkW1Sf-sy1HKuWdYHPYXJArOcGp8y3o7R2cWqAhQtDwnW6u4qhPtaHkxq7Bo_UaUh_zKk5ms4MYPY400114X0Lg4QcdLZT1ayz8ugKPD2Q-Kg60-muxqxSMHsnw5llxDYaBIvtG0GuhMjzl4J5pURKkY_KCkOSpXg6ynRFqdVHeBivpb0kC7pq-cmss-5ILSfCw8zgRTJVO8v1cdPTMn1IU_V0OTASrcnyPNeaveaUGpaRX060mmDQKCQAv00QG5p44ITH7x8S371PQP5Bf1z3PFmJHWShqn6r7B4jvkUCZR7fDVOEin95RM9ainrgXguq5L6IvPGGkEu1PuX58PmW48jCT-zb6OUY5qaEYWOhcD4GYTIDZnmoeT3jbGSei3Xql4b_88d2nqpfZRk5ne5HBEUMKLW3M79T-3QrpnZ1JR6t3pV7p--eAU_a3o7JDaQw_VKXhDNjYugGxiF3avFJcULeElL3oYoUkpGGeAeFOh5zkGVipec_7vMULLUAntRsPsKFBglJCei18EeR23sQ2e1M-_HzCf_F7HBs7mo1F_ws4GeYjzBL6oEfFkpCRcdg_2YsJGdTbAsR3FKaSqOowIn0g0zOS5dhrKZ2yW_yqWeWe0tlgWczE6yZ8Sms8XUph_SelE-IZqfszZVFT8EzYyESd6PS7TnNavmI7FKxUAEvPeisBfyb7jDQZj7T-kIvSY89SP6urRQjXNSctcGSb7IL9lLnMDio6TBsJZgHksxi_6ed2-fdqAyuKpEOoPgmHa1kgQBJyYw4-yODt2Lo7l7f9lkzZGa_MjzOVy1XI4E-kT6jl4sOxSYRDzv1rsO7PovTvx3DBwHd7Q2ANgMmvGsWWvglLGfmRmjCymvwPAJ3SfzMQEE6w3_0p3NKurnVJILB7V9z_8Kg5BF20Ulqz1Njm1E8aek0_4IPynd4T-DAMUyNsgDDWTVbWD4--wnV0L7v-j3gnkUcWfPp4EbDYNypt5CAsclU1P_wf_3hRTymMROsT2jozK5XnirRsfrC3kitRtp8u-yQjjL4Ux4CFczHdI1VBVxFpDoSch0VeXUULM6_vVK-_FRrjijv6gxRPf9TfPybUYokgnM5nkBQHDbm_nZghPxFCVC-X68G3d4BlRHwTfbUNAjI29uXfpzjBST71KO9W3F8WGqSmVis7POS-jlsQtvb32xSafiKv_ltMg8VGRmS7nKNt1QhNsZknfNd9EadO8hLux73RLQUHhMijibTzKTwYMpXtyTgNK7MUTlxghUxYqQK9Y9QFsDJ7alu3zeiyxEtLzdcOAf1_RlrR2sb9yibQhMOdCWwiqZzUtQ9VgsslJR09FfoC-gEwhzEhYPSqHn-YJu_5qcbjMYUQEiziZ7tW7uhhVSg5gznxLm9RBHbgvtXM7eeVW3uTXCtHJU3sF6ZINQVThnHFcZ7y2-GS0)
+
+## 6.7. Scénario : Authentification et obtention d’un token JWT
+
+### Description  
+L’employé ouvre la page **« Se connecter »** (`/login`) depuis le navigateur.  
+Après avoir saisi son nom d’utilisateur et son mot de passe :
+
+1. Le navigateur émet un **POST** `/api/v1/auth/login` contenant le JSON `{ username, password }`.  
+2. Le **`AuthController`** reçoit la requête et délègue à **Spring Security** la vérification des identifiants :  
+   - `UserDetailsServiceImpl` charge l’objet `User` et ses `Role` depuis `UserRepository`.  
+   - Le mot de passe est comparé en **BCrypt**.  
+3. Si l’authentification réussit, le contrôleur appelle **`JwtUtils.generateJwtToken()`** pour créer un **JWT signé** (contenant le `username` et la liste des rôles).  
+4. La réponse JSON `{ token: "...", id: 42, username: "...", roles: [...] }` est renvoyée au navigateur.  
+5. Le navigateur stocke le token (ex. `localStorage`) ; toutes les requêtes API suivantes incluent l’en-tête  
+
+### Diagramme de séquence  
+![dss-authentification](https://img.plantuml.biz/plantuml/svg/VP9DJiCm48NtaNA7KJQaYog5PHQeAIg88j5ABMB3nZIcZ71jOqzQ5SI1oZLwCIPEVq4YgzZpvhrlhEbw4ewgkOeZCINZe3-togna73sRIfV2hQ3dpD9B5qTJeyaP1KbHqUjLSr3IFUaq4nQpnNack90fCqFTIa1u249YRyiXE4KhD44oMD83eV91meTVpXFp9lKrAf8kA9hVE8gZBHkqBtTGaCDOe4S98JMpmlkbSMKSxGIitL80i7eq74_WBowaW_7mlXL7UottCHg4BuUPrD89admLy5AMxiljeumS1e-JOviJrejE1uPty0bKcmGjVDMJdK5XhLHGZ6wXKhHPEvILEvcYUOO6vwP_6C8wKrP87Y2jKut33q5esBqdXUCE3c7QVVlfO0kXiFnli5rVpk37BbnAHarqOV6m3GahdNolDjyaeNvWgGbVSBFcbUfANOPL-m40)
