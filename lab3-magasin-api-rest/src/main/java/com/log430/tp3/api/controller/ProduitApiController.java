@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 import com.log430.tp3.api.dto.ErrorResponse;
 import com.log430.tp3.api.dto.MessageResponse;
 import com.log430.tp3.api.dto.ProduitDto;
-//import com.log430.tp3.api.mapper.ProduitMapper;
 import com.log430.tp3.model.Produit;
 import com.log430.tp3.repository.ProduitRepository;
 
@@ -47,7 +45,6 @@ import jakarta.validation.Valid;
  * - Création / édition : ADMIN ou EMPLOYEE
  * - Suppression : ADMIN seul
  */
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/v1/produits")
 @Tag(name = "Produits", description = "Produits gestion API")

@@ -1,8 +1,5 @@
 package com.log430.tp3.config;
 
-import com.log430.tp3.security.jwt.AuthEntryPointJwt;
-import com.log430.tp3.security.jwt.AuthTokenFilter;
-import com.log430.tp3.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import com.log430.tp3.security.jwt.AuthEntryPointJwt;
+import com.log430.tp3.security.jwt.AuthTokenFilter;
+import com.log430.tp3.security.services.UserDetailsServiceImpl;
 
 /**
  * Configuration centrale de la sécurité.
@@ -36,7 +38,10 @@ public class WebSecurityConfig {
     UserDetailsServiceImpl userDetailsService; // Va chercher les utilisateurs en base
 
     @Autowired
-    private AuthEntryPointJwt unauthorizedHandler; // Répond 401 quand l’accès est interdit
+    private AuthEntryPointJwt unauthorizedHandler; // Répond 401 quand l'accès est interdit
+
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource; // Configuration CORS centralisée
 
     // Beans (= objets créés et gérés par Spring)
     /**
@@ -81,8 +86,10 @@ public class WebSecurityConfig {
     @Order(1) // Traité avant le filtre « formulaire » car ordre = 1
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
-                // Cette chaîne ne s’applique qu’aux URLs commençant par /api/**
+                // Cette chaîne ne s'applique qu'aux URLs commençant par /api/**
                 .securityMatcher("/api/**")
+                // Configuration CORS sécurisée (remplace les @CrossOrigin permissifs)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 // Pas de protection CSRF pour les appels API (gérés par token)
                 .csrf(csrf -> csrf.disable())
                 // Si l’utilisateur n’est pas connecté → renvoie 401 en JSON
