@@ -3,6 +3,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "MagasinApiApplication",
+      "request": "launch",
+      "mainClass": "com.log430.tp4.MagasinApiApplication",
+      "projectName": ""
+    },
+    {
+      "type": "java",
+      "name": "MagasinWebApplication",
+      "request": "launch",
+      "mainClass": "com.log430.tp4.MagasinWebApplication",
+      "projectName": ""
+    },
+    {
+      "type": "java",
       "name": "MagasinApp",
       "request": "launch",
       "mainClass": "com.log430.tp1.MagasinApp",
