@@ -1,227 +1,225 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xml:lang="fr" lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <title>Stock central</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        .navbar .nav-link {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease-in-out;
-        }
-        .navbar .nav-link:hover {
-            background-color: rgba(0,0,0,0.05);
-        }
-        .navbar .nav-link.active {
-            background-color: rgba(0,0,0,0.1);
-        }
-        .store-badge {
-            font-size: 0.9rem;
-            padding: 0.25rem 0.5rem;
-            margin-left: 0.5rem;
-            border-radius: 0.25rem;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Stock - Magasin DDD</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-store"></i> Magasin DDD
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link active" href="/stock">Stock</a>
+                <a class="nav-link" href="/panier">Ventes</a>
+                <a class="nav-link" href="/rapport">Rapports</a>
+            </div>
+        </div>
+    </nav>
 
-<body class="bg-light">
-    <div class="container py-4">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" th:href="@{/}">
-                    <i class="bi bi-shop me-2"></i>Magasin
-                    <span th:if="${selectedMagasin}" class="store-badge bg-success text-white" th:text="${selectedMagasin.nom}">Magasin A</span>
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
-                        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1><i class="fas fa-warehouse"></i> Gestion du Stock</h1>
+                <p class="text-muted">Gérez votre inventaire centralisé</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Rechercher un produit...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">Toutes les catégories</option>
+                    <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i class="fas fa-plus"></i> Ajouter
                 </button>
-                
-                <div class="collapse navbar-collapse" id="navbarContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center" th:href="@{/}">
-                                <i class="bi bi-house-door me-1"></i> Accueil
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/dashboard}">
-                                <i class="bi bi-graph-up me-1"></i> Tableau de bord
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/rapport}">
-                                <i class="bi bi-bar-chart-line-fill me-1"></i> Rapport
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" th:href="@{/stock}">
-                                <i class="bi bi-box me-1"></i> Stock central
-                            </a>
-                        </li>
-                        <!-- Store selection dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="storeDropdown" role="button" 
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-shop-window me-1"></i> Changer de magasin
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="storeDropdown">
-                                <li th:each="magasin : ${allMagasins}">
-                                    <a class="dropdown-item" th:href="@{'/selectMagasin/' + ${magasin.id}}" 
-                                        th:classappend="${selectedMagasin != null && selectedMagasin.id == magasin.id ? 'active' : ''}">
-                                        <i class="bi bi-shop me-2"></i>
-                                        <span th:text="${magasin.nom}">Magasin</span>
-                                        <span th:if="${selectedMagasin != null && selectedMagasin.id == magasin.id}" class="ms-2">
-                                            <i class="bi bi-check-circle-fill text-success"></i>
-                                        </span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                    
-                    <div class="d-flex gap-2">
-                        <a class="btn btn-warning d-flex align-items-center" th:href="@{/retour}">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>
-                            Retour
-                        </a>
-                        <a class="btn btn-primary position-relative d-flex align-items-center" th:href="@{/panier}">
-                            <i class="bi bi-cart4 me-1"></i>
-                            Panier
-                            <span id="cart-count" 
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
-                        </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list"></i> Inventaire</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nom</th>
+                                        <th>Catégorie</th>
+                                        <th>Prix</th>
+                                        <th>Stock Central</th>
+                                        <th>Stock Min.</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${inventoryItems}">
+                                        <td th:text="${item.id}"></td>
+                                        <td th:text="${item.nom}"></td>
+                                        <td>
+                                            <span class="badge bg-secondary" th:text="${item.categorie}"></span>
+                                        </td>
+                                        <td th:text="${#numbers.formatCurrency(item.prix)}"></td>
+                                        <td>
+                                            <span th:if="${item.stockCentral > item.stockMinimum}" class="badge bg-success" th:text="${item.stockCentral}"></span>
+                                            <span th:if="${item.stockCentral <= item.stockMinimum}" class="badge bg-warning" th:text="${item.stockCentral}"></span>
+                                        </td>
+                                        <td th:text="${item.stockMinimum}"></td>
+                                        <td>
+                                            <span th:if="${item.isAvailable()}" class="badge bg-success">Disponible</span>
+                                            <span th:if="${!item.isAvailable()}" class="badge bg-danger">Indisponible</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary" th:onclick="'editItem(' + ${item.id} + ')'">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" th:onclick="'adjustStock(' + ${item.id} + ')'">
+                                                    <i class="fas fa-boxes"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </nav>
-
-        <h1 class="mb-4 fw-bold">Stock central</h1>
-
-        <!-- Alertes -->
-        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            La demande de réapprovisionnement a été enregistrée avec succès.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
         </div>
-        <div th:if="${param.duplicate}" class="alert alert-warning alert-dismissible fade show" role="alert">
-            Une demande pour ce produit a déjà été faite aujourd’hui pour ce magasin.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-        </div>
+    </div>
 
-        <!-- Formulaire de demande -->
-        <form th:action="@{/stock/demander}" method="post" class="card p-3 mb-4 shadow-sm">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Produit à réapprovisionner</label>
-                    <select name="produitId" class="form-select" required>
-                        <option th:each="p : ${produits}" th:value="${p.id}" th:text="${p.nom}">Produit</option>
-                    </select>
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un nouvel article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Quantité souhaitée</label>
-                    <input type="number" name="quantite" min="1" class="form-control" required>
+                <div class="modal-body">
+                    <form id="addItemForm">
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom du produit</label>
+                            <input type="text" class="form-control" id="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="categorie" class="form-label">Catégorie</label>
+                            <input type="text" class="form-control" id="categorie" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="prix" class="form-label">Prix</label>
+                            <input type="number" step="0.01" class="form-control" id="prix" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stockCentral" class="form-label">Stock initial</label>
+                            <input type="number" class="form-control" id="stockCentral" required>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Magasin</label>
-                    <select name="magasinId" class="form-select" required>
-                        <option th:each="m : ${magasins}" th:value="${m.id}" th:text="${m.nom}"
-                            th:selected="${m.id == magasinId}">Magasin</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-grid">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="submit" class="btn btn-success"><i class="bi bi-box-seam"></i> Demander</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="addItem()">Ajouter</button>
                 </div>
             </div>
-        </form>
-
-        <!-- Table de produits -->
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered align-middle shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Nom</th>
-                        <th>Catégorie</th>
-                        <th>Prix ($)</th>
-                        <th>Quantité centrale</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="p : ${produits}">
-                        <td th:text="${p.nom}"></td>
-                        <td th:text="${p.categorie}"></td>
-                        <td th:text="${p.prix}"></td>
-                        <td th:text="${p.quantite}"></td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
-    <!-- Historique des demandes si un magasin est sélectionné -->
-    <div th:if="${magasinId != null}" class="mt-5">
-        <h2 class="fw-bold">Historique des demandes – <span th:text="${nomMagasin}">Magasin</span>></h2>
-
-        <!-- À Fixer pour faire que chaque magasin a son propre stock -->
-        <h3 class="mt-5">Stock local du magasin</h3>
-
-        <div th:if="${stockLocal != null and !stockLocal.isEmpty()}">
-            <table class="table table-sm table-bordered mt-2">
-                <thead class="table-light">
-                    <tr>
-                        <th>Produit</th>
-                        <th>Quantité locale</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="s : ${stockLocal}">
-                        <td th:text="${s.produit.nom}"></td>
-                        <td th:text="${s.quantite}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div th:if="${stockLocal == null or stockLocal.isEmpty()}" class="alert alert-secondary">
-            Aucun stock enregistré pour ce magasin.
-        </div>
-
-        <div th:if="${demandes != null and !demandes.isEmpty()}">
-            <table class="table table-bordered table-hover mt-3 shadow-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date de demande</th>
-                        <th>Produit</th>
-                        <th>Quantité demandée</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="d : ${demandes}">
-                        <td th:text="${d.dateDemande}"></td>
-                        <td th:text="${d.produit.nom}"></td>
-                        <td th:text="${d.quantiteDemandee}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div th:if="${demandes == null or demandes.isEmpty()}" class="alert alert-secondary mt-3">
-            Aucune demande de réapprovisionnement trouvée pour ce magasin.
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Mise à jour du compteur du panier
-        fetch("/panier/count").then(res => res.text()).then(count => {
-            const span = document.getElementById("cart-count");
-            if (span) span.innerText = count;
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
         });
+
+        // Category filter
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            const category = this.value;
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const categoryCell = row.cells[2].textContent;
+                row.style.display = !category || categoryCell.includes(category) ? '' : 'none';
+            });
+        });
+
+        // Add item function
+        function addItem() {
+            const data = {
+                nom: document.getElementById('nom').value,
+                categorie: document.getElementById('categorie').value,
+                prix: parseFloat(document.getElementById('prix').value),
+                stockCentral: parseInt(document.getElementById('stockCentral').value)
+            };
+
+            fetch('/api/inventory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Article ajouté avec succès!');
+                location.reload();
+            })
+            .catch(error => {
+                alert('Erreur lors de l\'ajout de l\'article');
+                console.error('Error:', error);
+            });
+        }
+
+        function editItem(id) {
+            alert('Fonction d\'édition à implémenter pour l\'ID: ' + id);
+        }
+
+        function adjustStock(id) {
+            const newStock = prompt('Nouveau stock pour l\'article ID ' + id + ':');
+            if (newStock && !isNaN(newStock)) {
+                fetch(`/api/inventory/${id}/stock`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({stock: parseInt(newStock)})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Stock mis à jour avec succès!');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Erreur lors de la mise à jour du stock');
+                    console.error('Error:', error);
+                });
+            }
+        }
     </script>
 </body>
-
 </html>

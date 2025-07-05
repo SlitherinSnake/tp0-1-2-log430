@@ -1,244 +1,116 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xml:lang="fr" lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <title>Tableau de bord</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .navbar .nav-link {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease-in-out;
-        }
-        .navbar .nav-link:hover {
-            background-color: rgba(0,0,0,0.05);
-        }
-        .navbar .nav-link.active {
-            background-color: rgba(0,0,0,0.1);
-        }
-        .store-badge {
-            font-size: 0.9rem;
-            padding: 0.25rem 0.5rem;
-            margin-left: 0.5rem;
-            border-radius: 0.25rem;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Magasin DDD</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-store"></i> Magasin DDD
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link" href="/stock">Stock</a>
+                <a class="nav-link" href="/panier">Ventes</a>
+                <a class="nav-link" href="/rapport">Rapports</a>
+            </div>
+        </div>
+    </nav>
 
-<body class="bg-light">
-    <div class="container py-4">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+                <p class="text-muted">Vue d'ensemble de votre magasin</p>
+            </div>
+        </div>
 
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" th:href="@{/ventes}">
-                    <i class="bi bi-shop me-2"></i>Magasin
-                </a>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center" th:href="@{/ventes}">
-                                <i class="bi bi-house-door me-1"></i> Accueil
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center active" th:href="@{/dashboard}">
-                                <i class="bi bi-graph-up me-1"></i> Tableau de bord
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center" th:href="@{/rapport}">
-                                <i class="bi bi-bar-chart-line-fill me-1"></i> Rapport
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center" th:href="@{/stock}">
-                                <i class="bi bi-box me-1"></i> Stock central
-                            </a>
-                        </li>
-                    </ul>
-
-                    <div class="d-flex gap-2">
-                        <a class="btn btn-warning d-flex align-items-center" th:href="@{/retour}">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>
-                            Retour
-                        </a>
-                        <a class="btn btn-primary position-relative d-flex align-items-center" th:href="@{/panier}">
-                            <i class="bi bi-cart4 me-1"></i>
-                            Panier
-                            <span id="cart-count"
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                0
-                            </span>
-                        </a>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-boxes fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title">Total Articles</h5>
+                                <h3 th:text="${totalItems}">0</h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </nav>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-dollar-sign fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title">Valeur Totale</h5>
+                                <h3 th:text="${#numbers.formatCurrency(totalValue)}">$0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="card-title">Restockage Requis</h5>
+                                <h3 th:text="${itemsNeedingRestock}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- TITRE -->
-        <h1 class="fw-bold mb-4">Tableau de bord – Performances</h1>
-
-        <!-- Graphique en camembert des ventes par magasin -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header fw-bold bg-primary text-white">
-                        <i class="bi bi-pie-chart"></i> Répartition des ventes par magasin
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-bar"></i> Actions Rapides</h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="salesPieChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <!-- Chiffre d'affaires -->
-            <div class="col-md-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header fw-bold bg-dark text-white">
-                        <i class="bi bi-currency-dollar"></i> Chiffre d'affaires par magasin
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Magasin</th>
-                                    <th>Montant</th>
-                                    <th>Pourcentage</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="magasin : ${ventesParMagasin}">
-                                    <td th:text="${magasin.nom}">Magasin A</td>
-                                    <td th:text="${magasin.montant} + ' $'">1000 $</td>
-                                    <td th:text="${magasin.pourcentage} + '%'">33.3%</td>
-                                </tr>
-                                <tr class="table-dark">
-                                    <td class="fw-bold">Total</td>
-                                    <td class="fw-bold" th:text="${totalVentes} + ' $'">3000 $</td>
-                                    <td class="fw-bold">100%</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="/stock" class="btn btn-outline-primary w-100 mb-2">
+                                    <i class="fas fa-warehouse"></i><br>
+                                    Gérer Stock
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/panier" class="btn btn-outline-success w-100 mb-2">
+                                    <i class="fas fa-shopping-cart"></i><br>
+                                    Nouvelle Vente
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/retour" class="btn btn-outline-warning w-100 mb-2">
+                                    <i class="fas fa-undo"></i><br>
+                                    Retour Produit
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/rapport" class="btn btn-outline-info w-100 mb-2">
+                                    <i class="fas fa-chart-pie"></i><br>
+                                    Voir Rapports
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Rupture de stock -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header fw-bold bg-danger text-white">
-                <i class="bi bi-exclamation-circle"></i> Produits en rupture de stock
-            </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item" th:each="r : ${ruptures}">
-                    <span th:text="${r.produit.nom}"></span> –
-                    <span th:text="'Magasin: ' + ${r.magasin.nom}"></span>
-                </li>
-                <li class="list-group-item text-muted" th:if="${ruptures.isEmpty()}">
-                    Aucun produit en rupture de stock
-                </li>
-            </ul>
-        </div>
-
-        <!-- Produits en surstock -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header fw-bold bg-warning">
-                <i class="bi bi-box-seam"></i> Produits en surstock
-            </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item" th:each="s : ${surstocks}">
-                    <span th:text="${s.produit.nom}"></span> –
-                    <span th:text="'Quantité: ' + ${s.quantite} + ' (Magasin: ' + ${s.magasin.nom} + ')'"></span>
-                </li>
-                <li class="list-group-item text-muted" th:if="${surstocks.isEmpty()}">
-                    Aucun produit en surstock
-                </li>
-            </ul>
-        </div>
-
-        <!-- Tendances hebdomadaires -->
-        <div class="card shadow-sm">
-            <div class="card-header fw-bold bg-info text-white">
-                <i class="bi bi-calendar3"></i> Tendances des ventes (7 derniers jours)
-            </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item" th:each="v : ${ventesSemaine}">
-                    <span th:text="${v.date}">2025-06-01</span> –
-                    <span th:text="${v.total} + ' $'">200 $</span>
-                </li>
-                <li class="list-group-item text-muted" th:if="${ventesSemaine.isEmpty()}">
-                    Aucune vente sur les 7 derniers jours
-                </li>
-            </ul>
-        </div>
-
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:inline="javascript">
-        // Mise à jour du compteur du panier
-        fetch("/panier/count").then(res => res.text()).then(count => {
-            const span = document.getElementById("cart-count");
-            if (span) span.innerText = count;
-        });
-        
-        // Données pour le graphique en camembert
-        const ventesParMagasin = /*[[${ventesParMagasin}]]*/ [];
-        
-        // Préparer les données pour Chart.js
-        const labels = ventesParMagasin.map(m => m.nom);
-        const data = ventesParMagasin.map(m => m.montant);
-        const backgroundColors = [
-            'rgba(54, 162, 235, 0.8)',  // Bleu
-            'rgba(255, 99, 132, 0.8)',  // Rose
-            'rgba(255, 206, 86, 0.8)',  // Jaune
-            'rgba(75, 192, 192, 0.8)',  // Vert menthe
-            'rgba(153, 102, 255, 0.8)', // Violet
-            'rgba(255, 159, 64, 0.8)'   // Orange
-        ];
-        
-        // Créer le graphique
-        const ctx = document.getElementById('salesPieChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: backgroundColors.slice(0, labels.length),
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const percentage = ventesParMagasin[context.dataIndex].pourcentage;
-                                return `${label}: ${value} $ (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

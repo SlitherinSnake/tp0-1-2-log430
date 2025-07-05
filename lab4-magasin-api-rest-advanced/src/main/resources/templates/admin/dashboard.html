@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Magasin en ligne</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.8;
+        }
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: calc(100vh - 56px);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            margin: 2px 0;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.2);
+        }
+        .content-area {
+            background: #f8f9fa;
+            min-height: calc(100vh - 56px);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Navigation administrative">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">
+                <i class="fas fa-tools"></i> Admin - Magasin en ligne
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/products" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Voir le site client
+                    </a>
+                    <a class="nav-link" href="/login">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3">
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="/admin/dashboard">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="/admin/products">
+                        <i class="fas fa-boxes"></i> Gestion Produits
+                    </a>
+                    <a class="nav-link" href="/admin/inventory">
+                        <i class="fas fa-warehouse"></i> Stock
+                    </a>
+                    <a class="nav-link" href="/admin/orders">
+                        <i class="fas fa-receipt"></i> Commandes
+                    </a>
+                    <a class="nav-link" href="/admin/customers">
+                        <i class="fas fa-users"></i> Clients
+                    </a>
+                    <a class="nav-link" href="/admin/reports">
+                        <i class="fas fa-chart-bar"></i> Rapports
+                    </a>
+                    <a class="nav-link" href="/admin/settings">
+                        <i class="fas fa-cog"></i> Paramètres
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 content-area p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+                        <p class="text-muted">Vue d'ensemble de votre magasin en ligne</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Actualiser
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card dashboard-card bg-primary text-white h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-boxes stat-icon"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title">Total Articles</h5>
+                                    <h2 th:text="${totalItems ?: 0}">156</h2>
+                                    <small>+12 ce mois</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card dashboard-card bg-success text-white h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-euro-sign stat-icon"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title">Valeur Stock</h5>
+                                    <h2 th:text="${totalValue != null ? #numbers.formatDecimal(totalValue, 1, 2) + '€' : '0€'}">45,780€</h2>
+                                    <small>+8% ce mois</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card dashboard-card bg-warning text-dark h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-exclamation-triangle stat-icon"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title">Réapprovisionnement</h5>
+                                    <h2 th:text="${itemsNeedingRestock ?: 0}">23</h2>
+                                    <small>Articles en rupture</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card dashboard-card bg-info text-white h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-shopping-cart stat-icon"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title">Commandes</h5>
+                                    <h2 id="totalOrders">142</h2>
+                                    <small>Ce mois-ci</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-8 mb-3">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-line"></i> Ventes par jour (30 derniers jours)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="salesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-pie"></i> Top Catégories</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="categoriesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row">
+                    <div class="col-lg-6 mb-3">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5><i class="fas fa-clock"></i> Activité Récente</h5>
+                                <a href="/admin/orders" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush" id="recentActivity">
+                                    <!-- Activity items will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-3">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5><i class="fas fa-star"></i> Produits Populaires</h5>
+                                <a href="/admin/products" class="btn btn-sm btn-outline-primary">Gérer</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush" id="popularProducts">
+                                    <!-- Popular products will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-bolt"></i> Actions Rapides</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/admin/products/new" class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-plus"></i> Nouveau Produit
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/admin/inventory" class="btn btn-outline-warning w-100">
+                                            <i class="fas fa-warehouse"></i> Gérer Stock
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/admin/orders" class="btn btn-outline-info w-100">
+                                            <i class="fas fa-receipt"></i> Voir Commandes
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <a href="/admin/reports" class="btn btn-outline-success w-100">
+                                            <i class="fas fa-chart-bar"></i> Rapports
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Mock data for charts and activities
+        const mockData = {
+            salesData: {
+                labels: Array.from({length: 30}, (_, i) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (29 - i));
+                    return date.toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit'});
+                }),
+                data: Array.from({length: 30}, () => Math.floor(Math.random() * 1000) + 500)
+            },
+            categoriesData: {
+                labels: ['Électronique', 'Vêtements', 'Maison', 'Sport', 'Livres'],
+                data: [35, 25, 20, 15, 5],
+                colors: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6c757d']
+            },
+            recentActivity: [
+                { type: 'order', message: 'Nouvelle commande #ORD-2024-156', time: '2 min', icon: 'shopping-cart', color: 'success' },
+                { type: 'product', message: 'Produit "Smartphone XYZ" en rupture', time: '15 min', icon: 'exclamation-triangle', color: 'warning' },
+                { type: 'customer', message: 'Nouveau client inscrit', time: '1h', icon: 'user-plus', color: 'info' },
+                { type: 'return', message: 'Demande de retour #RET-2024-045', time: '2h', icon: 'undo', color: 'danger' },
+                { type: 'stock', message: 'Stock "Casque audio" réapprovisionné', time: '3h', icon: 'boxes', color: 'primary' }
+            ],
+            popularProducts: [
+                { name: 'Smartphone XYZ', sales: 156, stock: 23, trend: 'up' },
+                { name: 'Casque Audio Pro', sales: 134, stock: 45, trend: 'up' },
+                { name: 'Tablette ABC', sales: 98, stock: 12, trend: 'down' },
+                { name: 'Montre Connectée', sales: 87, stock: 67, trend: 'up' },
+                { name: 'Écouteurs Sans Fil', sales: 76, stock: 34, trend: 'stable' }
+            ]
+        };
+        
+        // Initialize Sales Chart
+        function initSalesChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: mockData.salesData.labels,
+                    datasets: [{
+                        label: 'Ventes (€)',
+                        data: mockData.salesData.data,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '€';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize Categories Chart
+        function initCategoriesChart() {
+            const ctx = document.getElementById('categoriesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: mockData.categoriesData.labels,
+                    datasets: [{
+                        data: mockData.categoriesData.data,
+                        backgroundColor: mockData.categoriesData.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load Recent Activity
+        function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            container.innerHTML = mockData.recentActivity.map(activity => `
+                <div class="list-group-item list-group-item-action border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-${activity.icon} text-${activity.color}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-1">${activity.message}</p>
+                            <small class="text-muted">Il y a ${activity.time}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Load Popular Products
+        function loadPopularProducts() {
+            const container = document.getElementById('popularProducts');
+            container.innerHTML = mockData.popularProducts.map((product, index) => `
+                <div class="list-group-item border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <span class="badge bg-primary rounded-pill">${index + 1}</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${product.name}</h6>
+                            <small class="text-muted">${product.sales} ventes • Stock: ${product.stock}</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-arrow-${product.trend === 'up' ? 'up text-success' : product.trend === 'down' ? 'down text-danger' : 'right text-warning'}"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function refreshData() {
+            // Simulate data refresh
+            const button = event.target;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualisation...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+                
+                // Show success message
+                const toast = document.createElement('div');
+                toast.className = 'toast position-fixed top-0 end-0 m-3';
+                toast.innerHTML = `
+                    <div class="toast-header">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong class="me-auto">Succès</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        Données actualisées avec succès.
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+                
+                toast.addEventListener('hidden.bs.toast', () => {
+                    document.body.removeChild(toast);
+                });
+            }, 2000);
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initSalesChart();
+            initCategoriesChart();
+            loadRecentActivity();
+            loadPopularProducts();
+        });
+    </script>
+</body>
+</html>
