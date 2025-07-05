@@ -1,254 +1,195 @@
--- Supprimer les tables existantes si elles existent (dans l'ordre pour éviter les conflits de clés étrangères)
+-- =============================================
+-- DDD Architecture Database Schema
+-- =============================================
+
+-- Clean up old tables first
 DROP TABLE IF EXISTS user_roles CASCADE;
-DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS personnel_roles CASCADE;
+DROP TABLE IF EXISTS transaction_items CASCADE;
+DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS store_inventory CASCADE;
+DROP TABLE IF EXISTS inventory_items CASCADE;
+DROP TABLE IF EXISTS personnel CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS stores CASCADE;
 
--- Créer la table des rôles
-CREATE TABLE IF NOT EXISTS roles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(20) NOT NULL
-);
-
--- Créer la table des utilisateurs
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
-
--- Créer la table de liaison entre utilisateurs et rôles (relation plusieurs-à-plusieurs)
-CREATE TABLE IF NOT EXISTS user_roles (
-    user_id INTEGER NOT NULL,
-    role_id INTEGER NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
-);
-
--- Insérer les rôles par défaut
-INSERT INTO roles (name) VALUES ('ROLE_ADMIN');
-INSERT INTO roles (name) VALUES ('ROLE_EMPLOYEE');
-INSERT INTO roles (name) VALUES ('ROLE_VIEWER');
-
--- Supprimer d'abord les tables dépendantes pour éviter les violations de contraintes de clé étrangère
+-- Legacy table cleanup
 DROP TABLE IF EXISTS retour_produit CASCADE;
 DROP TABLE IF EXISTS retour CASCADE;
 DROP TABLE IF EXISTS vente_produit CASCADE;
 DROP TABLE IF EXISTS vente CASCADE;
 DROP TABLE IF EXISTS stock_magasin CASCADE;
 DROP TABLE IF EXISTS stock_central CASCADE;
-
--- Ensuite, supprimer les tables de base
 DROP TABLE IF EXISTS produits CASCADE;
 DROP TABLE IF EXISTS employes CASCADE;
 DROP TABLE IF EXISTS magasin CASCADE;
 
--- Création de la table employes
-CREATE TABLE IF NOT EXISTS employes (
-    id SERIAL PRIMARY KEY,
-    identifiant VARCHAR(50) NOT NULL,
-    nom VARCHAR(100) NOT NULL
+-- =============================================
+-- Create new DDD-aligned tables
+-- =============================================
+
+-- Roles table
+CREATE TABLE IF NOT EXISTS roles (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255)
 );
 
--- Création de la table magasin (si pas déjà existante)
-CREATE TABLE IF NOT EXISTS magasin (
-    id SERIAL PRIMARY KEY,
+-- Personnel table (unified Employee and User)
+CREATE TABLE IF NOT EXISTS personnel (
+    id BIGSERIAL PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
-    quartier VARCHAR(100) NOT NULL
+    identifiant VARCHAR(50) NOT NULL UNIQUE,
+    username VARCHAR(50) UNIQUE,
+    password VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT true
 );
 
--- Création de la table produits
-CREATE TABLE produits (
-    id SERIAL PRIMARY KEY,
-    categorie VARCHAR(50),
-    nom VARCHAR(100) UNIQUE,
-    prix DECIMAL(10,2),
-    quantite INTEGER
+-- Personnel-Roles junction table
+CREATE TABLE IF NOT EXISTS personnel_roles (
+    personnel_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (personnel_id, role_id),
+    FOREIGN KEY (personnel_id) REFERENCES personnel(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
--- Création de la table stock_magasin
-CREATE TABLE IF NOT EXISTS stock_magasin (
-    id SERIAL PRIMARY KEY,
-    quantite INTEGER NOT NULL,
-    magasin_id INTEGER REFERENCES magasin(id),
-    produit_id INTEGER REFERENCES produits(id)
+-- Stores table
+CREATE TABLE IF NOT EXISTS stores (
+    id BIGSERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    quartier VARCHAR(100) NOT NULL,
+    adresse VARCHAR(255),
+    telephone VARCHAR(20),
+    is_active BOOLEAN NOT NULL DEFAULT true
 );
 
--- Création de la table stock_central
-CREATE TABLE IF NOT EXISTS stock_central (
-    id SERIAL PRIMARY KEY,
-    quantite_demandee INTEGER NOT NULL,
+-- Inventory Items table (unified Product and Stock)
+CREATE TABLE IF NOT EXISTS inventory_items (
+    id BIGSERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    categorie VARCHAR(50) NOT NULL,
+    prix DECIMAL(10,2) NOT NULL,
+    description VARCHAR(500),
+    stock_central INTEGER NOT NULL DEFAULT 0,
+    stock_minimum INTEGER DEFAULT 0,
+    date_derniere_maj DATE,
+    is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+-- Store Inventory table (store-specific stock)
+CREATE TABLE IF NOT EXISTS store_inventory (
+    id BIGSERIAL PRIMARY KEY,
+    inventory_item_id BIGINT NOT NULL,
+    store_id BIGINT NOT NULL,
+    quantite_locale INTEGER NOT NULL DEFAULT 0,
+    quantite_demandee INTEGER,
     date_demande DATE,
-    magasin_id INTEGER REFERENCES magasin(id),
-    produit_id INTEGER REFERENCES produits(id)
+    date_derniere_maj DATE,
+    statut_demande VARCHAR(20) NOT NULL DEFAULT 'AUCUNE',
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+    UNIQUE(inventory_item_id, store_id)
 );
 
--- Création de la table ventes
-CREATE TABLE IF NOT EXISTS ventes (
-    id SERIAL PRIMARY KEY,
-    date_vente DATE,
-    montant_total DECIMAL(10,2),
-    employe_id INTEGER REFERENCES employes(id),
-    magasin_id INTEGER REFERENCES magasin(id)
+-- Transactions table (unified Sales and Returns)
+CREATE TABLE IF NOT EXISTS transactions (
+    id BIGSERIAL PRIMARY KEY,
+    type_transaction VARCHAR(10) NOT NULL CHECK (type_transaction IN ('VENTE', 'RETOUR')),
+    date_transaction DATE NOT NULL,
+    montant_total DECIMAL(10,2) DEFAULT 0.00,
+    personnel_id BIGINT NOT NULL,
+    store_id BIGINT NOT NULL,
+    transaction_originale_id BIGINT,
+    motif_retour VARCHAR(255),
+    statut VARCHAR(20) NOT NULL DEFAULT 'EN_COURS' CHECK (statut IN ('EN_COURS', 'COMPLETEE', 'ANNULEE')),
+    FOREIGN KEY (personnel_id) REFERENCES personnel(id),
+    FOREIGN KEY (store_id) REFERENCES stores(id),
+    FOREIGN KEY (transaction_originale_id) REFERENCES transactions(id)
 );
 
--- Création de la table vente_produit
-CREATE TABLE IF NOT EXISTS vente_produit (
-    id SERIAL PRIMARY KEY,
+-- Transaction Items table
+CREATE TABLE IF NOT EXISTS transaction_items (
+    id BIGSERIAL PRIMARY KEY,
+    transaction_id BIGINT NOT NULL,
+    inventory_item_id BIGINT NOT NULL,
     quantite INTEGER NOT NULL,
-    produit_id INTEGER REFERENCES produits(id),
-    vente_id INTEGER REFERENCES ventes(id)
+    prix_unitaire DECIMAL(10,2) NOT NULL,
+    sous_total DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id)
 );
 
--- Création de la table retours
-CREATE TABLE IF NOT EXISTS retours (
-    id SERIAL PRIMARY KEY,
-    date_retour DATE,
-    vente_id INTEGER REFERENCES ventes(id),
-    employe_id INTEGER REFERENCES employes(id)
-);
+-- =============================================
+-- Insert initial data
+-- =============================================
 
--- Création de la table retour_produit
-CREATE TABLE IF NOT EXISTS retour_produit (
-    id SERIAL PRIMARY KEY,
-    quantite INTEGER NOT NULL,
-    retour_id INTEGER REFERENCES retours(id),
-    produit_id INTEGER REFERENCES produits(id)
-);
+-- Insert default roles
+INSERT INTO roles (name, description) VALUES 
+    ('ROLE_ADMIN', 'Administrateur système avec tous les privilèges'),
+    ('ROLE_MANAGER', 'Gestionnaire de magasin'),
+    ('ROLE_EMPLOYEE', 'Employé de magasin'),
+    ('ROLE_VIEWER', 'Consultation uniquement');
 
--- Insertion des employés
-INSERT INTO employes (id, identifiant, nom) VALUES 
-    (1, 'emp001', 'Alice'),
-    (2, 'emp002', 'Tom'),
-    (3, 'emp003', 'Paul'),
-    (4, 'emp004', 'Jennifer');
+-- Insert sample stores
+INSERT INTO stores (nom, quartier, adresse, telephone) VALUES 
+    ('Magasin Centre-Ville', 'Centre-Ville', '123 Rue Principale', '514-555-0101'),
+    ('Magasin Nord', 'Quartier Nord', '456 Avenue Nord', '514-555-0102'),
+    ('Magasin Sud', 'Quartier Sud', '789 Boulevard Sud', '514-555-0103');
 
--- Insertion de magasins (y compris Maison Mère)
-INSERT INTO magasin (id, nom, quartier) VALUES
-    (1, 'Magasin A', 'Centre-ville'),
-    (2, 'Magasin B', 'Vietnam'),
-    (3, 'Magasin C', 'Paris');
+-- Insert sample personnel
+INSERT INTO personnel (nom, identifiant, username, password) VALUES 
+    ('Jean Dubois', 'EMP001', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'), -- password: admin
+    ('Marie Martin', 'EMP002', 'manager', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'), -- password: admin
+    ('Pierre Tremblay', 'EMP003', 'employee', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'); -- password: admin
 
--- Insertion des produits
-INSERT INTO produits (id, categorie, nom, prix, quantite) VALUES 
-    (1, 'Fruits', 'Banane', 0.99, 100),
-    (2, 'Fruits', 'Fraise', 1.99, 50),
-    (3, 'Fruits', 'Melon', 3.99, 30),
-    (4, 'Legumes', 'Tomate', 2.99, 50),
-    (5, 'Legumes', 'Concombre', 0.99, 75),
-    (6, 'Legumes', 'Laitue', 1.99, 70),
-    (7, 'Electroniques', 'TV', 100.99, 25),
-    (8, 'Electroniques', 'PS5', 300.99, 50),
-    (9, 'Electroniques', 'GTAVI', 120.99, 60),
-    (10, 'Vetements', 'Chandail', 8.99, 50),
-    (11, 'Vetements', 'Pantalon', 10.99, 50),
-    (12, 'Vetements', 'Manteau', 250.99, 90);
+-- Assign roles to personnel
+INSERT INTO personnel_roles (personnel_id, role_id) VALUES 
+    (1, 1), -- Jean Dubois -> ADMIN
+    (2, 2), -- Marie Martin -> MANAGER
+    (3, 3); -- Pierre Tremblay -> EMPLOYEE
 
--- Vider les données existantes de stock_magasin
-DELETE FROM stock_magasin;
+-- Insert sample inventory items
+INSERT INTO inventory_items (nom, categorie, prix, description, stock_central, stock_minimum, date_derniere_maj) VALUES 
+    ('Laptop Dell Inspiron', 'Electronique', 799.99, 'Ordinateur portable Dell Inspiron 15 pouces', 25, 5, CURRENT_DATE),
+    ('iPhone 14', 'Electronique', 999.99, 'Smartphone Apple iPhone 14 128GB', 15, 3, CURRENT_DATE),
+    ('Chaise de Bureau', 'Mobilier', 149.99, 'Chaise de bureau ergonomique avec support lombaire', 40, 10, CURRENT_DATE),
+    ('Livre Java Programming', 'Livres', 49.99, 'Guide complet de programmation Java', 100, 20, CURRENT_DATE),
+    ('Cafetière Keurig', 'Electromenager', 89.99, 'Cafetière à dosettes Keurig K-Classic', 30, 8, CURRENT_DATE);
 
--- Insertion du stock pour Magasin A
-INSERT INTO stock_magasin (produit_id, magasin_id, quantite) VALUES
-    (1, 1, 80), -- Banane
-    (2, 1, 40), -- Fraise
-    (3, 1, 20), -- Melon
-    (4, 1, 35), -- Tomate
-    (5, 1, 60), -- Concombre
-    (6, 1, 50), -- Laitue
-    (7, 1, 15), -- TV
-    (8, 1, 30), -- PS5
-    (9, 1, 45), -- GTAVI
-    (10, 1, 40), -- Chandail
-    (11, 1, 40), -- Pantalon
-    (12, 1, 70); -- Manteau
+-- Insert store inventory (distribute some inventory to stores)
+INSERT INTO store_inventory (inventory_item_id, store_id, quantite_locale, date_derniere_maj) VALUES 
+    -- Centre-Ville store
+    (1, 1, 8, CURRENT_DATE),
+    (2, 1, 5, CURRENT_DATE),
+    (3, 1, 12, CURRENT_DATE),
+    (4, 1, 25, CURRENT_DATE),
+    (5, 1, 10, CURRENT_DATE),
+    -- Nord store
+    (1, 2, 7, CURRENT_DATE),
+    (2, 2, 4, CURRENT_DATE),
+    (3, 2, 15, CURRENT_DATE),
+    (4, 2, 30, CURRENT_DATE),
+    (5, 2, 8, CURRENT_DATE),
+    -- Sud store
+    (1, 3, 6, CURRENT_DATE),
+    (2, 3, 3, CURRENT_DATE),
+    (3, 3, 10, CURRENT_DATE),
+    (4, 3, 20, CURRENT_DATE),
+    (5, 3, 12, CURRENT_DATE);
 
--- Insertion du stock pour Magasin B
-INSERT INTO stock_magasin (produit_id, magasin_id, quantite) VALUES
-    (1, 2, 60), -- Banane
-    (2, 2, 30), -- Fraise
-    (3, 2, 15), -- Melon
-    (4, 2, 40), -- Tomate
-    (5, 2, 55), -- Concombre
-    (6, 2, 45), -- Laitue
-    (7, 2, 20), -- TV
-    (8, 2, 35), -- PS5
-    (9, 2, 50), -- GTAVI
-    (10, 2, 35), -- Chandail
-    (11, 2, 30), -- Pantalon
-    (12, 2, 60); -- Manteau
-
--- Insertion du stock pour Magasin C
-INSERT INTO stock_magasin (produit_id, magasin_id, quantite) VALUES
-    (1, 3, 70), -- Banane
-    (2, 3, 35), -- Fraise
-    (3, 3, 25), -- Melon
-    (4, 3, 45), -- Tomate
-    (5, 3, 65), -- Concombre
-    (6, 3, 55), -- Laitue
-    (7, 3, 18), -- TV
-    (8, 3, 25), -- PS5
-    (9, 3, 40), -- GTAVI
-    (10, 3, 45), -- Chandail
-    (11, 3, 35), -- Pantalon
-    (12, 3, 75); -- Manteau
-
--- Important : respecter l’ordre des dépendances pour éviter les violations de contraintes
--- Vider les données liées aux ventes dans l’ordre des dépendances
-DELETE FROM retour_produit;
-DELETE FROM retours;
-DELETE FROM vente_produit;
-DELETE FROM ventes;
-
--- Insertion des ventes pour Magasin A
-INSERT INTO ventes (id, date_vente, montant_total, employe_id, magasin_id) VALUES
-    (1, '2025-06-01', 1500.50, 1, 1),
-    (2, '2025-06-02', 2200.75, 2, 1),
-    (3, '2025-06-03', 1800.25, 1, 1),
-    (4, '2025-06-04', 3100.00, 3, 1),
-    (5, '2025-06-05', 2500.50, 2, 1),
-    (6, '2025-06-06', 1900.75, 4, 1),
-    (7, '2025-06-07', 2800.25, 1, 1);
-
--- Insertion des ventes pour Magasin B
-INSERT INTO ventes (id, date_vente, montant_total, employe_id, magasin_id) VALUES
-    (8, '2025-06-01', 900.50, 3, 2),
-    (9, '2025-06-02', 1200.75, 4, 2),
-    (10, '2025-06-03', 1500.25, 3, 2),
-    (11, '2025-06-04', 1800.00, 4, 2),
-    (12, '2025-06-05', 1100.50, 3, 2),
-    (13, '2025-06-06', 1300.75, 4, 2),
-    (14, '2025-06-07', 1600.25, 3, 2);
-
--- Insertion des ventes pour Magasin C
-INSERT INTO ventes (id, date_vente, montant_total, employe_id, magasin_id) VALUES
-    (15, '2025-06-01', 2100.50, 2, 3),
-    (16, '2025-06-02', 1800.75, 1, 3),
-    (17, '2025-06-03', 2500.25, 2, 3),
-    (18, '2025-06-04', 2200.00, 1, 3),
-    (19, '2025-06-05', 1900.50, 2, 3),
-    (20, '2025-06-06', 2300.75, 1, 3),
-    (21, '2025-06-07', 2700.25, 2, 3);
-
--- Insertion de produits vendus (vente_produit)
-INSERT INTO vente_produit (vente_id, produit_id, quantite) VALUES
-    (1, 7, 5),  -- 5 Télévisions dans la vente 1
-    (1, 8, 2),  -- 2 PS5 dans la vente 1
-    (2, 9, 10), -- 10 GTAVI dans la vente 2
-    (2, 12, 5); -- 5 Manteaux dans la vente 2
-
--- Insertion des demandes de réapprovisionnement (stock_central)
-INSERT INTO stock_central (produit_id, magasin_id, quantite_demandee, date_demande) VALUES
-    (1, 1, 20, '2025-06-01'),  -- Magasin A demande 20 Bananes
-    (7, 2, 5, '2025-06-02'),   -- Magasin B demande 5 Télévisions
-    (8, 3, 10, '2025-06-03');  -- Magasin C demande 10 PS5
-
-    -- Réinitialisation des séquences après insertion manuelle d'ID
-SELECT setval('employes_id_seq', (SELECT MAX(id) FROM employes));
-SELECT setval('magasin_id_seq', (SELECT MAX(id) FROM magasin));
-SELECT setval('produits_id_seq', (SELECT MAX(id) FROM produits));
-SELECT setval('ventes_id_seq', (SELECT MAX(id) FROM ventes));
-SELECT setval('vente_produit_id_seq', (SELECT MAX(id) FROM vente_produit));
-SELECT setval('retours_id_seq', (SELECT MAX(id) FROM retours));
-SELECT setval('retour_produit_id_seq', (SELECT MAX(id) FROM retour_produit));
-SELECT setval('stock_magasin_id_seq', (SELECT MAX(id) FROM stock_magasin));
-SELECT setval('stock_central_id_seq', (SELECT MAX(id) FROM stock_central));
+-- =============================================
+-- Create indexes for performance
+-- =============================================
+CREATE INDEX IF NOT EXISTS idx_personnel_username ON personnel(username);
+CREATE INDEX IF NOT EXISTS idx_personnel_identifiant ON personnel(identifiant);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_categorie ON inventory_items(categorie);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_nom ON inventory_items(nom);
+CREATE INDEX IF NOT EXISTS idx_store_inventory_store_id ON store_inventory(store_id);
+CREATE INDEX IF NOT EXISTS idx_store_inventory_item_id ON store_inventory(inventory_item_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_store_id ON transactions(store_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_personnel_id ON transactions(personnel_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date_transaction);
+CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction_id ON transaction_items(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_transaction_items_inventory_id ON transaction_items(inventory_item_id);
