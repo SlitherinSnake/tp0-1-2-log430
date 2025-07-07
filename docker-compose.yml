@@ -1,0 +1,117 @@
+# =============================================
+# Docker Compose - Usage Instructions – Lab 2 (Web)
+#
+# Install Docker Compose (if needed):
+# sudo apt install docker-compose
+#
+# To build the image:
+# docker-compose build
+#
+# To run the application:
+# docker-compose up
+#
+# To run in detached mode:
+# docker-compose up -d
+#
+# To view container logs:
+# docker-compose logs -f
+# -------------------------------------------------
+# Docker Compose - Relaunch new project
+# 1. Supprimer les conteneurs arrêtés (ex: ancien app web)
+# docker container prune -f
+#
+# 2. Supprimer les images obsolètes (optionnel mais utile pour éviter conflit d'image)
+# docker image prune -a -f
+#
+# 3. S’assurer d’être dans le dossier contenant ce fichier docker-compose.yml
+#
+# 4. Rebuild ton projet 
+# docker-compose build
+#
+# 5. Lancer l'application
+# docker-compose up
+# =============================================
+
+version: "3.8"
+
+services:
+  # -------------------------
+  # Base de données PostgreSQL
+  # -------------------------
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: magasin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - magasin-net
+    restart: unless-stopped
+
+  # -------------------------
+  # Application principale Web (Spring Boot)
+  # -------------------------
+  api:
+    image: magasin-api-app  # ← Ajout essentiel pour CI/CD
+    container_name: magasin-api-app
+    build:
+      context: ./Lab4-DDD
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/magasin
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - magasin-net
+    restart: unless-stopped
+
+  # -------------------------
+  # Service de surveillance Prometheus
+  # -------------------------
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+    networks:
+      - magasin-net
+    restart: unless-stopped
+
+  # -------------------------
+  # Service de visualisation Grafana
+  # -------------------------
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - magasin-net
+    restart: unless-stopped
+
+# -------------------------
+# Volumes persistants
+# -------------------------
+volumes:
+  pgdata:  # Permet le stockage persistant de PostgreSQL
+
+# -------------------------
+# Réseau partagé
+# -------------------------
+networks:
+  magasin-net:
