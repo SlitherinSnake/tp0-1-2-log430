@@ -1,5 +1,8 @@
 package com.log430.tp4.presentation.web;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.log430.tp4.application.service.InventoryService;
+import com.log430.tp4.domain.transaction.Transaction;
+import com.log430.tp4.infrastructure.repository.PersonnelRepository;
+import com.log430.tp4.infrastructure.repository.TransactionRepository;
 
 /**
  * Web controller for online store interface.
@@ -17,9 +23,16 @@ import com.log430.tp4.application.service.InventoryService;
 public class WebController {
 
     private final InventoryService inventoryService;
+    private final TransactionRepository transactionRepository;
+    private final PersonnelRepository personnelRepository;
 
-    public WebController(InventoryService inventoryService) {
+    private static final String REDIRECT_LOGIN = "redirect:/login";
+    private static final String MONEY_FORMAT = "%.2f $";
+
+    public WebController(InventoryService inventoryService, TransactionRepository transactionRepository, PersonnelRepository personnelRepository) {
         this.inventoryService = inventoryService;
+        this.transactionRepository = transactionRepository;
+        this.personnelRepository = personnelRepository;
     }
 
     /**
@@ -57,14 +70,6 @@ public class WebController {
     @GetMapping("/cart")
     public String cart(Model model) {
         return "cart";
-    }
-
-    /**
-     * Order history for clients.
-     */
-    @GetMapping("/orders")
-    public String orders(Model model) {
-        return "orders";
     }
 
     /**
@@ -125,15 +130,6 @@ public class WebController {
     }
 
     /**
-     * Employee orders management.
-     */
-    @GetMapping("/admin/orders")
-    public String adminOrders(Model model) {
-        // In a real app, you would fetch orders from a service
-        return "admin/orders";
-    }
-
-    /**
      * Employee customers management.
      */
     @GetMapping("/admin/customers")
@@ -148,6 +144,40 @@ public class WebController {
     @GetMapping("/admin/settings")
     public String adminSettings(Model model) {
         return "admin/settings";
+    }
+
+    /**
+     * Sales page (Mes Achats) - shows all client purchases.
+     */
+    @GetMapping("/sales")
+    public String sales(Model model) {
+        // For demo: show all sales for the first client user (or all sales if needed)
+        // Remove all authentication checks
+        Long clientId = 4L; // Assuming client user has id 4
+        List<Transaction> transactions = transactionRepository.findByPersonnelId(clientId);
+        List<Map<String, Object>> sales = transactions.stream()
+                .filter(t -> t.getTypeTransaction() == Transaction.TypeTransaction.VENTE && t.getStatut() == Transaction.StatutTransaction.COMPLETEE)
+                .map(t -> Map.of(
+                        "id", t.getId(),
+                        "date", t.getDateTransaction(),
+                        "total", String.format(MONEY_FORMAT, t.getMontantTotal()),
+                        "items", t.getItems().stream().map(item -> Map.of(
+                                "name", getItemName(item.getInventoryItemId()),
+                                "price", String.format(MONEY_FORMAT, item.getPrixUnitaire()),
+                                "quantity", item.getQuantite(),
+                                "total", String.format(MONEY_FORMAT, item.getSousTotal())
+                        )).toList()
+                ))
+                .toList();
+        model.addAttribute("sales", sales);
+        return "sales";
+    }
+
+    // Helper to get item name by id (could be optimized with a cache if needed)
+    private String getItemName(Long inventoryItemId) {
+        return inventoryService.getItemById(inventoryItemId)
+                .map(com.log430.tp4.domain.inventory.InventoryItem::getNom)
+                .orElse("Article inconnu");
     }
 
     /**
