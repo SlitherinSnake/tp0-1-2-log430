@@ -1,16 +1,21 @@
 config:
-  target: "http://localhost:8080"
+  target: "http://localhost"
   phases:
     - duration: 60
       arrivalRate: 10
-      name: "Steady load"
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustained load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
 scenarios:
-  - name: "Get all inventory items"
+  # Load balanced test via Traefik (port 80)
+  - name: "Load Balanced API Test"
     flow:
       - get:
           url: "/api/inventory"
-  - name: "Create inventory item"
-    flow:
       - post:
           url: "/api/inventory"
           json:
@@ -18,20 +23,14 @@ scenarios:
             categorie: "TestCat"
             prix: 10.5
             stockCentral: 100
-  - name: "Increase stock"
-    flow:
       - patch:
           url: "/api/inventory/1/stock/increase"
           json:
             quantity: 5
-  - name: "Decrease stock"
-    flow:
       - patch:
           url: "/api/inventory/1/stock/decrease"
           json:
             quantity: 2
-  - name: "Create sale transaction"
-    flow:
       - post:
           url: "/api/transactions"
           json:
@@ -42,3 +41,12 @@ scenarios:
                 quantity: 1
                 price: 10.5
             montantTotal: 10.5
+  # Optionally, test direct access to each instance (should not be accessible in prod, but for test)
+  - name: "Direct API1 Test"
+    flow:
+      - get:
+          url: "http://localhost:8080/api/inventory"
+  - name: "Direct API2 Test"
+    flow:
+      - get:
+          url: "http://localhost:8080/api/inventory"
