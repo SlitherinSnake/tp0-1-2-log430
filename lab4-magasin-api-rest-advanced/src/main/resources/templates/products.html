@@ -68,11 +68,11 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav me-auto">
-                    <a class="nav-link active" href="/products">
+                    <a class="nav-link" href="/products">
                         <i class="fas fa-shopping-bag"></i> Produits
                     </a>
-                    <a class="nav-link" href="/orders">
-                        <i class="fas fa-receipt"></i> Mes commandes
+                    <a class="nav-link" href="/sales">
+                        <i class="fas fa-receipt"></i> Mes achats
                     </a>
                     <a class="nav-link" href="/returns">
                         <i class="fas fa-undo"></i> Retours
@@ -195,13 +195,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let cart = JSON.parse(localStorage.getItem('cart'))?.map(item => ({
+            ...item,
+            price: parseFloat(item.price),
+            quantity: parseInt(item.quantity)
+        })) || [];
         
         // Update cart count on page load
         updateCartCount();
 
         function addToCart(productId, productName, price) {
-            const existingItem = cart.find(item => item.id === productId);
+            cart = JSON.parse(localStorage.getItem('cart'))?.map(item => ({
+                ...item,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity)
+            })) || [];
+            price = parseFloat(price);
+            const existingItem = cart.find(item => item.id == productId);
             
             if (existingItem) {
                 existingItem.quantity += 1;
@@ -213,13 +223,17 @@
                     quantity: 1
                 });
             }
-            
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartCount();
             showToast();
         }
 
         function updateCartCount() {
+            cart = JSON.parse(localStorage.getItem('cart'))?.map(item => ({
+                ...item,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity)
+            })) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             document.getElementById('cartCount').textContent = totalItems;
         }
@@ -314,11 +328,11 @@
                         return a.querySelector('.card-title').textContent.localeCompare(
                                b.querySelector('.card-title').textContent);
                     case 'price-asc':
-                        return parseFloat(a.querySelector('.price-tag').textContent.replace(/[€,]/g, '')) - 
-                               parseFloat(b.querySelector('.price-tag').textContent.replace(/[€,]/g, ''));
+                        return parseFloat(a.querySelector('.price-tag').textContent.replace(/[$,]/g, '')) - 
+                               parseFloat(b.querySelector('.price-tag').textContent.replace(/[$,]/g, ''));
                     case 'price-desc':
-                        return parseFloat(b.querySelector('.price-tag').textContent.replace(/[€,]/g, '')) - 
-                               parseFloat(a.querySelector('.price-tag').textContent.replace(/[€,]/g, ''));
+                        return parseFloat(b.querySelector('.price-tag').textContent.replace(/[$,]/g, '')) - 
+                               parseFloat(a.querySelector('.price-tag').textContent.replace(/[$,]/g, ''));
                     case 'category':
                         return a.querySelector('.badge').textContent.localeCompare(
                                b.querySelector('.badge').textContent);

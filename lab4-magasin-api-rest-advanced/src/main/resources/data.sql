@@ -142,13 +142,18 @@ INSERT INTO stores (nom, quartier, adresse, telephone) VALUES
 INSERT INTO personnel (nom, identifiant, username, password) VALUES 
     ('Jean Dubois', 'EMP001', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'), -- password: admin
     ('Marie Martin', 'EMP002', 'manager', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'), -- password: admin
-    ('Pierre Tremblay', 'EMP003', 'employee', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'); -- password: admin
+    ('Pierre Tremblay', 'EMP003', 'employee', '$2a$10$N9qo8uLOickgx2ZMRZoMye1VQ2jhqKNjbq1JkJzJHPqCKLI2W8bHC'), -- password: admin
+    ('Client Démo', 'CLI001', 'client', '$2a$10$u1b6QwQwQwQwQwQwQwQwQeQwQwQwQwQwQwQwQwQwQwQwQwQw'); -- password: client123
+
+-- Add CLIENT role if not present
+INSERT INTO roles (name, description) VALUES ('ROLE_CLIENT', 'Client du magasin') ON CONFLICT (name) DO NOTHING;
 
 -- Assign roles to personnel
 INSERT INTO personnel_roles (personnel_id, role_id) VALUES 
     (1, 1), -- Jean Dubois -> ADMIN
     (2, 2), -- Marie Martin -> MANAGER
-    (3, 3); -- Pierre Tremblay -> EMPLOYEE
+    (3, 3), -- Pierre Tremblay -> EMPLOYEE
+    (4, 5); -- Client Démo -> CLIENT
 
 -- Insert sample inventory items
 INSERT INTO inventory_items (nom, categorie, prix, description, stock_central, stock_minimum, date_derniere_maj) VALUES 

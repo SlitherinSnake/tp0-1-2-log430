@@ -49,8 +49,8 @@
                     <a class="nav-link" href="/products">
                         <i class="fas fa-shopping-bag"></i> Produits
                     </a>
-                    <a class="nav-link" href="/orders">
-                        <i class="fas fa-receipt"></i> Mes commandes
+                    <a class="nav-link" href="/sales">
+                        <i class="fas fa-receipt"></i> Mes achats
                     </a>
                     <a class="nav-link active" href="/returns">
                         <i class="fas fa-undo"></i> Retours
@@ -98,11 +98,7 @@
                     <i class="fas fa-list"></i> Mes retours
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="return-policy-tab" data-bs-toggle="tab" data-bs-target="#return-policy" type="button" role="tab">
-                    <i class="fas fa-info-circle"></i> Politique de retour
-                </button>
-            </li>
+         
         </ul>
 
         <div class="tab-content" id="returnTabsContent">
@@ -196,48 +192,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Return Policy Tab -->
-            <div class="tab-pane fade" id="return-policy" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-info-circle"></i> Politique de retour</h4>
-                    </div>
-                    <div class="card-body">
-                        <h5>Conditions générales</h5>
-                        <ul>
-                            <li>Les retours sont acceptés dans les <strong>30 jours</strong> suivant la livraison</li>
-                            <li>Les articles doivent être dans leur <strong>état d'origine</strong> et non utilisés</li>
-                            <li>L'emballage original doit être conservé</li>
-                            <li>Certains articles ne sont pas retournables (articles personnalisés, produits d'hygiène)</li>
-                        </ul>
-                        
-                        <h5>Processus de retour</h5>
-                        <ol>
-                            <li><strong>Demande:</strong> Soumettez votre demande via ce formulaire</li>
-                            <li><strong>Validation:</strong> Notre équipe examine votre demande (1-2 jours ouvrés)</li>
-                            <li><strong>Étiquette:</strong> Nous vous envoyons une étiquette de retour prépayée</li>
-                            <li><strong>Expédition:</strong> Emballez et expédiez l'article</li>
-                            <li><strong>Inspection:</strong> Inspection à réception dans nos entrepôts</li>
-                            <li><strong>Remboursement:</strong> Remboursement dans les 5-7 jours ouvrés</li>
-                        </ol>
-                        
-                        <h5>Frais de retour</h5>
-                        <ul>
-                            <li><strong>Produit défectueux:</strong> Retour gratuit</li>
-                            <li><strong>Erreur de notre part:</strong> Retour gratuit</li>
-                            <li><strong>Changement d'avis:</strong> Frais de retour à votre charge (4,99 €)</li>
-                        </ul>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-phone"></i>
-                            <strong>Besoin d'aide ?</strong><br>
-                            Contactez notre service client : <strong>01 23 45 67 89</strong><br>
-                            Email : <strong>retours@magasin.fr</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -304,7 +258,7 @@
             order.items.forEach(item => {
                 const option = document.createElement('option');
                 option.value = item.id;
-                option.textContent = `${item.name} - ${item.price.toFixed(2)} € (Qté: ${item.quantity})`;
+                option.textContent = `${item.name} - ${item.price.toFixed(2)} $ (Qté: ${item.quantity})`;
                 option.dataset.maxQuantity = item.quantity;
                 itemSelect.appendChild(option);
             });

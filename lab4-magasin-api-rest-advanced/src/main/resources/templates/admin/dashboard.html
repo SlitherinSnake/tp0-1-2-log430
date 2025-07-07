@@ -94,9 +94,6 @@
                     <a class="nav-link" href="/admin/reports">
                         <i class="fas fa-chart-bar"></i> Rapports
                     </a>
-                    <a class="nav-link" href="/admin/settings">
-                        <i class="fas fa-cog"></i> Paramètres
-                    </a>
                 </nav>
             </div>
 
@@ -136,11 +133,11 @@
                         <div class="card dashboard-card bg-success text-white h-100">
                             <div class="card-body d-flex align-items-center">
                                 <div class="me-3">
-                                    <i class="fas fa-euro-sign stat-icon"></i>
+                                    <i class="fas fa-dollar-sign stat-icon"></i>
                                 </div>
                                 <div>
                                     <h5 class="card-title">Valeur Stock</h5>
-                                    <h2 th:text="${totalValue != null ? #numbers.formatDecimal(totalValue, 1, 2) + '€' : '0€'}">45,780€</h2>
+                                    <h2 th:text="${totalValue != null ? #numbers.formatDecimal(totalValue, 1, 2) + '$' : '0$'}">45,780$</h2>
                                     <small>+8% ce mois</small>
                                 </div>
                             </div>
@@ -237,41 +234,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Quick Actions -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card dashboard-card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-bolt"></i> Actions Rapides</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3 mb-2">
-                                        <a href="/admin/products/new" class="btn btn-outline-primary w-100">
-                                            <i class="fas fa-plus"></i> Nouveau Produit
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="/admin/inventory" class="btn btn-outline-warning w-100">
-                                            <i class="fas fa-warehouse"></i> Gérer Stock
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="/admin/orders" class="btn btn-outline-info w-100">
-                                            <i class="fas fa-receipt"></i> Voir Commandes
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="/admin/reports" class="btn btn-outline-success w-100">
-                                            <i class="fas fa-chart-bar"></i> Rapports
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -318,7 +280,7 @@
                 data: {
                     labels: mockData.salesData.labels,
                     datasets: [{
-                        label: 'Ventes (€)',
+                        label: 'Ventes ($)',
                         data: mockData.salesData.data,
                         borderColor: '#007bff',
                         backgroundColor: 'rgba(0, 123, 255, 0.1)',
@@ -339,7 +301,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return value + '€';
+                                    return value + '$';
                                 }
                             }
                         }
