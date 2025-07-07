@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'lab4-ddd'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['lab4-ddd:8080']
