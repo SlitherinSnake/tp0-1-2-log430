@@ -3,6 +3,8 @@ package com.log430.tp4.presentation.api;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,6 +30,7 @@ import com.log430.tp4.domain.inventory.InventoryItem;
 @RequestMapping("/api/inventory")
 @CrossOrigin(origins = "*")
 public class InventoryController {
+    private static final Logger log = LoggerFactory.getLogger(InventoryController.class);
 
     private final InventoryService inventoryService;
 
@@ -40,6 +43,7 @@ public class InventoryController {
      */
     @GetMapping
     public ResponseEntity<List<InventoryItem>> getAllItems() {
+        log.info("API call: getAllItems");
         List<InventoryItem> items = inventoryService.getAllActiveItems();
         return ResponseEntity.ok(items);
     }
@@ -49,6 +53,7 @@ public class InventoryController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<InventoryItem> getItemById(@PathVariable Long id) {
+        log.info("API call: getItemById with id {}", id);
         return inventoryService.getItemById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -59,6 +64,7 @@ public class InventoryController {
      */
     @PostMapping
     public ResponseEntity<InventoryItem> createItem(@RequestBody CreateItemRequest request) {
+        log.info("API call: createItem with name {}", request.nom());
         try {
             InventoryItem item = inventoryService.createItem(
                     request.nom(),
@@ -123,6 +129,7 @@ public class InventoryController {
     public ResponseEntity<InventoryItem> increaseStock(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
+        log.info("API call: increaseStock for id {} by {}", id, request.get("quantity"));
         try {
             Integer quantity = request.get("quantity");
             if (quantity == null || quantity <= 0) {
@@ -144,6 +151,7 @@ public class InventoryController {
     public ResponseEntity<InventoryItem> decreaseStock(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
+        log.info("API call: decreaseStock for id {} by {}", id, request.get("quantity"));
         try {
             Integer quantity = request.get("quantity");
             if (quantity == null || quantity <= 0) {

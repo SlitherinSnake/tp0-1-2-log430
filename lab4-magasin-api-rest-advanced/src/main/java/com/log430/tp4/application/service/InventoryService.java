@@ -3,6 +3,11 @@ package com.log430.tp4.application.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +21,7 @@ import com.log430.tp4.infrastructure.repository.InventoryItemRepository;
 @Service
 @Transactional
 public class InventoryService {
+    private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
 
     private static final String ITEM_NOT_FOUND_MSG = "Item not found with id: ";
 
@@ -29,7 +35,9 @@ public class InventoryService {
      * Get all active inventory items.
      */
     @Transactional(readOnly = true)
+    @Cacheable("inventoryAll")
     public List<InventoryItem> getAllActiveItems() {
+        log.info("Fetching all active inventory items");
         return inventoryItemRepository.findByIsActiveTrue();
     }
 
@@ -37,14 +45,21 @@ public class InventoryService {
      * Get inventory item by ID.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "inventoryById", key = "#id")
     public Optional<InventoryItem> getItemById(Long id) {
+        log.info("Fetching inventory item by id: {}", id);
         return inventoryItemRepository.findById(id);
     }
 
     /**
      * Create new inventory item.
      */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#result.id", condition = "#result != null")
+    })
     public InventoryItem createItem(String nom, String categorie, Double prix, Integer stockCentral) {
+        log.info("Creating new inventory item: {}", nom);
         InventoryItem item = new InventoryItem(nom, categorie, prix, stockCentral);
         return inventoryItemRepository.save(item);
     }
@@ -52,7 +67,12 @@ public class InventoryService {
     /**
      * Update inventory item.
      */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#id")
+    })
     public InventoryItem updateItem(Long id, String nom, String categorie, Double prix, String description) {
+        log.info("Updating inventory item with id: {}", id);
         return inventoryItemRepository.findById(id)
                 .map(item -> {
                     item.setNom(nom);
@@ -67,7 +87,12 @@ public class InventoryService {
     /**
      * Update stock levels.
      */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#id")
+    })
     public InventoryItem updateStock(Long id, Integer newStock) {
+        log.info("Updating stock for item id: {} to {}", id, newStock);
         return inventoryItemRepository.findById(id)
                 .map(item -> {
                     item.setStockCentral(newStock);
@@ -79,7 +104,12 @@ public class InventoryService {
     /**
      * Increase stock (receiving new inventory).
      */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#id")
+    })
     public InventoryItem increaseStock(Long id, Integer quantity) {
+        log.info("Increasing stock for item id: {} by {}", id, quantity);
         return inventoryItemRepository.findById(id)
                 .map(item -> {
                     item.increaseStock(quantity);
@@ -91,7 +121,12 @@ public class InventoryService {
     /**
      * Decrease stock (sales or transfers).
      */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#id")
+    })
     public InventoryItem decreaseStock(Long id, Integer quantity) {
+        log.info("Decreasing stock for item id: {} by {}", id, quantity);
         return inventoryItemRepository.findById(id)
                 .map(item -> {
                     item.decreaseStock(quantity);
@@ -104,7 +139,9 @@ public class InventoryService {
      * Get items needing restock.
      */
     @Transactional(readOnly = true)
+    @Cacheable("restockNeeded")
     public List<InventoryItem> getItemsNeedingRestock() {
+        log.info("Fetching items needing restock");
         return inventoryItemRepository.findItemsNeedingRestock();
     }
 
@@ -112,7 +149,9 @@ public class InventoryService {
      * Get items by category.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "inventoryByCategory", key = "#categorie")
     public List<InventoryItem> getItemsByCategory(String categorie) {
+        log.info("Fetching items by category: {}", categorie);
         return inventoryItemRepository.findByCategorieAndIsActiveTrue(categorie);
     }
 
@@ -120,7 +159,9 @@ public class InventoryService {
      * Search items by name.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "inventoryByName", key = "#name")
     public List<InventoryItem> searchItemsByName(String name) {
+        log.info("Searching items by name: {}", name);
         return inventoryItemRepository.findByNomContainingIgnoreCaseAndIsActiveTrue(name);
     }
 
@@ -128,7 +169,9 @@ public class InventoryService {
      * Get all distinct categories.
      */
     @Transactional(readOnly = true)
+    @Cacheable("categories")
     public List<String> getDistinctCategories() {
+        log.info("Fetching distinct categories");
         return inventoryItemRepository.findDistinctCategories();
     }
 
@@ -136,14 +179,24 @@ public class InventoryService {
      * Calculate total inventory value.
      */
     @Transactional(readOnly = true)
+    @Cacheable("totalInventoryValue")
     public Double calculateTotalInventoryValue() {
+        log.info("Calculating total inventory value");
         return inventoryItemRepository.calculateTotalInventoryValue();
     }
 
     /**
      * Deactivate inventory item.
      */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#id"),
+        @CacheEvict(value = "restockNeeded", allEntries = true),
+        @CacheEvict(value = "categories", allEntries = true),
+        @CacheEvict(value = "totalInventoryValue", allEntries = true)
+    })
     public void deactivateItem(Long id) {
+        log.warn("Deactivating inventory item with id: {}", id);
         inventoryItemRepository.findById(id)
                 .ifPresentOrElse(
                         item -> {
@@ -151,6 +204,7 @@ public class InventoryService {
                             inventoryItemRepository.save(item);
                         },
                         () -> {
+                            log.error("Item not found for deactivation: {}", id);
                             throw new IllegalArgumentException(ITEM_NOT_FOUND_MSG + id);
                         }
                 );

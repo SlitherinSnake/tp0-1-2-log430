@@ -661,5 +661,16 @@
         // Initialize
         displayProducts();
     </script>
+    <script>
+        // Fetch backend logs and print to browser console
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(logs => {
+                console.group('Backend Logs');
+                logs.forEach(line => console.log(line));
+                console.groupEnd();
+            })
+            .catch(e => console.error('Failed to fetch logs:', e));
+    </script>
 </body>
 </html>
