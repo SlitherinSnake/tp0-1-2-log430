@@ -43,7 +43,7 @@ services:
     container_name: postgres-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: magasin
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -60,7 +60,7 @@ services:
     image: magasin-api-app  # ← Ajout essentiel pour CI/CD
     container_name: magasin-api-app
     build:
-      context: ./Lab4-DDD
+      context: ./lab4-magasin-api-rest-advanced
       dockerfile: Dockerfile
     depends_on:
       - db
@@ -69,7 +69,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/magasin
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
     networks:
       - magasin-net
     restart: unless-stopped
@@ -101,7 +101,7 @@ services:
     image: magasin-api-app
     container_name: magasin-api-app-1
     build:
-      context: ./Lab4-DDD
+      context: ./lab4-magasin-api-rest-advanced
       dockerfile: Dockerfile
     depends_on:
       - db
@@ -113,7 +113,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/magasin
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
     networks:
       - magasin-net
     restart: unless-stopped
@@ -125,7 +125,7 @@ services:
     image: magasin-api-app
     container_name: magasin-api-app-2
     build:
-      context: ./Lab4-DDD
+      context: ./lab4-magasin-api-rest-advanced
       dockerfile: Dockerfile
     depends_on:
       - db
@@ -137,7 +137,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/magasin
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
     networks:
       - magasin-net
     restart: unless-stopped
