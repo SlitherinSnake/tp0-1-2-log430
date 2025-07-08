@@ -22,6 +22,11 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
     /**
      * Find inventory items by category.
      */
+    List<InventoryItem> findByCategorie(String categorie);
+
+    /**
+     * Find inventory items by category (active only).
+     */
     List<InventoryItem> findByCategorieAndIsActiveTrue(String categorie);
 
     /**
@@ -36,7 +41,12 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
     Optional<InventoryItem> findByNomAndIsActiveTrue(String nom);
 
     /**
-     * Search inventory items by name containing the given text.
+     * Search inventory items by name containing the given text (case insensitive).
+     */
+    List<InventoryItem> findByNomContainingIgnoreCase(String nom);
+
+    /**
+     * Search inventory items by name containing the given text (active only).
      */
     List<InventoryItem> findByNomContainingIgnoreCaseAndIsActiveTrue(String nom);
 
