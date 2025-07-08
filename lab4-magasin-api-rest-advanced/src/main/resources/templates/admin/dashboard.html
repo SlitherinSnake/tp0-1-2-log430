@@ -99,24 +99,9 @@
                                     <i class="fas fa-cubes fa-2x me-2"></i>
                                     <div>
                                         <h5 class="card-title mb-0">Total Articles</h5>
-                                        <small>+12 ce mois</small>
                                     </div>
                                 </div>
-                                <h2 class="mb-0" id="totalItems">5</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-white bg-success h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-dollar-sign fa-2x me-2"></i>
-                                    <div>
-                                        <h5 class="card-title mb-0">Valeur Stock</h5>
-                                        <small>+8% ce mois</small>
-                                    </div>
-                                </div>
-                                <h2 class="mb-0" id="totalValue">48697.90$</h2>
+                                <h2 class="mb-0" id="totalItems" th:text="${totalItems}" aria-label="Nombre total d'articles">0</h2>
                             </div>
                         </div>
                     </div>
@@ -130,7 +115,7 @@
                                         <small>Articles en rupture</small>
                                     </div>
                                 </div>
-                                <h2 class="mb-0" id="itemsNeedingRestock">0</h2>
+                                <h2 class="mb-0" id="itemsNeedingRestock" th:text="${itemsNeedingRestock}" aria-label="Articles nécessitant réapprovisionnement">0</h2>
                             </div>
                         </div>
                     </div>
@@ -144,7 +129,7 @@
                                         <small>Ce mois-ci</small>
                                     </div>
                                 </div>
-                                <h2 class="mb-0" id="ordersCount">142</h2>
+                                <h2 class="mb-0" id="ordersCount" th:text="${ordersCount}" aria-label="Nombre de commandes">0</h2>
                             </div>
                         </div>
                     </div>
