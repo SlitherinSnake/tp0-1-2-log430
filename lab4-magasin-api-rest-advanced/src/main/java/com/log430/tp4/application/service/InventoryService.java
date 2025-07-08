@@ -131,7 +131,7 @@ public class InventoryService {
         log.info("Decreasing stock for item id: {} by {}", id, quantity);
         return inventoryItemRepository.findById(id)
                 .map(item -> {
-                    item.decreaseStock(quantity);
+                    item.reduceStock(quantity);
                     return inventoryItemRepository.save(item);
                 })
                 .orElseThrow(() -> new IllegalArgumentException(ITEM_NOT_FOUND_MSG + id));
@@ -207,6 +207,28 @@ public class InventoryService {
                         },
                         () -> {
                             log.error("Item not found for deactivation: {}", id);
+                            throw new IllegalArgumentException(ITEM_NOT_FOUND_MSG + id);
+                        }
+                );
+    }
+
+    /**
+     * Reduce stock for an inventory item.
+     */
+    @Caching(evict = {
+        @CacheEvict(value = "inventoryAll", allEntries = true),
+        @CacheEvict(value = "inventoryById", key = "#id")
+    })
+    public void reduceStock(Long id, Integer quantity) {
+        log.info("Reducing stock for item id: {} by quantity: {}", id, quantity);
+        inventoryItemRepository.findById(id)
+                .ifPresentOrElse(
+                        item -> {
+                            item.reduceStock(quantity);
+                            inventoryItemRepository.save(item);
+                        },
+                        () -> {
+                            log.error("Item not found for stock reduction: {}", id);
                             throw new IllegalArgumentException(ITEM_NOT_FOUND_MSG + id);
                         }
                 );
