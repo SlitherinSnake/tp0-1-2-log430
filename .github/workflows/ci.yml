@@ -9,8 +9,8 @@ on:
     branches: [ main ]
 
 env:
-  # Repo Docker Hub : <SlitherinSnake>/lab3-magasin-api-rest
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab3-magasin-api-rest
+  # Repo Docker Hub : <SlitherinSnake>/lab4-magasin-api-rest-advanced
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab4-magasin-api-rest-advanced
 
 jobs:
 # ──────────────────────────── LINT ────────────────────────────
@@ -25,7 +25,7 @@ jobs:
         with: { java-version: '21', distribution: 'temurin' }
 
       - name: Lint (Run Checkstyle)
-        working-directory: lab3-magasin-api-rest
+        working-directory: lab4-magasin-api-rest-advanced
         run: mvn --batch-mode -q verify
 
 # ──────────────────────────── TEST ────────────────────────────
@@ -42,7 +42,7 @@ jobs:
 
       # Le POM est dans le dossier magasin/
       - name: Run Maven tests (module magasin)
-        working-directory: lab3-magasin-api-rest
+        working-directory: lab4-magasin-api-rest-advanced
         run: mvn --batch-mode clean test
 
 # ──────────────────────────── BUILD DOCKER ────────────────────────────
