@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.log430.tp4.application.service.InventoryService;
+//import com.log430.tp4.application.service.InventoryService;
 import com.log430.tp4.domain.transaction.Transaction;
 import com.log430.tp4.infrastructure.repository.TransactionRepository;
 import com.log430.tp4.presentation.api.dto.TransactionDto;
@@ -28,9 +28,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class TransactionController {
     @Autowired
     private TransactionRepository transactionRepository;
-    @Autowired
-    private InventoryService inventoryService;
+    //@Autowired
+    //private InventoryService inventoryService;
 
+    @SuppressWarnings("unchecked")
     @Operation(summary = "Créer une vente", description = "Crée une nouvelle transaction de vente.")
     @PostMapping
     public ResponseEntity<?> createSale(@RequestBody Map<String, Object> payload) {
