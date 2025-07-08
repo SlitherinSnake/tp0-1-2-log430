@@ -104,9 +104,14 @@ public class InventoryController {
     @GetMapping("/{id}")
     public ResponseEntity<InventoryItemDto> getItemById(@PathVariable Long id) {
         log.info("API call: getItemById with id {}", id);
-        return inventoryService.getItemById(id)
-                .map(item -> ResponseEntity.ok(InventoryItemDto.fromEntity(item)))
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return inventoryService.getItemById(id)
+                    .map(item -> ResponseEntity.ok(InventoryItemDto.fromEntity(item)))
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error in getItemById: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     /**

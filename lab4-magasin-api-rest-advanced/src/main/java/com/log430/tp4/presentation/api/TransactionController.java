@@ -43,6 +43,11 @@ public class TransactionController {
             List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
             Double montantTotal = Double.valueOf(payload.get("montantTotal").toString());
 
+            // Validate that items list is not empty
+            if (items == null || items.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Items list cannot be empty"));
+            }
+
             Transaction transaction = new Transaction();
             transaction.setTypeTransaction(Transaction.TypeTransaction.VENTE);
             transaction.setDateTransaction(LocalDate.now());
@@ -58,21 +63,32 @@ public class TransactionController {
                 transaction.addItem(inventoryItemId, quantity, price);
             }
 
-            transactionRepository.save(transaction);
-            return ResponseEntity.ok(Map.of("success", true, "transactionId", transaction.getId()));
+            Transaction savedTransaction = transactionRepository.save(transaction);
+            Long transactionId = savedTransaction.getId();
+            if (transactionId == null) {
+                return ResponseEntity.internalServerError().body(Map.of("success", false, "error", "Failed to save transaction"));
+            }
+            return ResponseEntity.status(201).body(Map.of("success", true, "transactionId", transactionId));
         } catch (NumberFormatException | NullPointerException | ClassCastException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 
     @Operation(summary = "Lister toutes les transactions", description = "Retourne toutes les transactions (ventes, retours, etc.)")
     @GetMapping
-    public List<TransactionDto> getAllTransactions() {
-        List<Transaction> transactions = transactionRepository.findAll();
-        return transactions.stream()
-                .map(tx -> TransactionDto.fromEntity(tx, id -> inventoryService.getItemById(id)
-                        .map(com.log430.tp4.domain.inventory.InventoryItem::getNom)
-                        .orElse("Article inconnu")))
-                .toList();
+    public ResponseEntity<List<TransactionDto>> getAllTransactions() {
+        try {
+            List<Transaction> transactions = transactionRepository.findAll();
+            List<TransactionDto> transactionDtos = transactions.stream()
+                    .map(tx -> TransactionDto.fromEntity(tx, id -> inventoryService.getItemById(id)
+                            .map(com.log430.tp4.domain.inventory.InventoryItem::getNom)
+                            .orElse("Article inconnu")))
+                    .toList();
+            return ResponseEntity.ok(transactionDtos);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
