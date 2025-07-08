@@ -29,6 +29,7 @@ class InventoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @SuppressWarnings("removal")
     @MockBean
     private InventoryService inventoryService;
 

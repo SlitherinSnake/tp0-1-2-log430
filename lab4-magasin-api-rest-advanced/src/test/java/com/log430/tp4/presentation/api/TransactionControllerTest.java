@@ -31,9 +31,11 @@ class TransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @SuppressWarnings("removal")
     @MockBean
     private TransactionRepository transactionRepository;
 
+    @SuppressWarnings("removal")
     @MockBean
     private InventoryService inventoryService;
 
