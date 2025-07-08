@@ -1,98 +1,67 @@
-@startuml
-title DSS – Enregistrer une vente (Spring Boot Web)
+@startuml Enregistrer une vente 
+title DSS - Enregistrer une vente (Architecture Spring Boot DDD)
 
-' === Acteur principal ===
-actor Employe
+' === Acteurs ===
+actor Employee as "Employé"
 
-' === Composants Web (architecture MVC Spring Boot) ===
-participant "Navigateur Web (Thymeleaf)" as Vue
-participant "VenteController" as Controller
-participant "VenteService" as Service
-participant "EmployeRepository" as EmployeRepo
-participant "ProduitRepository" as ProduitRepo
-participant "VenteRepository" as VenteRepo
+' === Composants Spring Boot DDD ===
+participant "WebController" as WebCtrl
+participant "TransactionController" as TxnCtrl
+participant "InventoryService" as InvSvc
+participant "TransactionRepository" as TxnRepo
+participant "InventoryItemRepository" as InvRepo
 database "PostgreSQL"
 
-== Étape 1 : Accès au panier ==
-Employe -> Vue : accède à /panier (GET)
-' L’employé ouvre la page du panier pour visualiser les produits sélectionnés
+== Scénario 1: Interface Web ==
+Employee -> WebCtrl : GET /admin/sales
+WebCtrl -> InvSvc : getAllActiveItems()
+InvSvc -> InvRepo : findByIsActiveTrue()
+InvRepo -> PostgreSQL : SELECT * FROM inventory_items WHERE is_active = true
+PostgreSQL --> InvRepo : Liste des produits
+InvRepo --> InvSvc : List<InventoryItem>
+InvSvc --> WebCtrl : Liste des produits
+WebCtrl --> Employee : Page de vente avec produits
 
-Vue -> Controller : HTTP GET /panier
-' Le navigateur déclenche une requête GET vers le contrôleur
+Employee -> WebCtrl : Sélectionne produits + quantités
+note right : L'employé utilise l'interface\npour construire la vente
 
-Controller --> Vue : retourne panier.html avec vente en cours
-' Le contrôleur prépare les données de la vente en session et rend la vue HTML
+== Scénario 2: Finalisation via API ==
+Employee -> TxnCtrl : POST /api/transactions\n{items: [{inventoryItemId, quantity}], personnelId, storeId}
 
-== Étape 2 : Ajout de produit ==
-Employe -> Vue : clique "Ajouter au panier"
-' L’employé choisit un produit et indique une quantité
-
-Vue -> Controller : HTTP POST /panier/add {produitId, quantite}
-' La requête POST contient l’identifiant du produit et la quantité demandée
-
-Controller -> Service : ajouterProduit(produitId, quantite)
-' Le contrôleur délègue la logique métier d’ajout au service
-
-Service -> ProduitRepo : findById(produitId)
-' Le service vérifie que le produit existe dans la base de données
-
-ProduitRepo -> PostgreSQL : SELECT * \n FROM produits \n WHERE id = ?
-' Une requête SQL est générée pour récupérer le produit par son identifiant
-
-PostgreSQL --> ProduitRepo : Produit
-' La base renvoie les détails du produit
-
-ProduitRepo --> Service : Produit
-' Le produit est renvoyé au service pour traitement
-
-alt stock suffisant
-    Service -> ProduitRepo : mise à jour stock (quantite - q)
-    ' Si la quantité est disponible, le service décrémente le stock du produit
-
-    ProduitRepo -> PostgreSQL : UPDATE produits \n SET quantite = ...
-    ' La mise à jour de la quantité est appliquée dans la base
-
-    Service --> Controller : produit ajouté
-    ' Le service confirme l’ajout du produit au panier
-else stock insuffisant
-    Service --> Controller : erreur stock
-    ' Si le stock est insuffisant, une erreur est renvoyée
+TxnCtrl -> InvSvc : Valider stock pour chaque item
+loop Pour chaque item
+  InvSvc -> InvRepo : findById(inventoryItemId)
+  InvRepo -> PostgreSQL : SELECT * FROM inventory_items WHERE id = ?
+  PostgreSQL --> InvRepo : InventoryItem
+  InvRepo --> InvSvc : InventoryItem
+  InvSvc -> InvSvc : hasStock(quantity)
+  alt Stock insuffisant
+    InvSvc --> TxnCtrl : Exception "Stock insuffisant"
+    TxnCtrl --> Employee : 400 Bad Request
+  end
 end
 
-Controller --> Vue : mise à jour panier (via AJAX)
-' Le contrôleur retourne une réponse partielle pour mettre à jour dynamiquement l’affichage du panier
+TxnCtrl -> TxnCtrl : Créer Transaction(VENTE)
+TxnCtrl -> TxnRepo : save(transaction)
+TxnRepo -> PostgreSQL : INSERT INTO transactions...
+PostgreSQL --> TxnRepo : Transaction saved
 
-== Étape 3 : Finalisation ==
-Employe -> Vue : clique "Valider la vente"
-' Une fois le panier complet, l’employé clique pour finaliser la vente
+loop Pour chaque item
+  TxnCtrl -> InvSvc : decreaseStock(itemId, quantity)
+  InvSvc -> InvRepo : findById(itemId)
+  InvRepo -> PostgreSQL : SELECT...
+  PostgreSQL --> InvRepo : InventoryItem
+  InvRepo --> InvSvc : InventoryItem
+  InvSvc -> InvSvc : item.decreaseStock(quantity)
+  InvSvc -> InvRepo : save(updatedItem)
+  InvRepo -> PostgreSQL : UPDATE inventory_items...
+  PostgreSQL --> InvRepo : Updated
+end
 
-Vue -> Controller : HTTP POST /ventes/valider {vente}
-' La requête POST contient toutes les informations de la vente en cours
+TxnCtrl -> TxnCtrl : transaction.complete()
+TxnCtrl -> TxnRepo : save(completedTransaction)
+TxnRepo -> PostgreSQL : UPDATE transactions SET statut = 'COMPLETED'...
 
-Controller -> Service : enregistrerVente(vente)
-' Le contrôleur délègue l’enregistrement complet de la vente au service
-
-Service -> EmployeRepo : findById(employeId)
-' Le service vérifie que l’employé assigné à la vente existe
-
-Service -> VenteRepo : save(vente)
-' Une fois les vérifications faites, la vente est sauvegardée en base
-
-VenteRepo -> PostgreSQL : INSERT INTO ventes + vente_produit
-' Deux tables sont affectées : `ventes` et la table associative `vente_produit`
-
-PostgreSQL --> VenteRepo : OK
-' Confirmation de l’insertion des données
-
-VenteRepo --> Service : confirmation
-Service --> Controller : vente confirmée
-' Le service remonte la confirmation d’enregistrement au contrôleur
-
-== Affichage ==
-Controller --> Vue : redirection vers facture.html
-' Le contrôleur redirige l’utilisateur vers la page de facture générée
-
-Vue --> Employe : affiche reçu de la vente
-' L’employé voit la facture avec les détails de la transaction
+TxnCtrl --> Employee : 200 OK + TransactionDto
 
 @enduml

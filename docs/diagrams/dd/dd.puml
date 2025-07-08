@@ -1,0 +1,47 @@
+@startuml Diagramme de déploiement
+title Diagramme de déploiement - Architecture Spring Boot avec Docker
+
+' === Container orchestration ===
+node "Docker Compose Environment" {
+  
+  ' === Application Container ===
+  node "magasin-api-container" {
+    component "Spring Boot Application\n(MagasinAPI)" {
+      component "Web Interface\n(Thymeleaf + Bootstrap)"
+      component "REST APIs\n(Swagger documented)"
+      component "Application Services"
+      component "Domain Layer\n(DDD Architecture)"
+    }
+    
+    component "JVM\n(Java 21)"
+    component "Monitoring\n(Actuator + Prometheus)"
+  }
+  
+  ' === Database Container ===
+  node "postgres-container" {
+    database "PostgreSQL 14+\nDatabase"
+  }
+  
+  ' === Monitoring Container (optional) ===
+  node "prometheus-container" {
+    component "Prometheus\nMetrics Collector"
+  }
+}
+
+' === External Access ===
+actor "Client Web" as client
+actor "Admin/Employee" as admin
+actor "API Consumer" as api
+
+' === Connections ===
+client --> "Web Interface\n(Thymeleaf + Bootstrap)" : "HTTP :8080\n(Web UI)"
+admin --> "Web Interface\n(Thymeleaf + Bootstrap)" : "HTTP :8080\n(/admin/**)"
+api --> "REST APIs\n(Swagger documented)" : "HTTP :8080\n(/api/**)"
+
+"Application Services" --> "PostgreSQL 14+\nDatabase" : "JPA/Hibernate\n:5432"
+"Monitoring\n(Actuator + Prometheus)" --> "Prometheus\nMetrics Collector" : "Metrics Export\n:9090"
+
+' === Volume mounts ===
+"PostgreSQL 14+\nDatabase" ..> "postgres-data\n(Volume)" : persists
+
+@enduml

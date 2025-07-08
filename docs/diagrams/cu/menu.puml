@@ -1,73 +1,91 @@
 @startuml
-title Diagramme de cas d'utilisation – Système de gestion multi-magasins (API-REST)
+title Diagramme de cas d'utilisation – Système de gestion de magasin (Spring Boot DDD)
 
-' === Acteurs principaux ===
-actor "Employé"   as Employe
+' === Acteurs ===
+actor "Client" as Client
+actor "Employé" as Employee
 actor "Administrateur" as Admin
-actor "Viewer (lecture seule)" as Viewer
-actor "Client API externe" as ApiClient
+actor "Système externe" as ExtSystem
 
-' -----------------------------------------------------------------
-rectangle "Application Web Spring Boot\n(Thymeleaf + API REST/JWT + PostgreSQL)" {
+' === Package principal ===
+rectangle "MagasinAPI - Spring Boot Application" {
 
-  ' === Authentification & autorisation ===
-  usecase "Se connecter (login)" as UC_AUTH_LOGIN
-  usecase "S'inscrire (signup)" as UC_AUTH_SIGNUP
-  usecase "Obtenir un token JWT" as UC_AUTH_TOKEN
-  UC_AUTH_TOKEN <|-- UC_AUTH_LOGIN : <<include>>
+  ' === Gestion des produits et inventaire ===
+  package "Gestion Inventaire" {
+    usecase "Consulter catalogue produits" as UC_VIEW_PRODUCTS
+    usecase "Rechercher produit" as UC_SEARCH_PRODUCT
+    usecase "Consulter stock central" as UC_VIEW_STOCK
+    usecase "Mettre à jour stock" as UC_UPDATE_STOCK
+    usecase "Gérer produits (CRUD)" as UC_MANAGE_PRODUCTS
+    usecase "Identifier produits à réapprovisionner" as UC_RESTOCK_ALERT
+  }
 
-  ' === Gestion des utilisateurs (réservé ADMIN) ===
-  usecase "Gérer les utilisateurs & rôles" as UC_ADMIN_USERS
+  ' === Gestion des transactions ===
+  package "Gestion Transactions" {
+    usecase "Enregistrer vente" as UC_RECORD_SALE
+    usecase "Traiter retour" as UC_PROCESS_RETURN
+    usecase "Consulter historique ventes" as UC_VIEW_SALES_HISTORY
+    usecase "Générer rapport de vente" as UC_GENERATE_REPORT
+  }
 
-  ' === Gestion de produits ===
-  usecase "Rechercher un produit"              as UC1
-  usecase "Consulter le stock central"         as UC2
+  ' === Interface utilisateur ===
+  package "Interface Web" {
+    usecase "Naviguer site web" as UC_BROWSE_WEB
+    usecase "Gérer panier" as UC_MANAGE_CART
+    usecase "Accéder dashboard admin" as UC_ADMIN_DASHBOARD
+    usecase "Consulter performance magasin" as UC_VIEW_PERFORMANCE
+  }
 
-  ' === Gestion des ventes ===
-  usecase "Ajouter un produit au panier"       as UC3
-  usecase "Valider une vente"                  as UC4
+  ' === APIs et intégration ===
+  package "APIs REST" {
+    usecase "Accéder API Inventaire" as UC_API_INVENTORY
+    usecase "Accéder API Transactions" as UC_API_TRANSACTIONS
+    usecase "Consulter logs système" as UC_API_LOGS
+    usecase "Obtenir métriques Prometheus" as UC_API_METRICS
+  }
 
-  ' === Gestion des retours ===
-  usecase "Initier un retour"                  as UC5
-  usecase "Valider les produits retournés"     as UC6
-
-  ' === Rapports ===
-  usecase "Générer un rapport consolidé des ventes" as UC7
+  ' === Gestion du système ===
+  package "Administration Système" {
+    usecase "Gérer personnel et rôles" as UC_MANAGE_PERSONNEL
+    usecase "Configurer magasins" as UC_MANAGE_STORES
+    usecase "Surveiller application" as UC_MONITOR_APP
+  }
 }
 
-' -----------------------------------------------------------------
-' Droits & relations
-' Authentication (tout le monde)
-Employe  --> UC_AUTH_LOGIN
-Viewer   --> UC_AUTH_LOGIN
-Admin    --> UC_AUTH_LOGIN
-ApiClient --> UC_AUTH_TOKEN
+' === Relations Client ===
+Client --> UC_VIEW_PRODUCTS
+Client --> UC_SEARCH_PRODUCT
+Client --> UC_BROWSE_WEB
+Client --> UC_MANAGE_CART
 
-' Inscription (optionnel : si tu l’ouvres uniquement aux admins, conserve la flèche Admin)
-Admin  --> UC_AUTH_SIGNUP
+' === Relations Employé ===
+Employee --> UC_VIEW_PRODUCTS
+Employee --> UC_VIEW_STOCK
+Employee --> UC_RECORD_SALE
+Employee --> UC_PROCESS_RETURN
+Employee --> UC_VIEW_SALES_HISTORY
+Employee --> UC_RESTOCK_ALERT
 
-' Gestion des utilisateurs
-Admin  --> UC_ADMIN_USERS
+' === Relations Administrateur ===
+Admin --> UC_MANAGE_PRODUCTS
+Admin --> UC_UPDATE_STOCK
+Admin --> UC_ADMIN_DASHBOARD
+Admin --> UC_VIEW_PERFORMANCE
+Admin --> UC_GENERATE_REPORT
+Admin --> UC_MANAGE_PERSONNEL
+Admin --> UC_MANAGE_STORES
+Admin --> UC_MONITOR_APP
 
-' Cas d’utilisation existants
-Employe --> UC1
-Employe --> UC2
-Employe --> UC3
-Employe --> UC4
-Employe --> UC5
-Employe --> UC6
-Employe --> UC7
+' === Relations Système externe ===
+ExtSystem --> UC_API_INVENTORY
+ExtSystem --> UC_API_TRANSACTIONS
+ExtSystem --> UC_API_LOGS
+ExtSystem --> UC_API_METRICS
 
-Viewer  --> UC1
-Viewer  --> UC2
-Viewer  --> UC7
-
-Admin   --> UC1
-Admin   --> UC2
-Admin   --> UC3
-Admin   --> UC4
-Admin   --> UC5
-Admin   --> UC6
-Admin   --> UC7
+' === Extensions et inclusions ===
+UC_RECORD_SALE <|-- UC_UPDATE_STOCK : <<include>>
+UC_PROCESS_RETURN <|-- UC_UPDATE_STOCK : <<include>>
+UC_ADMIN_DASHBOARD <|-- UC_VIEW_PERFORMANCE : <<include>>
+UC_VIEW_PERFORMANCE <|-- UC_GENERATE_REPORT : <<extend>>
 
 @enduml

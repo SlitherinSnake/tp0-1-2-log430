@@ -1,123 +1,116 @@
-@startuml
-title Vue d’implémentation – Organisation des modules (MVC + Service + Repository)
+@startuml Architecture DDD Spring Boot
+allowmixing
+title Vue d'implémentation - Architecture DDD Spring Boot
 
-' === Packages ===
-package "com.log430.tp3.controller" {
-  class ProduitController
-  class VenteController
-  class RetourController
-  class StockCentralController
-  class RapportController
-  class DashboardController
-  class AuthController
-  class ProduitApiController
-  class AuthViewController
+' === Presentation Layer ===
+package "com.log430.tp4.presentation" {
+  
+  package "api" {
+    class InventoryController
+    class TransactionController
+    class LogController
+    
+    package "dto" {
+      class InventoryItemDto
+      class TransactionDto
+    }
+  }
+  
+  package "web" {
+    class WebController
+  }
 }
 
-package "com.log430.tp3.service" {
-  class RapportService
-  class StockCentralService
+' === Application Layer ===
+package "com.log430.tp4.application" {
+  package "service" {
+    class InventoryService
+  }
 }
 
-package "com.log430.tp3.repository" {
-  class ProduitRepository
-  class VenteRepository
-  class RetourRepository
-  class EmployeRepository
-  class MagasinRepository
-  class StockMagasinRepository
-  class StockCentralRepository
-  class UserRepository
-  class RoleRepository
+' === Domain Layer ===
+package "com.log430.tp4.domain" {
+  
+  package "inventory" {
+    class InventoryItem
+  }
+  
+  package "transaction" {
+    class Transaction
+    class TransactionItem
+    enum TypeTransaction
+    enum StatutTransaction
+  }
+  
+  package "store" {
+    class Store
+    class StoreInventory
+  }
+  
+  package "personnel" {
+    class Personnel
+    class Role
+  }
 }
 
-package "com.log430.tp3.model" {
-  class Produit
-  class Vente
-  class Retour
-  class Employe
-  class VenteProduit
-  class RetourProduit
-  class Magasin
-  class StockMagasin
-  class StockCentral
-  class User
-  class Role
+' === Infrastructure Layer ===
+package "com.log430.tp4.infrastructure" {
+  
+  package "repository" {
+    interface InventoryItemRepository
+    interface TransactionRepository
+    interface StoreRepository
+    interface PersonnelRepository
+    interface RoleRepository
+  }
+  
+  package "config" {
+    class HttpConfig
+  }
 }
 
-' --- Bloc sécurité & auth --------------------------------------------------
-
-package "com.log430.tp3.security.jwt" {
-  class JwtUtils
-  class AuthTokenFilter
-  class AuthEntryPointJwt
+' === Spring Boot Configuration ===
+package "Spring Boot Core" {
+  class MagasinApiApplication
+  annotation SpringBootApplication
+  annotation EnableJpaRepositories
+  annotation EnableCaching
 }
 
-package "com.log430.tp3.security.services" {
-  class UserDetailsImpl
-  class UserDetailsServiceImpl
+' === External Dependencies ===
+package "External" {
+  database PostgreSQL
+  component "Swagger/OpenAPI"
+  component "Prometheus"
+  component "Docker"
 }
 
-package "com.log430.tp3.config" {
-  class WebSecurityConfig
-  class CorsConfig
-  class OpenApiConfig
-  class DataInitializer
-}
+' === Relations ===
+InventoryController --> InventoryService : uses
+TransactionController --> TransactionRepository : uses
+TransactionController --> InventoryService : uses
+WebController --> InventoryService : uses
+WebController --> TransactionRepository : uses
 
-package "com.log430.tp3.api.controller" {
-  class AuthController
-  class ProduitApiController
-}
+InventoryService --> InventoryItemRepository : uses
+InventoryItemRepository --> InventoryItem : manages
+TransactionRepository --> Transaction : manages
+StoreRepository --> Store : manages
+PersonnelRepository --> Personnel : manages
 
-' === Relations contrôleurs → services ===
-RapportController --> RapportService
-StockCentralController --> StockCentralService
+MagasinApiApplication --> SpringBootApplication : annotated
+MagasinApiApplication --> EnableJpaRepositories : annotated
+MagasinApiApplication --> EnableCaching : annotated
 
-' === Relations contrôleurs → repositories ===
-ProduitController --> ProduitRepository
-VenteController --> ProduitRepository
-VenteController --> VenteRepository
-VenteController --> EmployeRepository
-VenteController --> MagasinRepository
+InventoryItemRepository --> PostgreSQL : connects
+TransactionRepository --> PostgreSQL : connects
+StoreRepository --> PostgreSQL : connects
+PersonnelRepository --> PostgreSQL : connects
 
-RetourController --> RetourRepository
-RetourController --> VenteRepository
-RetourController --> ProduitRepository
+InventoryController --> "Swagger/OpenAPI" : documented
+TransactionController --> "Swagger/OpenAPI" : documented
 
-DashboardController --> VenteRepository
-DashboardController --> StockMagasinRepository
-DashboardController --> ProduitRepository
-
-StockCentralController --> MagasinRepository
-StockCentralController --> StockMagasinRepository
-StockCentralController --> StockCentralService
-
-' === Services → Repositories ===
-RapportService --> VenteRepository
-RapportService --> ProduitRepository
-
-StockCentralService --> ProduitRepository
-StockCentralService --> MagasinRepository
-StockCentralService --> StockCentralRepository
-
-' --- Relations principales -------------------------------------------------
-
-AuthController --> JwtUtils
-AuthController --> UserRepository
-AuthController --> RoleRepository
-
-AuthTokenFilter --> JwtUtils
-UserDetailsServiceImpl --> UserRepository
-
-WebSecurityConfig --> AuthTokenFilter
-WebSecurityConfig --> UserDetailsServiceImpl
-
-AuthViewController --> JwtUtils
-AuthViewController --> UserDetailsImpl
-
-UserDetailsImpl "*" --> "*" Role : authorities >
-UserRepository --> User
-RoleRepository --> Role
+MagasinApiApplication --> "Prometheus" : metrics
+MagasinApiApplication --> "Docker" : containerized
 
 @enduml

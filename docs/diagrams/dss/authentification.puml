@@ -1,19 +1,66 @@
 @startuml
-actor Employe
-boundary Browser
-control "AuthController\n(/api/v1/auth/login)" as AuthCtl
-participant "JwtUtils" as Jwt
-control "AuthTokenFilter" as Filter
+title DSS – Authentification simplifiée (Application Spring Boot actuelle)
 
-Employe -> Browser : Saisie login/password
-Browser -> AuthCtl   : POST /api/v1/auth/login (JSON)
-AuthCtl  -> Jwt      : generateJwtToken()
-Jwt      --> AuthCtl : JWT
-AuthCtl  --> Browser : 200 OK { token: JWT }
+' === Acteurs ===
+actor Client as "Utilisateur"
+actor Employee as "Employé"
 
-' Appel API ultérieur
-Browser -> Filter    : GET /api/v1/produits  (Authorization: Bearer JWT)
-Filter   -> Jwt      : validateJwtToken()
-Jwt      --> Filter  : OK
-Filter   --> "ProduitApiController" : requête authentifiée
+' === Composants Spring Boot ===
+participant "Browser" as Browser
+participant "WebController" as WebCtrl
+participant "Login Page\n(Thymeleaf)" as LoginPage
+database "Hard-coded\nCredentials" as Creds
+
+== Scénario : Accès initial ==
+Client -> Browser : Accède à l'application (/)
+Browser -> WebCtrl : GET /
+WebCtrl --> Browser : redirect:/login
+Browser -> WebCtrl : GET /login
+WebCtrl --> Browser : Page login.html (Thymeleaf)
+
+== Scénario : Sélection du rôle ==
+Client -> LoginPage : Sélectionne type de compte\n(Client ou Employé)
+LoginPage -> LoginPage : Met à jour l'interface\n(role-card selected)
+
+== Scénario : Connexion Client ==
+Client -> LoginPage : Saisie identifiants client\n(client/client123)
+LoginPage -> LoginPage : Validation côté client (JavaScript)
+
+alt Identifiants client valides
+  LoginPage -> Browser : window.location.href = '/products'
+  Browser -> WebCtrl : GET /products
+  WebCtrl --> Browser : Page produits (interface client)
+else Identifiants invalides
+  LoginPage --> Client : alert('Nom d\'utilisateur ou mot de passe incorrect')
+end
+
+== Scénario : Connexion Employé ==
+Employee -> LoginPage : Saisie identifiants employé\n(admin/admin)
+LoginPage -> LoginPage : Validation côté client (JavaScript)
+
+alt Identifiants employé valides
+  LoginPage -> Browser : window.location.href = '/admin/dashboard'
+  Browser -> WebCtrl : GET /admin/dashboard
+  WebCtrl --> Browser : Dashboard administrateur
+else Identifiants invalides
+  LoginPage --> Employee : alert('Nom d\'utilisateur ou mot de passe incorrect')
+end
+
+== Scénario : Connexion rapide (demo) ==
+Client -> LoginPage : Clique "Connexion rapide"\n(bouton demo)
+LoginPage -> LoginPage : quickLogin(username, password, role)
+LoginPage -> Browser : Redirection automatique selon le rôle
+
+note right of LoginPage
+  **Comptes de démonstration:**
+  • Client: client/client123 → /products
+  • Employé: admin/admin → /admin/dashboard
+  
+  **Authentification simplifiée:**
+  • Validation côté client JavaScript
+  • Pas de Spring Security
+  • Pas de JWT
+  • Redirection basée sur les identifiants
+end note
+
 @enduml

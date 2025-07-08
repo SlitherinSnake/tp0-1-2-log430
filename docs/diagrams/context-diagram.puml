@@ -1,0 +1,54 @@
+@startuml
+title Diagramme de contexte - MagasinAPI
+
+' === Acteurs externes ===
+actor "Clients" as Clients
+actor "Employés" as Employees
+actor "Administrateurs" as Admins
+actor "Développeurs" as Developers
+
+' === Systèmes externes ===
+database "PostgreSQL\nDatabase" as DB
+component "Docker\nContainers" as Docker
+component "Prometheus\nMonitoring" as Prometheus
+component "Navigateurs Web" as Browser
+component "Applications\nMobiles/Externes" as MobileApps
+
+' === Système principal ===
+package "MagasinAPI System" as System {
+  component "Spring Boot\nApplication" as SpringApp
+  component "REST APIs" as APIs
+  component "Web Interface" as WebUI
+  component "Monitoring\nActuator" as Monitoring
+}
+
+' === Relations avec les acteurs ===
+Clients --> WebUI : Consultation produits\nNavigation site
+Employees --> WebUI : Gestion ventes\nGestion stock
+Admins --> WebUI : Dashboard\nConfiguration
+Developers --> APIs : Intégration\nAutomatisation
+
+' === Relations avec les navigateurs ===
+Browser --> WebUI : HTTP/HTTPS :8080
+MobileApps --> APIs : REST API :8080/api
+
+' === Relations internes ===
+WebUI --> SpringApp : MVC Controllers
+APIs --> SpringApp : REST Controllers
+SpringApp --> DB : JPA/Hibernate :5432
+Monitoring --> Prometheus : Metrics Export
+
+' === Infrastructure ===
+System --> Docker : Containerized\nDeployment
+Docker --> DB : Database Container
+
+' === Flux de données principaux ===
+note right of System
+  **Interfaces principales:**
+  • Web UI: /admin/**, /products, /cart
+  • REST API: /api/inventory, /api/transactions
+  • Monitoring: /actuator/prometheus
+  • Documentation: /api-docs/swagger-ui
+end note
+
+@enduml
