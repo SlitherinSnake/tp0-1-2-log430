@@ -84,7 +84,7 @@ public class Transaction {
         for (TransactionItem item : items) {
             if (item.getInventoryItemId().equals(inventoryItemId)) {
                 item.updateQuantite(item.getQuantite() + quantite);
-                recalculateTotal();
+                calculateTotal();
                 return;
             }
         }
@@ -92,59 +92,112 @@ public class Transaction {
         // Add new item
         TransactionItem newItem = new TransactionItem(this, inventoryItemId, quantite, prixUnitaire);
         items.add(newItem);
-        recalculateTotal();
+        calculateTotal();
     }
 
     public void removeItem(Long inventoryItemId) {
         items.removeIf(item -> item.getInventoryItemId().equals(inventoryItemId));
-        recalculateTotal();
+        calculateTotal();
     }
 
     public void updateItemQuantity(Long inventoryItemId, Integer nouvelleQuantite) {
         for (TransactionItem item : items) {
             if (item.getInventoryItemId().equals(inventoryItemId)) {
                 item.updateQuantite(nouvelleQuantite);
-                recalculateTotal();
+                calculateTotal();
                 return;
             }
         }
     }
 
-    public void recalculateTotal() {
-        this.montantTotal = items.stream()
-                .mapToDouble(TransactionItem::getSousTotal)
+    /**
+     * Calculate total amount from all transaction items.
+     */
+    public void calculateTotal() {
+        if (items == null || items.isEmpty()) {
+            this.montantTotal = 0.0;
+            return;
+        }
+        
+        double total = items.stream()
+                .mapToDouble(item -> item.getSousTotal() != null ? item.getSousTotal() : 0.0)
                 .sum();
+        this.montantTotal = total;
     }
 
+    /**
+     * Complete the transaction.
+     */
     public void complete() {
-        if (statut == StatutTransaction.EN_COURS) {
-            recalculateTotal();
-            statut = StatutTransaction.COMPLETEE;
+        if (statut == StatutTransaction.COMPLETEE) {
+            throw new IllegalStateException("Transaction is already completed");
         }
+        if (statut == StatutTransaction.ANNULEE) {
+            throw new IllegalStateException("Cannot complete a cancelled transaction");
+        }
+        this.statut = StatutTransaction.COMPLETEE;
     }
 
+    /**
+     * Cancel the transaction.
+     */
     public void cancel() {
-        if (statut == StatutTransaction.EN_COURS) {
-            statut = StatutTransaction.ANNULEE;
+        if (statut == StatutTransaction.COMPLETEE) {
+            throw new IllegalStateException("Cannot cancel a completed transaction");
+        }
+        if (statut == StatutTransaction.ANNULEE) {
+            throw new IllegalStateException("Transaction is already cancelled");
+        }
+        this.statut = StatutTransaction.ANNULEE;
+    }
+
+    /**
+     * Validate the transaction.
+     */
+    public void validate() {
+        if (items == null || items.isEmpty()) {
+            throw new IllegalStateException("Transaction must have at least one item");
+        }
+        if (personnelId == null) {
+            throw new IllegalStateException("Transaction must have a personnel ID");
+        }
+        if (storeId == null) {
+            throw new IllegalStateException("Transaction must have a store ID");
+        }
+        if (typeTransaction == null) {
+            throw new IllegalStateException("Transaction must have a type");
+        }
+        if (montantTotal == null || montantTotal < 0) {
+            throw new IllegalStateException("Transaction total must be non-negative");
         }
     }
 
+    /**
+     * Check if this is a sale transaction.
+     */
     public boolean isSale() {
-        return typeTransaction == TypeTransaction.VENTE;
+        return TypeTransaction.VENTE.equals(typeTransaction);
     }
 
+    /**
+     * Check if this is a return transaction.
+     */
     public boolean isReturn() {
-        return typeTransaction == TypeTransaction.RETOUR;
+        return TypeTransaction.RETOUR.equals(typeTransaction);
     }
 
+    /**
+     * Check if transaction is completed.
+     */
     public boolean isCompleted() {
-        return statut == StatutTransaction.COMPLETEE;
+        return StatutTransaction.COMPLETEE.equals(statut);
     }
 
-    public Integer getTotalItems() {
-        return items.stream()
-                .mapToInt(TransactionItem::getQuantite)
-                .sum();
+    /**
+     * Check if transaction is cancelled.
+     */
+    public boolean isCancelled() {
+        return StatutTransaction.ANNULEE.equals(statut);
     }
 
     // Getters and Setters

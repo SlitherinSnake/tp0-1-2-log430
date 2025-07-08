@@ -67,11 +67,54 @@ public class TransactionItem {
     }
 
     private void calculateSousTotal() {
-        this.sousTotal = quantite * prixUnitaire;
+        if (quantite != null && prixUnitaire != null) {
+            this.sousTotal = quantite * prixUnitaire;
+        } else {
+            this.sousTotal = 0.0;
+        }
     }
 
-    public Double getTotalValue() {
-        return sousTotal;
+    /**
+     * Calculate subtotal (exposed publicly for tests and external use).
+     */
+    public void calculateSubtotal() {
+        calculateSousTotal();
+    }
+
+    /**
+     * Update quantity and recalculate subtotal.
+     */
+    public void updateQuantity(Integer newQuantity) {
+        if (newQuantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        this.quantite = newQuantity;
+        calculateSousTotal();
+    }
+
+    /**
+     * Validate the transaction item data.
+     */
+    public void validate() {
+        if (inventoryItemId == null) {
+            throw new IllegalArgumentException("Inventory item ID cannot be null");
+        }
+        if (quantite == null || quantite <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        if (prixUnitaire == null || prixUnitaire <= 0) {
+            throw new IllegalArgumentException("Unit price must be positive");
+        }
+    }
+
+    /**
+     * Check if the requested quantity is available in stock.
+     */
+    public boolean isQuantityAvailable(Integer availableStock) {
+        if (availableStock == null || quantite == null) {
+            return false;
+        }
+        return quantite <= availableStock;
     }
 
     // Getters and Setters

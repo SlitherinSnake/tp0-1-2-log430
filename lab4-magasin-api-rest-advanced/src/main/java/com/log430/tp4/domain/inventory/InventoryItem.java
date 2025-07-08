@@ -59,36 +59,93 @@ public class InventoryItem {
     }
 
     // Business methods
-    public boolean hasStock(int quantite) {
-        return stockCentral >= quantite;
-    }
-
-    public void decreaseStock(int quantite) {
-        if (!hasStock(quantite)) {
-            throw new IllegalArgumentException("Stock central insuffisant. Disponible: " + stockCentral + ", Demandé: " + quantite);
-        }
-        stockCentral -= quantite;
-        dateDerniereMaj = LocalDate.now();
-    }
-
-    public void increaseStock(int quantite) {
-        if (quantite < 0) {
-            throw new IllegalArgumentException("La quantité à ajouter doit être positive");
-        }
-        stockCentral += quantite;
-        dateDerniereMaj = LocalDate.now();
-    }
-
+    /**
+     * Check if item needs restock based on current stock vs minimum stock.
+     */
     public boolean needsRestock() {
         return stockCentral <= stockMinimum;
     }
 
-    public Double calculateValue() {
-        return prix * stockCentral;
+    /**
+     * Reduce stock by specified quantity.
+     * Throws exception if trying to reduce more than available.
+     */
+    public void reduceStock(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        if (stockCentral == null || stockCentral < quantity) {
+            throw new IllegalArgumentException("Insufficient stock");
+        }
+        this.stockCentral -= quantity;
+        this.dateDerniereMaj = LocalDate.now();
     }
 
-    public boolean isAvailable() {
-        return isActive && stockCentral > 0;
+    /**
+     * Increase stock by specified quantity.
+     */
+    public void increaseStock(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        if (stockCentral == null) {
+            stockCentral = 0;
+        }
+        this.stockCentral += quantity;
+        this.dateDerniereMaj = LocalDate.now();
+    }
+
+    /**
+     * Deactivate the inventory item.
+     */
+    public void deactivate() {
+        this.isActive = false;
+    }
+
+    /**
+     * Activate the inventory item.
+     */
+    public void activate() {
+        this.isActive = true;
+    }
+
+    /**
+     * Update stock to specific value.
+     */
+    public void updateStock(Integer newStock) {
+        if (newStock == null || newStock < 0) {
+            throw new IllegalArgumentException("Stock cannot be negative");
+        }
+        this.stockCentral = newStock;
+        this.dateDerniereMaj = LocalDate.now();
+    }
+
+    /**
+     * Validate the inventory item data.
+     */
+    public void validate() {
+        if (nom == null || nom.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        if (categorie == null || categorie.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category cannot be null or empty");
+        }
+        if (prix == null || prix < 0) {
+            throw new IllegalArgumentException("Price cannot be null or negative");
+        }
+        if (stockCentral == null || stockCentral < 0) {
+            throw new IllegalArgumentException("Stock cannot be null or negative");
+        }
+    }
+
+    /**
+     * Calculate total value of this inventory item (price * stock).
+     */
+    public Double calculateTotalValue() {
+        if (prix == null || stockCentral == null) {
+            return 0.0;
+        }
+        return prix * stockCentral;
     }
 
     // Getters and Setters
