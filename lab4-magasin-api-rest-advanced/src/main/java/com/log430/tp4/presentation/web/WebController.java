@@ -83,10 +83,12 @@ public class WebController {
     // Employee-only pages
     
     /**
-     * Employee dashboard.
+     * Employee dashboard root - show dashboard page directly (no redirect).
      */
     @GetMapping("/admin/dashboard")
-    public String adminDashboard(Model model) {
+    public String adminDashboardRoot(Model model) {
+        model.addAttribute("inventoryItems", inventoryService.getAllActiveItems());
+        model.addAttribute("categories", inventoryService.getDistinctCategories());
         model.addAttribute("totalItems", inventoryService.getAllActiveItems().size());
         model.addAttribute("totalValue", inventoryService.calculateTotalInventoryValue());
         model.addAttribute("itemsNeedingRestock", inventoryService.getItemsNeedingRestock().size());
@@ -94,13 +96,12 @@ public class WebController {
     }
 
     /**
-     * Employee product management.
+     * Employee products management dashboard (legacy route, optional).
      */
-    @GetMapping("/admin/products")
-    public String adminProducts(Model model) {
-        model.addAttribute("inventoryItems", inventoryService.getAllActiveItems());
-        model.addAttribute("categories", inventoryService.getDistinctCategories());
-        return "admin/products";
+    @GetMapping("/admin/dashboard/products")
+    public String adminDashboardProducts(Model model) {
+        // Optionally keep for backward compatibility, or remove if not needed
+        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -186,5 +187,15 @@ public class WebController {
     @GetMapping("/panier")
     public String panier() {
         return "redirect:/cart";
+    }
+
+    /**
+     * Admin product management page.
+     */
+    @GetMapping("/admin/products")
+    public String adminProducts(Model model) {
+        model.addAttribute("products", inventoryService.getAllActiveItems());
+        model.addAttribute("categories", inventoryService.getDistinctCategories());
+        return "admin/products";
     }
 }
