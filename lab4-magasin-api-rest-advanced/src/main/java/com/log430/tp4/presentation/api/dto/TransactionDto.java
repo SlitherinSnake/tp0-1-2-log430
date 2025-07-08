@@ -21,6 +21,9 @@ public class TransactionDto {
     private Long personnelId;
     private Long storeId;
 
+    private static final String DEFAULT_CLIENT = "Client";
+    private static final String UNKNOWN = "UNKNOWN";
+
     // Default constructor
     public TransactionDto() {}
 
@@ -29,17 +32,37 @@ public class TransactionDto {
         this.id = transaction.getId();
         this.date = transaction.getDateTransaction() != null ? 
                    transaction.getDateTransaction().toString() : null;
-        this.clientName = "Client"; // Default client name
-        this.client = "Client"; // Default client name
+        this.clientName = DEFAULT_CLIENT;
+        this.client = DEFAULT_CLIENT;
         this.items = transaction.getItems() != null ? 
                     transaction.getItems().stream()
                         .map(TransactionItemDto::fromEntity)
                         .toList() : List.of();
         this.total = transaction.getMontantTotal();
         this.status = transaction.getStatut() != null ? 
-                     transaction.getStatut().name() : "UNKNOWN";
+                     transaction.getStatut().name() : UNKNOWN;
         this.type = transaction.getTypeTransaction() != null ? 
-                   transaction.getTypeTransaction().name() : "UNKNOWN";
+                   transaction.getTypeTransaction().name() : UNKNOWN;
+        this.personnelId = transaction.getPersonnelId();
+        this.storeId = transaction.getStoreId();
+    }
+
+    // Constructor from domain entity with product name resolver
+    public TransactionDto(Transaction transaction, java.util.function.LongFunction<String> productNameResolver) {
+        this.id = transaction.getId();
+        this.date = transaction.getDateTransaction() != null ? 
+                   transaction.getDateTransaction().toString() : null;
+        this.clientName = DEFAULT_CLIENT;
+        this.client = DEFAULT_CLIENT;
+        this.items = transaction.getItems() != null ? 
+                    transaction.getItems().stream()
+                        .map(item -> TransactionItemDto.fromEntity(item, productNameResolver.apply(item.getInventoryItemId())))
+                        .toList() : List.of();
+        this.total = transaction.getMontantTotal();
+        this.status = transaction.getStatut() != null ? 
+                     transaction.getStatut().name() : UNKNOWN;
+        this.type = transaction.getTypeTransaction() != null ? 
+                   transaction.getTypeTransaction().name() : UNKNOWN;
         this.personnelId = transaction.getPersonnelId();
         this.storeId = transaction.getStoreId();
     }
@@ -47,6 +70,11 @@ public class TransactionDto {
     // Static factory method
     public static TransactionDto fromEntity(Transaction transaction) {
         return new TransactionDto(transaction);
+    }
+
+    // Static factory method with product name resolver
+    public static TransactionDto fromEntity(Transaction transaction, java.util.function.LongFunction<String> productNameResolver) {
+        return new TransactionDto(transaction, productNameResolver);
     }
 
     // Getters and Setters
@@ -90,13 +118,29 @@ public class TransactionDto {
 
         public TransactionItemDto() {}
 
-        public TransactionItemDto(TransactionItem item) {
+        /**
+         * Constructor using TransactionItem and product name.
+         */
+        public TransactionItemDto(TransactionItem item, String productName) {
             this.id = item.getId();
-            // TODO: Ideally, we should join with InventoryItem to get the actual product name
-            this.productName = "Produit ID " + item.getInventoryItemId(); // Default product name
+            this.productName = productName;
             this.quantity = item.getQuantite();
             this.price = item.getPrixUnitaire();
             this.sousTotal = item.getSousTotal();
+        }
+
+        /**
+         * Legacy constructor (kept for backward compatibility, uses default name).
+         */
+        public TransactionItemDto(TransactionItem item) {
+            this(item, "Produit ID " + item.getInventoryItemId());
+        }
+
+        /**
+         * Factory method to create DTO with product name.
+         */
+        public static TransactionItemDto fromEntity(TransactionItem item, String productName) {
+            return new TransactionItemDto(item, productName);
         }
 
         public static TransactionItemDto fromEntity(TransactionItem item) {

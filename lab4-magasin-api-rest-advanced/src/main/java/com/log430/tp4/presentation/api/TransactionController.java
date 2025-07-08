@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.log430.tp4.application.service.InventoryService;
 import com.log430.tp4.domain.transaction.Transaction;
 import com.log430.tp4.infrastructure.repository.TransactionRepository;
 import com.log430.tp4.presentation.api.dto.TransactionDto;
@@ -25,9 +26,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @CrossOrigin(origins = "*")
 public class TransactionController {
     private final TransactionRepository transactionRepository;
+    private final InventoryService inventoryService;
 
-    public TransactionController(TransactionRepository transactionRepository) {
+    public TransactionController(TransactionRepository transactionRepository, InventoryService inventoryService) {
         this.transactionRepository = transactionRepository;
+        this.inventoryService = inventoryService;
     }
 
     @Operation(summary = "Créer une vente", description = "Crée une nouvelle transaction de vente.")
@@ -67,7 +70,9 @@ public class TransactionController {
     public List<TransactionDto> getAllTransactions() {
         List<Transaction> transactions = transactionRepository.findAll();
         return transactions.stream()
-                .map(TransactionDto::fromEntity)
+                .map(tx -> TransactionDto.fromEntity(tx, id -> inventoryService.getItemById(id)
+                        .map(com.log430.tp4.domain.inventory.InventoryItem::getNom)
+                        .orElse("Article inconnu")))
                 .toList();
     }
 }
