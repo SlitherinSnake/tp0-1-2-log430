@@ -1,4 +1,32 @@
-# 3. Contexte du système
+# 3. C## 3.1. Contexte métier
+
+Notre application est un système de caisse pour un magasin de quartier avec architecture web centralisée. Il permet aux différents utilisateurs d'effectuer les opérations suivantes selon leurs rôles :
+
+**Employés :**
+- de rechercher un produit (par identifiant, nom ou catégorie),
+- d'enregistrer une vente (sélection des produits et calcul du total),
+- de gérer les retours (annuler une vente),
+- de consulter l'état du stock des produits.
+
+**Administrateurs :**
+- de gérer le catalogue produits (CRUD),
+- de consulter les rapports de ventes,
+- de gérer les utilisateurs et leurs rôles.
+
+**Viewers (lecture seule) :**
+- de consulter le stock et les tableaux de bord.
+
+Les utilisateurs accèdent au système via une interface web moderne avec des vues Thymeleaf et une API REST pour les intégrations externes.
+
+## 3.2. Contexte technique
+
+L'application s'exécute dans un environnement conteneurisé avec Docker. Elle suit une architecture 3-tier :
+
+- Le **client** est un navigateur web accédant aux vues Thymeleaf ou une application externe consommant l'API REST.
+- Le **serveur d'application** est Spring Boot exposant à la fois des vues serveur-side et une API REST stateless.
+- La **base de données** est PostgreSQL centralisée, accédée via Spring Data JPA/Hibernate.
+
+La communication web utilise HTTPS avec authentification par session (vues web) ou JWT (API REST). L'orchestration se fait via Docker Compose.
 
 La portée et le contexte du système, comme leur nom l'indique, délimitent votre système (c'est-à-dire votre portée) de tous ses partenaires de communication (systèmes voisins et utilisateurs, c'est-à-dire le contexte de votre système). Ils précisent ainsi les interfaces externes.
 

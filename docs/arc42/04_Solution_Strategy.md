@@ -1,23 +1,41 @@
-# 4. Stratégie de solution
+# 4. Stratégie de soluti• Architecture **DDD 4-tier** :
 
-Résumé des décisions clés qui structurent l’architecture du système.
+  1. Presentation (Web MVC + REST API) →
+  2. Application (Services applicatifs) →
+  3. Domain (Entités métier, logique domaine) →
+  4. Infrastructure (Repositories, PostgreSQL).
+
+• **Entités unifiées** : Personnel (Employee + User), Transaction (Sale + Return), InventoryItem (Product + Stock).
+
+• Couche sécurité transversale :
+  – Session-based auth pour les vues Thymeleaf
+  – JWT pour /api/** (stateless).
+
+• Organisation par agrégats de domaine : transaction, inventory, personnel, store.
+
+• Déploiement conteneurisé :
+  spring-app ↔ PostgreSQL.
+  Scalabilité horizontale possible via load-balancer.
+
+• Architecture stateless pour l'API permettant l'intégration externe et mobile.écisions clés qui structurent l’architecture du système.
 
 ## 4.1. Choix technologiques
 
 | Catégorie         | Ancien          | Nouveau                                         |
 | ----------------- | --------------- | ---------------------------------------------------------------- |
-| Langage           | Java            | idem                                                 |
-| Framework Web     | —               | **Spring Boot (MVC + REST)**                                   |
-| Accès BD          | Hibernate (JPA) | **Spring Data JPA** (Hibernate)                      |
-| Base de données   | SQLite locale   | **PostgreSQL**    |
-| Sécurité          | —               | **Spring Security**, JWT                        |
-| Documentation API | —               | **OpenAPI / Swagger-UI**                                         |
-| Tests             | JUnit           | JUnit 5 + Spring Security Test + Testcontainers (PostgreSQL)     |
-| Build             | Maven           | idem                           |
-| CI/CD             | GitHub Actions  | idem     |
-| Conteneurs        | Docker          | idem |
-| UI                | CLI             | **Thymeleaf**                                    |
-| Observabilité     | —               | Micrometer + Actuator + Prometheus/Grafana (Lab 4)               |
+| Langage           | Java            | idem (Java 21)                                                   |
+| Framework Web     | —               | **Spring Boot 3 (MVC + REST)**                                  |
+| Architecture      | MVC simple      | **Domain-Driven Design (DDD)**                                  |
+| Accès BD          | Hibernate (JPA) | **Spring Data JPA** (Hibernate)                                 |
+| Base de données   | SQLite locale   | **PostgreSQL conteneurisé**                                     |
+| Sécurité          | —               | **Spring Security**, Sessions + JWT                             |
+| Documentation API | —               | **OpenAPI / Swagger-UI**                                        |
+| Tests             | JUnit           | JUnit 5 + Spring Security Test                                  |
+| Build             | Maven           | idem                                                             |
+| CI/CD             | GitHub Actions  | idem                                                             |
+| Conteneurs        | Docker          | **Docker Compose**                                              |
+| UI                | CLI             | **Thymeleaf + JavaScript moderne**                              |
+| Observabilité     | —               | Micrometer + Actuator + Prometheus/Grafana                      |
 
 ## 4.2. Architecture globale
 

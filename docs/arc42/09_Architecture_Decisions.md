@@ -1,4 +1,12 @@
-# 9. Décisions d’architecture
+# 9. Déci| ADR 002 | Séparation des responsabilités (pattern MVC)                 | `docs/adr/002-separation-responsabilites.md` | **Superseded** par ADR 007 |
+
+| ADR 003 | Stratégie de persistance (ORM JPA + Hibernate)               | `docs/adr/003-strategie-persistance.md`   | Accepted |
+| ADR 004 | Choix initial de la base de données locale (SQLite)          | `docs/adr/004-choix-bd.md`                | **Superseded** par ADR 006 |
+| ADR 005 | **Sécurisation : JWT + Sessions vs Sessions only**            | `docs/adr/005-jwt-vs-session.md`          | Accepted |
+| ADR 006 | **Migration vers PostgreSQL centralisé (≠ SQLite)**           | `docs/adr/006-postgresql-centralise.md`   | Accepted |
+| ADR 007 | **Migration vers Domain-Driven Design (DDD)**                | `docs/adr/007-architecture-ddd.md`        | Accepted |
+
+> *ADR 002 et ADR 004 sont conservées pour l'historique mais marquées « Superseded » : ces décisions sont remplacées par des approches plus récentes.*’architecture
 
 Cette section référence les principales décisions architecturales prises lors du développement du système. Chaque décision est documentée sous forme d’ADR (Architecture Decision Record), selon le format de Michael Nygard.
 
