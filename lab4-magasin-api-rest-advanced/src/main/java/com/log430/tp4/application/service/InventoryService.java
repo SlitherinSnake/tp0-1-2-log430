@@ -35,10 +35,12 @@ public class InventoryService {
      * Get all active inventory items.
      */
     @Transactional(readOnly = true)
-    @Cacheable("inventoryAll")
+    // @Cacheable("inventoryAll") // Temporarily disabled for debugging
     public List<InventoryItem> getAllActiveItems() {
         log.info("Fetching all active inventory items");
-        return inventoryItemRepository.findByIsActiveTrue();
+        List<InventoryItem> items = inventoryItemRepository.findByIsActiveTrue();
+        log.info("Found {} active items in database", items.size());
+        return items;
     }
 
     /**
