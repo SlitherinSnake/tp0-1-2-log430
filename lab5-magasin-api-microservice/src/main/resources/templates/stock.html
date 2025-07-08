@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xml:lang="fr" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Stock - Magasin DDD</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-store"></i> Magasin DDD
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">Dashboard</a>
+                <a class="nav-link active" href="/stock">Stock</a>
+                <a class="nav-link" href="/panier">Ventes</a>
+                <a class="nav-link" href="/rapport">Rapports</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1><i class="fas fa-warehouse"></i> Gestion du Stock</h1>
+                <p class="text-muted">Gérez votre inventaire centralisé</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Rechercher un produit...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">Toutes les catégories</option>
+                    <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list"></i> Inventaire</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nom</th>
+                                        <th>Catégorie</th>
+                                        <th>Prix</th>
+                                        <th>Stock Central</th>
+                                        <th>Stock Min.</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${inventoryItems}">
+                                        <td th:text="${item.id}"></td>
+                                        <td th:text="${item.nom}"></td>
+                                        <td>
+                                            <span class="badge bg-secondary" th:text="${item.categorie}"></span>
+                                        </td>
+                                        <td th:text="${#numbers.formatCurrency(item.prix)}"></td>
+                                        <td>
+                                            <span th:if="${item.stockCentral > item.stockMinimum}" class="badge bg-success" th:text="${item.stockCentral}"></span>
+                                            <span th:if="${item.stockCentral <= item.stockMinimum}" class="badge bg-warning" th:text="${item.stockCentral}"></span>
+                                        </td>
+                                        <td th:text="${item.stockMinimum}"></td>
+                                        <td>
+                                            <span th:if="${item.isAvailable()}" class="badge bg-success">Disponible</span>
+                                            <span th:if="${!item.isAvailable()}" class="badge bg-danger">Indisponible</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary" th:onclick="'editItem(' + ${item.id} + ')'">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" th:onclick="'adjustStock(' + ${item.id} + ')'">
+                                                    <i class="fas fa-boxes"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter un nouvel article</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addItemForm">
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom du produit</label>
+                            <input type="text" class="form-control" id="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="categorie" class="form-label">Catégorie</label>
+                            <input type="text" class="form-control" id="categorie" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="prix" class="form-label">Prix</label>
+                            <input type="number" step="0.01" class="form-control" id="prix" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stockCentral" class="form-label">Stock initial</label>
+                            <input type="number" class="form-control" id="stockCentral" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="addItem()">Ajouter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Category filter
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            const category = this.value;
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const categoryCell = row.cells[2].textContent;
+                row.style.display = !category || categoryCell.includes(category) ? '' : 'none';
+            });
+        });
+
+        // Add item function
+        function addItem() {
+            const data = {
+                nom: document.getElementById('nom').value,
+                categorie: document.getElementById('categorie').value,
+                prix: parseFloat(document.getElementById('prix').value),
+                stockCentral: parseInt(document.getElementById('stockCentral').value)
+            };
+
+            fetch('/api/inventory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Article ajouté avec succès!');
+                location.reload();
+            })
+            .catch(error => {
+                alert('Erreur lors de l\'ajout de l\'article');
+                console.error('Error:', error);
+            });
+        }
+
+        function editItem(id) {
+            alert('Fonction d\'édition à implémenter pour l\'ID: ' + id);
+        }
+
+        function adjustStock(id) {
+            const newStock = prompt('Nouveau stock pour l\'article ID ' + id + ':');
+            if (newStock && !isNaN(newStock)) {
+                fetch(`/api/inventory/${id}/stock`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({stock: parseInt(newStock)})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Stock mis à jour avec succès!');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Erreur lors de la mise à jour du stock');
+                    console.error('Error:', error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

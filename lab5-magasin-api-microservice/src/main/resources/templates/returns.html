@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retours - Magasin en ligne</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .return-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s;
+        }
+        .return-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .return-form {
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .empty-returns {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" aria-label="Navigation principale">
+        <div class="container">
+            <a class="navbar-brand" href="/products">
+                <i class="fas fa-store"></i> Magasin en ligne
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="/products">
+                        <i class="fas fa-shopping-bag"></i> Produits
+                    </a>
+                    <a class="nav-link" href="/sales">
+                        <i class="fas fa-receipt"></i> Mes achats
+                    </a>
+                    <a class="nav-link active" href="/returns">
+                        <i class="fas fa-undo"></i> Retours
+                    </a>
+                </div>
+                
+                <div class="navbar-nav">
+                    <a class="nav-link position-relative" href="/cart">
+                        <i class="fas fa-shopping-cart"></i> Panier
+                        <span class="position-absolute top-0 start-100 translate-middle badge bg-danger" id="cartCount">
+                            0
+                        </span>
+                    </a>
+                    <a class="nav-link" href="/login">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1><i class="fas fa-undo"></i> Gestion des Retours</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/products">Produits</a></li>
+                        <li class="breadcrumb-item active">Retours</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="returnTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="new-return-tab" data-bs-toggle="tab" data-bs-target="#new-return" type="button" role="tab">
+                    <i class="fas fa-plus"></i> Nouveau retour
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="my-returns-tab" data-bs-toggle="tab" data-bs-target="#my-returns" type="button" role="tab">
+                    <i class="fas fa-list"></i> Mes retours
+                </button>
+            </li>
+         
+        </ul>
+
+        <div class="tab-content" id="returnTabsContent">
+            <!-- New Return Tab -->
+            <div class="tab-pane fade show active" id="new-return" role="tabpanel">
+                <div class="return-form p-4">
+                    <h4><i class="fas fa-plus"></i> Demande de retour</h4>
+                    <hr>
+                    
+                    <form id="returnForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="orderSelect" class="form-label">Numéro de commande *</label>
+                                <select class="form-select" id="orderSelect" required>
+                                    <option value="">Sélectionnez une commande...</option>
+                                </select>
+                                <div class="form-text">Seules les commandes livrées sont éligibles au retour.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="itemSelect" class="form-label">Article à retourner *</label>
+                                <select class="form-select" id="itemSelect" required disabled>
+                                    <option value="">Sélectionnez d'abord une commande</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="returnReason" class="form-label">Motif du retour *</label>
+                                <select class="form-select" id="returnReason" required>
+                                    <option value="">Sélectionnez un motif...</option>
+                                    <option value="defective">Produit défectueux</option>
+                                    <option value="wrong_item">Article incorrect</option>
+                                    <option value="not_as_described">Non conforme à la description</option>
+                                    <option value="damaged">Endommagé à la livraison</option>
+                                    <option value="changed_mind">Changement d'avis</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="returnQuantity" class="form-label">Quantité *</label>
+                                <input type="number" class="form-control" id="returnQuantity" min="1" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="returnDescription" class="form-label">Description détaillée *</label>
+                            <textarea class="form-control" id="returnDescription" rows="4" required
+                                placeholder="Décrivez le problème ou la raison du retour en détail..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="returnImages" class="form-label">Photos (optionnel)</label>
+                            <input type="file" class="form-control" id="returnImages" multiple accept="image/*">
+                            <div class="form-text">Joignez des photos si le produit est défectueux ou endommagé.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="returnConditions" required>
+                                <label class="form-check-label" for="returnConditions">
+                                    J'ai lu et j'accepte les <a href="#" data-bs-toggle="tab" data-bs-target="#return-policy">conditions de retour</a> *
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-undo"></i> Réinitialiser
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Soumettre la demande
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- My Returns Tab -->
+            <div class="tab-pane fade" id="my-returns" role="tabpanel">
+                <div id="returnsList">
+                    <!-- Returns will be loaded here -->
+                </div>
+                
+                <div id="emptyReturns" class="empty-returns" style="display: none;">
+                    <i class="fas fa-undo fa-3x mb-3"></i>
+                    <h3>Aucun retour en cours</h3>
+                    <p>Vous n'avez aucune demande de retour en cours.</p>
+                    <button class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#new-return">
+                        <i class="fas fa-plus"></i> Faire une demande de retour
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mock data for orders and returns
+        let deliveredOrders = [
+            {
+                id: 'ORD-2024-001',
+                date: new Date('2024-01-15'),
+                items: [
+                    { id: 1, name: 'Smartphone XYZ', price: 299.99, quantity: 1 },
+                    { id: 2, name: 'Coque de protection', price: 19.99, quantity: 2 }
+                ]
+            },
+            {
+                id: 'ORD-2024-002',
+                date: new Date('2024-01-10'),
+                items: [
+                    { id: 3, name: 'Casque audio', price: 79.99, quantity: 2 }
+                ]
+            }
+        ];
+        
+        let returns = [
+            {
+                id: 'RET-2024-001',
+                orderId: 'ORD-2024-001',
+                item: 'Coque de protection',
+                reason: 'Produit défectueux',
+                status: 'pending',
+                date: new Date(),
+                quantity: 1
+            }
+        ];
+        
+        function populateOrderSelect() {
+            const orderSelect = document.getElementById('orderSelect');
+            orderSelect.innerHTML = '<option value="">Sélectionnez une commande...</option>';
+            
+            deliveredOrders.forEach(order => {
+                const option = document.createElement('option');
+                option.value = order.id;
+                option.textContent = `${order.id} - ${order.date.toLocaleDateString('fr-FR')}`;
+                orderSelect.appendChild(option);
+            });
+        }
+        
+        function populateItemSelect(orderId) {
+            const itemSelect = document.getElementById('itemSelect');
+            const quantityInput = document.getElementById('returnQuantity');
+            
+            if (!orderId) {
+                itemSelect.innerHTML = '<option value="">Sélectionnez d\'abord une commande</option>';
+                itemSelect.disabled = true;
+                quantityInput.value = '';
+                return;
+            }
+            
+            const order = deliveredOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            itemSelect.innerHTML = '<option value="">Sélectionnez un article...</option>';
+            order.items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.name} - ${item.price.toFixed(2)} $ (Qté: ${item.quantity})`;
+                option.dataset.maxQuantity = item.quantity;
+                itemSelect.appendChild(option);
+            });
+            
+            itemSelect.disabled = false;
+        }
+        
+        function updateQuantityLimit() {
+            const itemSelect = document.getElementById('itemSelect');
+            const quantityInput = document.getElementById('returnQuantity');
+            
+            if (itemSelect.selectedOptions.length > 0) {
+                const maxQuantity = itemSelect.selectedOptions[0].dataset.maxQuantity;
+                quantityInput.max = maxQuantity;
+                quantityInput.value = Math.min(quantityInput.value || 1, maxQuantity);
+            }
+        }
+        
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': 'bg-warning text-dark',
+                'approved': 'bg-success',
+                'rejected': 'bg-danger',
+                'completed': 'bg-info'
+            };
+            
+            const labels = {
+                'pending': 'En attente',
+                'approved': 'Approuvé',
+                'rejected': 'Rejeté',
+                'completed': 'Terminé'
+            };
+            
+            return `<span class="badge ${badges[status]} status-badge">${labels[status]}</span>`;
+        }
+        
+        function displayReturns() {
+            const returnsListContainer = document.getElementById('returnsList');
+            const emptyReturnsDiv = document.getElementById('emptyReturns');
+            
+            if (returns.length === 0) {
+                returnsListContainer.style.display = 'none';
+                emptyReturnsDiv.style.display = 'block';
+                return;
+            }
+            
+            returnsListContainer.style.display = 'block';
+            emptyReturnsDiv.style.display = 'none';
+            
+            returnsListContainer.innerHTML = returns.map(returnItem => `
+                <div class="return-card">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <strong>Retour ${returnItem.id}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Commande ${returnItem.orderId}</small>
+                            </div>
+                            <div class="col-md-3">
+                                ${getStatusBadge(returnItem.status)}
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <small class="text-muted">${returnItem.date.toLocaleDateString('fr-FR')}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>${returnItem.item}</h6>
+                                <p class="text-muted mb-1">Motif: ${returnItem.reason}</p>
+                                <p class="text-muted">Quantité: ${returnItem.quantity}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                ${returnItem.status === 'pending' ? `
+                                    <button class="btn btn-outline-danger btn-sm" onclick="cancelReturn('${returnItem.id}')">
+                                        <i class="fas fa-times"></i> Annuler
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-outline-primary btn-sm" onclick="viewReturnDetails('${returnItem.id}')">
+                                    <i class="fas fa-eye"></i> Détails
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function cancelReturn(returnId) {
+            if (confirm('Êtes-vous sûr de vouloir annuler cette demande de retour ?')) {
+                returns = returns.filter(r => r.id !== returnId);
+                displayReturns();
+                alert('Demande de retour annulée.');
+            }
+        }
+        
+        function viewReturnDetails(returnId) {
+            const returnItem = returns.find(r => r.id === returnId);
+            if (returnItem) {
+                alert(`Détails du retour ${returnItem.id}:\n\nArticle: ${returnItem.item}\nMotif: ${returnItem.reason}\nStatut: ${returnItem.status}\nQuantité: ${returnItem.quantity}`);
+            }
+        }
+        
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').textContent = totalItems;
+        }
+        
+        // Event listeners
+        document.getElementById('orderSelect').addEventListener('change', function() {
+            populateItemSelect(this.value);
+        });
+        
+        document.getElementById('itemSelect').addEventListener('change', updateQuantityLimit);
+        
+        document.getElementById('returnForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const orderSelect = document.getElementById('orderSelect');
+            const itemSelect = document.getElementById('itemSelect');
+            const reasonSelect = document.getElementById('returnReason');
+            const quantity = document.getElementById('returnQuantity').value;
+            const description = document.getElementById('returnDescription').value;
+            
+            if (!orderSelect.value || !itemSelect.value || !reasonSelect.value || !quantity || !description) {
+                alert('Veuillez remplir tous les champs obligatoires.');
+                return;
+            }
+            
+            const newReturn = {
+                id: `RET-2024-${String(returns.length + 1).padStart(3, '0')}`,
+                orderId: orderSelect.value,
+                item: itemSelect.selectedOptions[0].textContent.split(' - ')[0],
+                reason: reasonSelect.selectedOptions[0].textContent,
+                status: 'pending',
+                date: new Date(),
+                quantity: parseInt(quantity)
+            };
+            
+            returns.push(newReturn);
+            
+            alert('Demande de retour soumise avec succès ! Vous recevrez un email de confirmation.');
+            this.reset();
+            populateItemSelect('');
+            
+            // Switch to my returns tab
+            const myReturnsTab = new bootstrap.Tab(document.getElementById('my-returns-tab'));
+            myReturnsTab.show();
+            displayReturns();
+        });
+        
+        // Initialize
+        populateOrderSelect();
+        displayReturns();
+        updateCartCount();
+    </script>
+</body>
+</html>
