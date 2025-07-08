@@ -161,7 +161,17 @@ INSERT INTO inventory_items (nom, categorie, prix, description, stock_central, s
     ('iPhone 14', 'Electronique', 999.99, 'Smartphone Apple iPhone 14 128GB', 15, 3, CURRENT_DATE),
     ('Chaise de Bureau', 'Mobilier', 149.99, 'Chaise de bureau ergonomique avec support lombaire', 40, 10, CURRENT_DATE),
     ('Livre Java Programming', 'Livres', 49.99, 'Guide complet de programmation Java', 100, 20, CURRENT_DATE),
-    ('Cafetière Keurig', 'Electromenager', 89.99, 'Cafetière à dosettes Keurig K-Classic', 30, 8, CURRENT_DATE);
+    ('Cafetière Keurig', 'Electromenager', 89.99, 'Cafetière à dosettes Keurig K-Classic', 30, 8, CURRENT_DATE),
+    ('Samsung Galaxy S23', 'Electronique', 899.99, 'Smartphone Samsung Galaxy S23 256GB', 20, 4, CURRENT_DATE),
+    ('Table de conférence', 'Mobilier', 399.99, 'Grande table de réunion 10 places', 8, 2, CURRENT_DATE),
+    ('Aspirateur Dyson V11', 'Electromenager', 599.99, 'Aspirateur sans fil Dyson V11 Absolute', 12, 3, CURRENT_DATE),
+    ('Casque Bose QC45', 'Electronique', 349.99, 'Casque audio sans fil à réduction de bruit', 18, 5, CURRENT_DATE),
+    ('Imprimante HP LaserJet', 'Electronique', 229.99, 'Imprimante laser monochrome HP', 14, 3, CURRENT_DATE),
+    ('Bureau assis-debout', 'Mobilier', 299.99, 'Bureau réglable en hauteur électrique', 10, 2, CURRENT_DATE),
+    ('Livre Python Avancé', 'Livres', 59.99, 'Techniques avancées de programmation Python', 80, 15, CURRENT_DATE),
+    ('Grille-pain Moulinex', 'Electromenager', 39.99, 'Grille-pain 2 fentes inox', 25, 5, CURRENT_DATE),
+    ('Fauteuil ergonomique', 'Mobilier', 249.99, 'Fauteuil de bureau haut de gamme', 16, 4, CURRENT_DATE),
+    ('Tablette iPad Air', 'Electronique', 699.99, 'Apple iPad Air 10.9" 64GB', 13, 3, CURRENT_DATE);
 
 -- Insert store inventory (distribute some inventory to stores)
 INSERT INTO store_inventory (inventory_item_id, store_id, quantite_locale, date_derniere_maj) VALUES 
@@ -183,6 +193,34 @@ INSERT INTO store_inventory (inventory_item_id, store_id, quantite_locale, date_
     (3, 3, 10, CURRENT_DATE),
     (4, 3, 20, CURRENT_DATE),
     (5, 3, 12, CURRENT_DATE);
+
+-- Insert more store inventory for new products
+INSERT INTO store_inventory (inventory_item_id, store_id, quantite_locale, date_derniere_maj) VALUES 
+    (6, 1, 7, CURRENT_DATE), (7, 1, 2, CURRENT_DATE), (8, 1, 4, CURRENT_DATE), (9, 1, 6, CURRENT_DATE), (10, 1, 3, CURRENT_DATE),
+    (11, 1, 2, CURRENT_DATE), (12, 1, 10, CURRENT_DATE), (13, 1, 5, CURRENT_DATE), (14, 1, 3, CURRENT_DATE), (15, 1, 2, CURRENT_DATE),
+    (6, 2, 5, CURRENT_DATE), (7, 2, 1, CURRENT_DATE), (8, 2, 3, CURRENT_DATE), (9, 2, 4, CURRENT_DATE), (10, 2, 2, CURRENT_DATE),
+    (11, 2, 1, CURRENT_DATE), (12, 2, 8, CURRENT_DATE), (13, 2, 3, CURRENT_DATE), (14, 2, 2, CURRENT_DATE), (15, 2, 1, CURRENT_DATE),
+    (6, 3, 4, CURRENT_DATE), (7, 3, 1, CURRENT_DATE), (8, 3, 2, CURRENT_DATE), (9, 3, 3, CURRENT_DATE), (10, 3, 1, CURRENT_DATE),
+    (11, 3, 1, CURRENT_DATE), (12, 3, 6, CURRENT_DATE), (13, 3, 2, CURRENT_DATE), (14, 3, 1, CURRENT_DATE), (15, 3, 1, CURRENT_DATE);
+
+-- Insert demo transactions for dashboard activity and sales
+INSERT INTO transactions (type_transaction, date_transaction, montant_total, personnel_id, store_id, statut) VALUES
+    ('VENTE', CURRENT_DATE - INTERVAL '1 day', 1599.98, 2, 1, 'COMPLETEE'),
+    ('VENTE', CURRENT_DATE - INTERVAL '2 days', 999.99, 3, 2, 'COMPLETEE'),
+    ('VENTE', CURRENT_DATE - INTERVAL '3 days', 149.99, 2, 3, 'COMPLETEE'),
+    ('VENTE', CURRENT_DATE, 229.99, 3, 1, 'COMPLETEE'),
+    ('VENTE', CURRENT_DATE, 349.99, 2, 2, 'COMPLETEE'),
+    ('VENTE', CURRENT_DATE, 49.99, 3, 3, 'COMPLETEE');
+
+-- Insert demo transaction items
+INSERT INTO transaction_items (transaction_id, inventory_item_id, quantite, prix_unitaire, sous_total) VALUES
+    (1, 2, 1, 999.99, 999.99),
+    (1, 1, 1, 599.99, 599.99),
+    (2, 2, 1, 999.99, 999.99),
+    (3, 3, 1, 149.99, 149.99),
+    (4, 10, 1, 229.99, 229.99),
+    (5, 9, 1, 349.99, 349.99),
+    (6, 4, 1, 49.99, 49.99);
 
 -- =============================================
 -- Create indexes for performance
