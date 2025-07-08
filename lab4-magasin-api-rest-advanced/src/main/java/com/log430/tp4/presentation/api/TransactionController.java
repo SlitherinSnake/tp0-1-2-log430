@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-//import com.log430.tp4.application.service.InventoryService;
 import com.log430.tp4.domain.transaction.Transaction;
 import com.log430.tp4.infrastructure.repository.TransactionRepository;
 import com.log430.tp4.presentation.api.dto.TransactionDto;
@@ -26,18 +24,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/transactions")
 @CrossOrigin(origins = "*")
 public class TransactionController {
-    @Autowired
-    private TransactionRepository transactionRepository;
-    //@Autowired
-    //private InventoryService inventoryService;
+    private final TransactionRepository transactionRepository;
 
-    @SuppressWarnings("unchecked")
+    public TransactionController(TransactionRepository transactionRepository) {
+        this.transactionRepository = transactionRepository;
+    }
+
     @Operation(summary = "Créer une vente", description = "Crée une nouvelle transaction de vente.")
     @PostMapping
-    public ResponseEntity<?> createSale(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<Map<String, Object>> createSale(@RequestBody Map<String, Object> payload) {
         try {
             Long personnelId = Long.valueOf(payload.get("personnelId").toString());
             Long storeId = Long.valueOf(payload.get("storeId").toString());
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
             Double montantTotal = Double.valueOf(payload.get("montantTotal").toString());
 
@@ -58,7 +57,7 @@ public class TransactionController {
 
             transactionRepository.save(transaction);
             return ResponseEntity.ok(Map.of("success", true, "transactionId", transaction.getId()));
-        } catch (Exception e) {
+        } catch (NumberFormatException | NullPointerException | ClassCastException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
