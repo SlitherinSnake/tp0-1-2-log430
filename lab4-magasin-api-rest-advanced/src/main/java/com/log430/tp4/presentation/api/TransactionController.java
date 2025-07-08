@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.log430.tp4.application.service.InventoryService;
 import com.log430.tp4.domain.transaction.Transaction;
 import com.log430.tp4.infrastructure.repository.TransactionRepository;
+import com.log430.tp4.presentation.api.dto.TransactionDto;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Transactions", description = "Gestion des transactions (ventes)")
 @RestController
 @RequestMapping("/api/transactions")
 @CrossOrigin(origins = "*")
@@ -25,6 +31,7 @@ public class TransactionController {
     @Autowired
     private InventoryService inventoryService;
 
+    @Operation(summary = "Créer une vente", description = "Crée une nouvelle transaction de vente.")
     @PostMapping
     public ResponseEntity<?> createSale(@RequestBody Map<String, Object> payload) {
         try {
@@ -53,5 +60,14 @@ public class TransactionController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
+    }
+
+    @Operation(summary = "Lister toutes les transactions", description = "Retourne toutes les transactions (ventes, retours, etc.)")
+    @GetMapping
+    public List<TransactionDto> getAllTransactions() {
+        List<Transaction> transactions = transactionRepository.findAll();
+        return transactions.stream()
+                .map(TransactionDto::fromEntity)
+                .toList();
     }
 }

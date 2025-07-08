@@ -1,5 +1,6 @@
 package com.log430.tp4.presentation.api;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,16 +22,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.log430.tp4.application.service.InventoryService;
 import com.log430.tp4.domain.inventory.InventoryItem;
+import com.log430.tp4.presentation.api.dto.InventoryItemDto;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * REST API controller for inventory management.
  * Provides endpoints for inventory operations.
  */
+@Tag(name = "Inventaire", description = "Gestion de l'inventaire et des produits")
 @RestController
 @RequestMapping("/api/inventory")
 @CrossOrigin(origins = "*")
 public class InventoryController {
     private static final Logger log = LoggerFactory.getLogger(InventoryController.class);
+    private static final String QUANTITY_PARAM = "quantity";
 
     private final InventoryService inventoryService;
 
@@ -41,29 +48,73 @@ public class InventoryController {
     /**
      * Get all active inventory items.
      */
+    @Operation(summary = "Lister tous les produits", description = "Retourne tous les articles actifs de l'inventaire.")
     @GetMapping
-    public ResponseEntity<List<InventoryItem>> getAllItems() {
+    public ResponseEntity<List<InventoryItemDto>> getAllItems() {
         log.info("API call: getAllItems");
-        List<InventoryItem> items = inventoryService.getAllActiveItems();
-        return ResponseEntity.ok(items);
+        try {
+            List<InventoryItem> items = inventoryService.getAllActiveItems();
+            log.info("Found {} active inventory items", items.size());
+            
+            List<InventoryItemDto> dtos = items.stream()
+                    .map(InventoryItemDto::fromEntity)
+                    .toList();
+            
+            log.info("Successfully converted {} items to DTOs", dtos.size());
+            
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .header("Cache-Control", "no-cache")
+                    .body(dtos);
+        } catch (Exception e) {
+            log.error("Error in getAllItems: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get all inventory items as a direct list (alternative endpoint).
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<InventoryItemDto>> getAllItemsDirect() {
+        log.info("API call: getAllItemsDirect");
+        try {
+            List<InventoryItem> items = inventoryService.getAllActiveItems();
+            log.info("Found {} active inventory items", items.size());
+            
+            List<InventoryItemDto> dtos = new ArrayList<>();
+            for (InventoryItem item : items) {
+                dtos.add(new InventoryItemDto(item));
+            }
+            
+            log.info("Successfully converted {} items to DTOs", dtos.size());
+            return ResponseEntity.ok()
+                .header("Content-Type", "application/json; charset=utf-8")
+                .body(dtos);
+        } catch (Exception e) {
+            log.error("Error in getAllItemsDirect: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     /**
      * Get inventory item by ID.
      */
+    @Operation(summary = "Obtenir un produit par ID", description = "Retourne un article d'inventaire par son identifiant.")
     @GetMapping("/{id}")
-    public ResponseEntity<InventoryItem> getItemById(@PathVariable Long id) {
+    public ResponseEntity<InventoryItemDto> getItemById(@PathVariable Long id) {
         log.info("API call: getItemById with id {}", id);
         return inventoryService.getItemById(id)
-                .map(ResponseEntity::ok)
+                .map(item -> ResponseEntity.ok(InventoryItemDto.fromEntity(item)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /**
      * Create new inventory item.
      */
+    @Operation(summary = "Créer un produit", description = "Crée un nouvel article d'inventaire.")
     @PostMapping
-    public ResponseEntity<InventoryItem> createItem(@RequestBody CreateItemRequest request) {
+    public ResponseEntity<InventoryItemDto> createItem(@RequestBody CreateItemRequest request) {
         log.info("API call: createItem with name {}", request.nom());
         try {
             InventoryItem item = inventoryService.createItem(
@@ -72,7 +123,7 @@ public class InventoryController {
                     request.prix(),
                     request.stockCentral()
             );
-            return ResponseEntity.status(HttpStatus.CREATED).body(item);
+            return ResponseEntity.status(HttpStatus.CREATED).body(InventoryItemDto.fromEntity(item));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -81,8 +132,9 @@ public class InventoryController {
     /**
      * Update inventory item.
      */
+    @Operation(summary = "Mettre à jour un produit", description = "Met à jour les informations d'un article d'inventaire.")
     @PutMapping("/{id}")
-    public ResponseEntity<InventoryItem> updateItem(
+    public ResponseEntity<InventoryItemDto> updateItem(
             @PathVariable Long id,
             @RequestBody UpdateItemRequest request) {
         try {
@@ -93,7 +145,7 @@ public class InventoryController {
                     request.prix(),
                     request.description()
             );
-            return ResponseEntity.ok(item);
+            return ResponseEntity.ok(InventoryItemDto.fromEntity(item));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -104,8 +156,9 @@ public class InventoryController {
     /**
      * Update stock levels.
      */
+    @Operation(summary = "Mettre à jour le stock d'un produit", description = "Met à jour le stock central d'un article d'inventaire.")
     @PatchMapping("/{id}/stock")
-    public ResponseEntity<InventoryItem> updateStock(
+    public ResponseEntity<InventoryItemDto> updateStock(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
         try {
@@ -114,7 +167,7 @@ public class InventoryController {
                 return ResponseEntity.badRequest().build();
             }
             InventoryItem item = inventoryService.updateStock(id, newStock);
-            return ResponseEntity.ok(item);
+            return ResponseEntity.ok(InventoryItemDto.fromEntity(item));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -126,17 +179,17 @@ public class InventoryController {
      * Increase stock (receiving inventory).
      */
     @PatchMapping("/{id}/stock/increase")
-    public ResponseEntity<InventoryItem> increaseStock(
+    public ResponseEntity<InventoryItemDto> increaseStock(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
-        log.info("API call: increaseStock for id {} by {}", id, request.get("quantity"));
+        log.info("API call: increaseStock for id {} by {}", id, request.get(QUANTITY_PARAM));
         try {
-            Integer quantity = request.get("quantity");
+            Integer quantity = request.get(QUANTITY_PARAM);
             if (quantity == null || quantity <= 0) {
                 return ResponseEntity.badRequest().build();
             }
             InventoryItem item = inventoryService.increaseStock(id, quantity);
-            return ResponseEntity.ok(item);
+            return ResponseEntity.ok(InventoryItemDto.fromEntity(item));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -148,17 +201,17 @@ public class InventoryController {
      * Decrease stock (sales or transfers).
      */
     @PatchMapping("/{id}/stock/decrease")
-    public ResponseEntity<InventoryItem> decreaseStock(
+    public ResponseEntity<InventoryItemDto> decreaseStock(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
-        log.info("API call: decreaseStock for id {} by {}", id, request.get("quantity"));
+        log.info("API call: decreaseStock for id {} by {}", id, request.get(QUANTITY_PARAM));
         try {
-            Integer quantity = request.get("quantity");
+            Integer quantity = request.get(QUANTITY_PARAM);
             if (quantity == null || quantity <= 0) {
                 return ResponseEntity.badRequest().build();
             }
             InventoryItem item = inventoryService.decreaseStock(id, quantity);
-            return ResponseEntity.ok(item);
+            return ResponseEntity.ok(InventoryItemDto.fromEntity(item));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -168,27 +221,36 @@ public class InventoryController {
      * Get items needing restock.
      */
     @GetMapping("/restock-needed")
-    public ResponseEntity<List<InventoryItem>> getItemsNeedingRestock() {
+    public ResponseEntity<List<InventoryItemDto>> getItemsNeedingRestock() {
         List<InventoryItem> items = inventoryService.getItemsNeedingRestock();
-        return ResponseEntity.ok(items);
+        List<InventoryItemDto> dtos = items.stream()
+                .map(InventoryItemDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     /**
      * Get items by category.
      */
     @GetMapping("/category/{categorie}")
-    public ResponseEntity<List<InventoryItem>> getItemsByCategory(@PathVariable String categorie) {
+    public ResponseEntity<List<InventoryItemDto>> getItemsByCategory(@PathVariable String categorie) {
         List<InventoryItem> items = inventoryService.getItemsByCategory(categorie);
-        return ResponseEntity.ok(items);
+        List<InventoryItemDto> dtos = items.stream()
+                .map(InventoryItemDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     /**
      * Search items by name.
      */
     @GetMapping("/search")
-    public ResponseEntity<List<InventoryItem>> searchItems(@RequestParam String name) {
+    public ResponseEntity<List<InventoryItemDto>> searchItems(@RequestParam String name) {
         List<InventoryItem> items = inventoryService.searchItemsByName(name);
-        return ResponseEntity.ok(items);
+        List<InventoryItemDto> dtos = items.stream()
+                .map(InventoryItemDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     /**
@@ -212,6 +274,7 @@ public class InventoryController {
     /**
      * Deactivate inventory item.
      */
+    @Operation(summary = "Supprimer (désactiver) un produit", description = "Désactive un article d'inventaire par son identifiant.")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deactivateItem(@PathVariable Long id) {
         try {
@@ -219,6 +282,75 @@ public class InventoryController {
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Simple test endpoint to verify API is working.
+     */
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, Object>> test() {
+        log.info("API call: test endpoint");
+        Map<String, Object> response = Map.of(
+            "status", "OK",
+            "timestamp", System.currentTimeMillis(),
+            "message", "API is working"
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get count of inventory items.
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Object>> getItemCount() {
+        log.info("API call: getItemCount");
+        try {
+            List<InventoryItem> items = inventoryService.getAllActiveItems();
+            Map<String, Object> response = Map.of(
+                "count", items.size(),
+                "status", "OK"
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error getting item count: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get inventory items in batches for debugging.
+     */
+    @GetMapping("/batch")
+    public ResponseEntity<List<InventoryItemDto>> getItemsBatch(
+            @RequestParam(defaultValue = "0") int start,
+            @RequestParam(defaultValue = "5") int size) {
+        log.info("API call: getItemsBatch start={}, size={}", start, size);
+        try {
+            List<InventoryItem> allItems = inventoryService.getAllActiveItems();
+            log.info("Total items available: {}", allItems.size());
+            
+            int endIndex = Math.min(start + size, allItems.size());
+            List<InventoryItem> batchItems = allItems.subList(start, endIndex);
+            log.info("Processing batch from {} to {}, {} items", start, endIndex, batchItems.size());
+            
+            List<InventoryItemDto> dtos = new ArrayList<>();
+            for (int i = 0; i < batchItems.size(); i++) {
+                InventoryItem item = batchItems.get(i);
+                try {
+                    log.info("Converting item {} (ID: {})", i + start, item.getId());
+                    InventoryItemDto dto = InventoryItemDto.fromEntity(item);
+                    dtos.add(dto);
+                } catch (Exception e) {
+                    log.error("Error converting item {} (ID: {}) to DTO: {}", i + start, item.getId(), e.getMessage(), e);
+                }
+            }
+            
+            log.info("Successfully converted {} items in batch", dtos.size());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            log.error("Error in getItemsBatch: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
