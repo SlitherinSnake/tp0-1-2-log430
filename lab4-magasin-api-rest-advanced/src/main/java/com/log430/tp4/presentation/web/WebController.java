@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.log430.tp4.application.service.InventoryService;
 import com.log430.tp4.domain.transaction.Transaction;
-import com.log430.tp4.infrastructure.repository.PersonnelRepository;
 import com.log430.tp4.infrastructure.repository.TransactionRepository;
 
 /**
@@ -24,15 +23,14 @@ public class WebController {
 
     private final InventoryService inventoryService;
     private final TransactionRepository transactionRepository;
-    private final PersonnelRepository personnelRepository;
 
-    private static final String REDIRECT_LOGIN = "redirect:/login";
     private static final String MONEY_FORMAT = "%.2f $";
+    private static final String PRODUCTS_ATTR = "products";
+    private static final String CATEGORIES_ATTR = "categories";
 
-    public WebController(InventoryService inventoryService, TransactionRepository transactionRepository, PersonnelRepository personnelRepository) {
+    public WebController(InventoryService inventoryService, TransactionRepository transactionRepository) {
         this.inventoryService = inventoryService;
         this.transactionRepository = transactionRepository;
-        this.personnelRepository = personnelRepository;
     }
 
     /**
@@ -59,9 +57,9 @@ public class WebController {
      */
     @GetMapping("/products")
     public String products(Model model) {
-        model.addAttribute("products", inventoryService.getAllActiveItems());
-        model.addAttribute("categories", inventoryService.getDistinctCategories());
-        return "products";
+        model.addAttribute(PRODUCTS_ATTR, inventoryService.getAllActiveItems());
+        model.addAttribute(CATEGORIES_ATTR, inventoryService.getDistinctCategories());
+        return PRODUCTS_ATTR;
     }
 
     /**
@@ -88,20 +86,11 @@ public class WebController {
     @GetMapping("/admin/dashboard")
     public String adminDashboardRoot(Model model) {
         model.addAttribute("inventoryItems", inventoryService.getAllActiveItems());
-        model.addAttribute("categories", inventoryService.getDistinctCategories());
+        model.addAttribute(CATEGORIES_ATTR, inventoryService.getDistinctCategories());
         model.addAttribute("totalItems", inventoryService.getAllActiveItems().size());
         model.addAttribute("totalValue", inventoryService.calculateTotalInventoryValue());
         model.addAttribute("itemsNeedingRestock", inventoryService.getItemsNeedingRestock().size());
         return "admin/dashboard";
-    }
-
-    /**
-     * Employee products management dashboard (legacy route, optional).
-     */
-    @GetMapping("/admin/dashboard/products")
-    public String adminDashboardProducts(Model model) {
-        // Optionally keep for backward compatibility, or remove if not needed
-        return "redirect:/admin/dashboard";
     }
 
     /**
@@ -135,7 +124,6 @@ public class WebController {
      */
     @GetMapping("/admin/customers")
     public String adminCustomers(Model model) {
-        // In a real app, you would fetch customers from a service
         return "admin/customers";
     }
 
@@ -182,20 +170,12 @@ public class WebController {
     }
 
     /**
-     * Legacy panier route - redirects to cart.
-     */
-    @GetMapping("/panier")
-    public String panier() {
-        return "redirect:/cart";
-    }
-
-    /**
      * Admin product management page.
      */
     @GetMapping("/admin/products")
     public String adminProducts(Model model) {
-        model.addAttribute("products", inventoryService.getAllActiveItems());
-        model.addAttribute("categories", inventoryService.getDistinctCategories());
+        model.addAttribute(PRODUCTS_ATTR, inventoryService.getAllActiveItems());
+        model.addAttribute(CATEGORIES_ATTR, inventoryService.getDistinctCategories());
         return "admin/products";
     }
 }
