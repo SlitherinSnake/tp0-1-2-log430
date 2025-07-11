@@ -1,6 +1,0 @@
-target/
-.git/
-.vscode/
-*.log
-*.iml
-*.class
