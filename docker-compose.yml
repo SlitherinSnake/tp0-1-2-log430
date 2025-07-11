@@ -60,7 +60,7 @@ services:
     image: magasin-api-app  # ← Ajout essentiel pour CI/CD
     container_name: magasin-api-app
     build:
-      context: ./lab4-magasin-api-rest-advanced
+      context: ./lab5-magasin-api-microservice
       dockerfile: Dockerfile
     depends_on:
       - db
@@ -101,7 +101,7 @@ services:
     image: magasin-api-app
     container_name: magasin-api-app-1
     build:
-      context: ./lab4-magasin-api-rest-advanced
+      context: ./lab5-magasin-api-microservice
       dockerfile: Dockerfile
     depends_on:
       - db
@@ -125,7 +125,7 @@ services:
     image: magasin-api-app
     container_name: magasin-api-app-2
     build:
-      context: ./lab4-magasin-api-rest-advanced
+      context: ./lab5-magasin-api-microservice
       dockerfile: Dockerfile
     depends_on:
       - db
