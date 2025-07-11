@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: calc(100vh - 56px);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            margin: 2px 0;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.2);
+        }
+        .content-area {
+            background: #f8f9fa;
+            min-height: calc(100vh - 56px);
+        }
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .product-image {
+            height: 150px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .filters-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Global Navbar -->
+    <div th:replace="fragments/navbar :: navbar"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3">
+                <nav class="nav flex-column" aria-label="Menu d'administration">
+                    <a class="nav-link active" href="/admin/dashboard">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="/admin/products">
+                        <i class="fas fa-boxes"></i> Gestion Produits
+                    </a>          
+                    <a class="nav-link" href="#" onclick="showSalesModal()">
+                        <i class="fas fa-receipt"></i> Commandes
+                    </a>
+                    <a class="nav-link" href="#" onclick="showReportsModal()">
+                        <i class="fas fa-chart-bar"></i> Rapports
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 content-area p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+                        <p class="text-muted">Vue d'ensemble de votre magasin en ligne</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="refreshDashboard()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-primary h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-cubes fa-2x me-2"></i>
+                                    <div>
+                                        <h5 class="card-title mb-0">Total Articles</h5>
+                                    </div>
+                                </div>
+                                <h2 class="mb-0" id="totalItems" th:text="${totalItems}" aria-label="Nombre total d'articles">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-dark bg-warning h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-exclamation-triangle fa-2x me-2"></i>
+                                    <div>
+                                        <h5 class="card-title mb-0">Réapprovisionnement</h5>
+                                        <small>Articles en rupture</small>
+                                    </div>
+                                </div>
+                                <h2 class="mb-0" id="itemsNeedingRestock" th:text="${itemsNeedingRestock}" aria-label="Articles nécessitant réapprovisionnement">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-info h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-shopping-cart fa-2x me-2"></i>
+                                    <div>
+                                        <h5 class="card-title mb-0">Commandes</h5>
+                                        <small>Ce mois-ci</small>
+                                    </div>
+                                </div>
+                                <h2 class="mb-0" id="ordersCount" th:text="${ordersCount}" aria-label="Nombre de commandes">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-8 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header"><i class="fas fa-chart-line"></i> Ventes par jour (30 derniers jours)</div>
+                            <div class="card-body">
+                                <canvas id="salesChart" height="120"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header"><i class="fas fa-chart-pie"></i> Top Catégories</div>
+                            <div class="card-body">
+                                <canvas id="categoriesChart" height="180"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header"><i class="fas fa-history"></i> Activité Récente</div>
+                            <div class="card-body" id="recentActivity">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <i class="fas fa-shopping-cart text-success"></i> Nouvelle commande #ORD-2024-156<br>
+                                        <small class="text-muted">Il y a 2 min</small>
+                                    </li>
+                                </ul>
+                                <a href="#" class="btn btn-link btn-sm mt-2">Voir tout</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header"><i class="fas fa-star"></i> Produits Populaires</div>
+                            <div class="card-body" id="popularProducts">
+                                <ol class="list-group list-group-numbered">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Smartphone XYZ <span class="badge bg-primary rounded-pill">156 ventes • Stock: 23</span>
+                                    </li>
+                                </ol>
+                                <a href="#" class="btn btn-link btn-sm mt-2">Gérer</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Modal -->
+    <div class="modal fade" id="salesModal" tabindex="-1" aria-labelledby="salesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="salesModalLabel">Toutes les ventes (Commandes)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="salesTableContainer">
+                        <div class="text-center text-muted">Chargement des ventes...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div class="modal fade" id="reportsModal" tabindex="-1" aria-labelledby="reportsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportsModalLabel">Rapport consolidé des ventes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reportsTableContainer">
+                        <div class="text-center text-muted">Chargement du rapport...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Console logging utility for debugging
+        const Logger = {
+            info: (message, ...args) => console.log(`[ADMIN-INFO] ${message}`, ...args),
+            error: (message, ...args) => console.error(`[ADMIN-ERROR] ${message}`, ...args),
+            warn: (message, ...args) => console.warn(`[ADMIN-WARN] ${message}`, ...args),
+            debug: (message, ...args) => console.log(`[ADMIN-DEBUG] ${message}`, ...args),
+            api: (method, url, data) => console.log(`[API] ${method} ${url}`, data || '')
+        };
+
+        Logger.info('Admin dashboard loaded');
+
+        // --- API-based products data ---
+        let products = [];
+        let filteredProducts = [];
+        let currentPage = 1;
+        const productsPerPage = 8;
+
+        // Use the REST API endpoint for all product data fetches
+        async function fetchProducts() {
+            try {
+                Logger.api('GET', '/api/inventory/all');
+                Logger.info('Fetching products from API...');
+                
+                const response = await fetch('/api/inventory/all');
+                Logger.debug('API Response status:', response.status);
+                
+                if (!response.ok) {
+                    let errorMsg = 'Erreur lors du chargement des produits';
+                    try {
+                        const errorData = await response.json();
+                        Logger.error('API Error Response:', errorData);
+                        if (errorData && errorData.message) errorMsg = errorData.message;
+                    } catch (err) {
+                        Logger.error('Failed to parse error response:', err);
+                    }
+                    throw new Error(errorMsg);
+                }
+                
+                products = await response.json();
+                filteredProducts = [...products];
+                Logger.info(`Products loaded successfully: ${products.length} items`);
+                Logger.debug('Products data:', products);
+                
+                // Only call applyFilters if we're on a page with filter elements
+                if (document.getElementById('searchProducts')) {
+                    applyFilters();
+                }
+            } catch (e) {
+                console.error('Error fetching products:', e);
+                alert('Impossible de charger les produits: ' + e.message);
+            }
+        }
+
+        function getStockBadge(stock) {
+            if (stock === 0) return '<span class="badge bg-danger stock-badge">Rupture</span>';
+            if (stock < 10) return '<span class="badge bg-warning stock-badge">Stock faible</span>';
+            return '<span class="badge bg-success stock-badge">En stock</span>';
+        }
+        
+        function getStatusBadge(status) {
+            const badges = {
+                'active': 'bg-success',
+                'inactive': 'bg-secondary',
+                'draft': 'bg-warning text-dark'
+            };
+            
+            const labels = {
+                'active': 'Actif',
+                'inactive': 'Inactif',
+                'draft': 'Brouillon'
+            };
+            
+            return `<span class="badge ${badges[status]}">${labels[status]}</span>`;
+        }
+        
+        function displayProducts() {
+            const startIndex = (currentPage - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+            const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+            
+            const grid = document.getElementById('productsGrid');
+            
+            if (paginatedProducts.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h3>Aucun produit trouvé</h3>
+                        <p class="text-muted">Essayez de modifier vos critères de recherche</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = paginatedProducts.map(product => `
+                <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                    <div class="card product-card h-100 position-relative">
+                        ${getStockBadge(product.stock)}
+                        <div class="product-image">
+                            <i class="fas fa-box fa-3x text-muted"></i>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">${product.name}</h6>
+                            <p class="card-text text-muted small">${product.description}</p>
+                            <div class="mb-2">
+                                <span class="badge bg-light text-dark">${product.category}</span>
+                                ${getStatusBadge(product.status)}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong class="text-primary">${product.price.toFixed(2)} $</strong>
+                                <small class="text-muted">Stock: ${product.stock}</small>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="btn-group w-100" role="group">
+                                <button class="btn btn-outline-primary btn-sm" onclick="editProduct(${product.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="duplicateProduct(${product.id})">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteProduct(${product.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updatePagination();
+        }
+        
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    paginationHTML += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+            
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+        
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                displayProducts();
+            }
+        }
+        
+        function applyFilters() {
+            // Only apply filters if we're on a page with filter elements
+            const searchElement = document.getElementById('searchProducts');
+            if (!searchElement) return; // Skip if not on products page
+            
+            const searchTerm = searchElement.value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const stockFilter = document.getElementById('stockFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            filteredProducts = products.filter(product => {
+                const name = String(product.name || '');
+                const description = String(product.description || '');
+                const matchesSearch = name.toLowerCase().includes(searchTerm) ||
+                                      description.toLowerCase().includes(searchTerm);
+                const matchesCategory = !categoryFilter || product.category === categoryFilter;
+                const matchesStatus = !statusFilter || product.status === statusFilter;
+                
+                let matchesStock = true;
+                if (stockFilter === 'instock') matchesStock = product.stock > 10;
+                else if (stockFilter === 'lowstock') matchesStock = product.stock > 0 && product.stock <= 10;
+                else if (stockFilter === 'outofstock') matchesStock = product.stock === 0;
+                
+                return matchesSearch && matchesCategory && matchesStatus && matchesStock;
+            });
+            
+            // Sort products
+            filteredProducts.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name': return String(a.name || '').localeCompare(String(b.name || ''));
+                    case 'price': return a.price - b.price;
+                    case 'stock': return b.stock - a.stock;
+                    case 'created': return b.created - a.created;
+                    default: return 0;
+                }
+            });
+            
+            currentPage = 1;
+            displayProducts();
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchProducts').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('stockFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('sortBy').value = 'name';
+            applyFilters();
+        }
+        
+        function openProductModal(productId = null) {
+            const modal = document.getElementById('productModal');
+            const modalTitle = document.getElementById('productModalLabel');
+            const deleteBtn = document.getElementById('deleteProductBtn');
+            
+            if (productId) {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    modalTitle.textContent = 'Modifier le produit';
+                    deleteBtn.style.display = 'block';
+                    
+                    // Fill form with product data
+                    document.getElementById('productId').value = product.id;
+                    document.getElementById('productName').value = product.name;
+                    document.getElementById('productDescription').value = product.description;
+                    document.getElementById('productCategory').value = product.category;
+                    document.getElementById('productBrand').value = product.brand || '';
+                    document.getElementById('productPrice').value = product.price;
+                    document.getElementById('productStock').value = product.stock;
+                    document.getElementById('productStatus').value = product.status || '';
+                }
+            } else {
+                modalTitle.textContent = 'Nouveau produit';
+                deleteBtn.style.display = 'none';
+                document.getElementById('productForm').reset();
+                document.getElementById('productId').value = '';
+            }
+            
+            new bootstrap.Modal(modal).show();
+        }
+        
+        function editProduct(productId) {
+            Logger.info(`Edit product clicked for ID: ${productId}`);
+            openProductModal(productId);
+        }
+        
+        async function saveProduct() {
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('productName').value;
+            const description = document.getElementById('productDescription').value;
+            const category = document.getElementById('productCategory').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            
+            Logger.info('Save product called with data:', { id, name, description, category, price, stock });
+            
+            if (!name || !category || isNaN(price) || stock < 0 || isNaN(stock)) {
+                Logger.error('Validation failed: missing required fields');
+                alert('Veuillez remplir tous les champs obligatoires.');
+                return;
+            }
+            
+            try {
+                let method, url, body;
+                if (!id) {
+                    // CREATE: POST /api/inventory
+                    method = 'POST';
+                    url = '/api/inventory';
+                    body = JSON.stringify({
+                        nom: name,
+                        categorie: category,
+                        prix: price,
+                        stockCentral: stock
+                    });
+                    Logger.info('Creating new product');
+                } else {
+                    // UPDATE: PUT /api/inventory/{id}
+                    method = 'PUT';
+                    url = '/api/inventory/' + id;
+                    body = JSON.stringify({
+                        nom: name,
+                        categorie: category,
+                        prix: price,
+                        description: description
+                    });
+                    Logger.info(`Updating existing product ID: ${id}`);
+                }
+                
+                Logger.api(method, url, JSON.parse(body));
+                Logger.debug('Sending request...');
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body
+                });
+                
+                Logger.debug(`API Response status: ${response.status}`);
+                
+                if (!response.ok) {
+                    Logger.error(`API Error: ${response.status} ${response.statusText}`);
+                    throw new Error('Erreur lors de l\'enregistrement du produit');
+                }
+                
+                Logger.info('Product saved successfully');
+                
+                // If updating, update stock if changed
+                if (id && products) {
+                    const old = products.find(p => p.id == id);
+                    if (old && old.stock !== stock) {
+                        Logger.info(`Updating stock for product ${id} from ${old.stock} to ${stock}`);
+                        Logger.api('PATCH', `/api/inventory/${id}/stock`, { stock: stock });
+                        
+                        await fetch(`/api/inventory/${id}/stock`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ stock: stock })
+                        });
+                        
+                        Logger.info('Stock updated successfully');
+                    }
+                }
+                
+                await fetchProducts();
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                Logger.info('Product modal closed and products refreshed');
+                alert('Produit enregistré avec succès !');
+            } catch (e) {
+                Logger.error('Error saving product:', e);
+                alert('Erreur: ' + e.message);
+            }
+        }
+        async function duplicateProduct(productId) {
+            Logger.info(`Duplicating product with ID: ${productId}`);
+            
+            const product = products.find(p => p.id == productId);
+            if (product) {
+                Logger.debug('Original product found:', product);
+                
+                // Only send fields required by backend
+                const newProduct = {
+                    nom: product.name + ' (Copie)',
+                    categorie: product.category,
+                    prix: product.price,
+                    stockCentral: product.stock
+                };
+                
+                Logger.debug('New product payload:', newProduct);
+                Logger.api('POST', '/api/inventory', newProduct);
+                
+                try {
+                    const response = await fetch('/api/inventory', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newProduct)
+                    });
+                    
+                    Logger.debug(`Duplicate API Response status: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        Logger.error(`Failed to duplicate product: ${response.status} ${response.statusText}`);
+                        throw new Error('Erreur lors de la duplication');
+                    }
+                    
+                    Logger.info('Product duplicated successfully');
+                    await fetchProducts();
+                    alert('Produit dupliqué avec succès !');
+                } catch (e) {
+                    Logger.error('Error duplicating product:', e);
+                    alert('Erreur: ' + e.message);
+                }
+            } else {
+                Logger.error(`Product with ID ${productId} not found for duplication`);
+            }
+        }
+        async function confirmDeleteProduct(productId) {
+            const product = products.find(p => p.id == productId);
+            if (product && confirm(`Êtes-vous sûr de vouloir supprimer "${product.name}" ?`)) {
+                await deleteProductById(productId);
+            }
+        }
+        async function deleteProduct() {
+            const productId = document.getElementById('productId').value;
+            if (productId && confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+                await deleteProductById(productId);
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+            }
+        }
+        async function deleteProductById(productId) {
+            try {
+                const response = await fetch('/api/inventory/' + productId, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Erreur lors de la suppression');
+                await fetchProducts();
+                alert('Produit supprimé avec succès !');
+            } catch (e) {
+                alert('Erreur: ' + e.message);
+            }
+        }
+        function exportProducts() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "ID,Nom,Description,Catégorie,Marque,Prix,Stock,Statut\n"
+                + products.map(p => 
+                    `${p.id},"${p.name}","${p.description}",${p.category},${p.brand},${p.price},${p.stock},${p.status}`
+                ).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "produits.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        async function showSalesModal() {
+            const modal = new bootstrap.Modal(document.getElementById('salesModal'));
+            document.getElementById('salesTableContainer').innerHTML = '<div class="text-center text-muted">Chargement des ventes...</div>';
+            modal.show();
+            try {
+                const response = await fetch('/api/transactions');
+                if (!response.ok) {
+                    // Try to parse error JSON, fallback to generic error
+                    let errorMsg = 'Erreur lors du chargement des ventes';
+                    try {
+                        const errorData = await response.json();
+                        if (errorData && errorData.message) errorMsg = errorData.message;
+                    } catch (err) {
+                        // If not JSON, keep default errorMsg
+                    }
+                    throw new Error(errorMsg);
+                }
+                const sales = await response.json();
+                if (!Array.isArray(sales) || sales.length === 0) {
+                    document.getElementById('salesTableContainer').innerHTML = '<div class="text-center text-muted">Aucune vente trouvée.</div>';
+                    return;
+                }
+                let table = `<div class="table-responsive"><table class="table table-bordered table-striped">
+                    <thead><tr><th>ID</th><th>Date</th><th>Client</th><th>Produits</th><th>Total</th><th>Statut</th></tr></thead><tbody>`;
+                for (const sale of sales) {
+                    table += `<tr>
+                        <td>${sale.id ?? ''}</td>
+                        <td>${sale.date ? new Date(sale.date).toLocaleString() : ''}</td>
+                        <td>${sale.clientName ?? sale.client ?? ''}</td>
+                        <td>${Array.isArray(sale.items) ? sale.items.map(i => i.productName + ' x' + i.quantity).join('<br>') : ''}</td>
+                        <td>${sale.total ? sale.total.toFixed(2) + ' $' : ''}</td>
+                        <td>${sale.status ?? ''}</td>
+                    </tr>`;
+                }
+                table += '</tbody></table></div>';
+                document.getElementById('salesTableContainer').innerHTML = table;
+            } catch (e) {
+                document.getElementById('salesTableContainer').innerHTML = '<div class="text-danger">Erreur: ' + e.message + '</div>';
+            }
+        }
+        
+        async function showReportsModal() {
+            const modal = new bootstrap.Modal(document.getElementById('reportsModal'));
+            document.getElementById('reportsTableContainer').innerHTML = '<div class="text-center text-muted">Chargement du rapport...</div>';
+            modal.show();
+            try {
+                const response = await fetch('/api/transactions');
+                if (!response.ok) throw new Error('Erreur lors du chargement des ventes');
+                const sales = await response.json();
+                if (!Array.isArray(sales) || sales.length === 0) {
+                    document.getElementById('reportsTableContainer').innerHTML = '<div class="text-center text-muted">Aucune vente trouvée.</div>';
+                    return;
+                }
+                // Consolidate sales by product
+                const productMap = {};
+                let totalSales = 0;
+                let totalRevenue = 0;
+                for (const sale of sales) {
+                    if (Array.isArray(sale.items)) {
+                        for (const item of sale.items) {
+                            if (!productMap[item.productName]) {
+                                productMap[item.productName] = { quantity: 0, revenue: 0 };
+                            }
+                            productMap[item.productName].quantity += item.quantity;
+                            productMap[item.productName].revenue += (item.price || 0) * item.quantity;
+                            totalSales += item.quantity;
+                            totalRevenue += (item.price || 0) * item.quantity;
+                        }
+                    }
+                }
+                let table = `<div class="table-responsive"><table class="table table-bordered table-striped">
+                    <thead><tr><th>Produit</th><th>Quantité vendue</th><th>Revenu total ($)</th></tr></thead><tbody>`;
+                for (const [product, data] of Object.entries(productMap)) {
+                    table += `<tr><td>${product}</td><td>${data.quantity}</td><td>${data.revenue.toFixed(2)}</td></tr>`;
+                }
+                table += `<tr class="table-info"><th>Total</th><th>${totalSales}</th><th>${totalRevenue.toFixed(2)}</th></tr>`;
+                table += '</tbody></table></div>';
+                document.getElementById('reportsTableContainer').innerHTML = table;
+            } catch (e) {
+                document.getElementById('reportsTableContainer').innerHTML = '<div class="text-danger">Erreur: ' + e.message + '</div>';
+            }
+        }
+        
+        // Create charts with real data
+        function createCharts() {
+            createCategoriesChart();
+            createSalesChart();
+        }
+
+        // Create categories pie chart
+        function createCategoriesChart() {
+            const categoriesCount = {};
+            products.forEach(product => {
+                const category = product.category || 'Sans catégorie';
+                categoriesCount[category] = (categoriesCount[category] || 0) + 1;
+            });
+
+            const categories = Object.keys(categoriesCount);
+            const counts = Object.values(categoriesCount);
+
+            if (categories.length === 0) {
+                document.getElementById('categoriesChart').style.display = 'none';
+                return;
+            }
+
+            // Check if Chart.js is available, if not, show text instead
+            if (typeof Chart === 'undefined') {
+                const chartContainer = document.getElementById('categoriesChart').parentElement;
+                chartContainer.innerHTML = `
+                    <div class="card-header"><i class="fas fa-chart-pie"></i> Top Catégories</div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            ${categories.map((cat, index) => `
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>${cat}</span>
+                                    <span class="badge bg-primary">${counts[index]}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+                return;
+            }
+
+            const ctx = document.getElementById('categoriesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create sales chart (placeholder with sample data)
+        function createSalesChart() {
+            // Since we don't have historical sales data, create a sample chart
+            if (typeof Chart === 'undefined') {
+                const chartContainer = document.getElementById('salesChart').parentElement;
+                chartContainer.innerHTML = `
+                    <div class="card-header"><i class="fas fa-chart-line"></i> Ventes par jour (30 derniers jours)</div>
+                    <div class="card-body">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>Graphique des ventes non disponible</p>
+                            <small>Chart.js requis pour afficher les graphiques</small>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            // Generate sample data for last 30 days
+            const days = [];
+            const salesData = [];
+            
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                days.push(date.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }));
+                // Random sales data for demo
+                salesData.push(Math.floor(Math.random() * 10) + 1);
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Ventes',
+                        data: salesData,
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event listeners - only attach if elements exist
+        function attachEventListeners() {
+            const searchProducts = document.getElementById('searchProducts');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const stockFilter = document.getElementById('stockFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const sortBy = document.getElementById('sortBy');
+            
+            if (searchProducts) searchProducts.addEventListener('input', applyFilters);
+            if (categoryFilter) categoryFilter.addEventListener('change', applyFilters);
+            if (stockFilter) stockFilter.addEventListener('change', applyFilters);
+            if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+            if (sortBy) sortBy.addEventListener('change', applyFilters);
+        }
+        
+        // Initialize dashboard with real data
+        async function initializeDashboard() {
+            console.log('Initializing dashboard...');
+            attachEventListeners();
+            await fetchProducts();
+            await updateDashboardStats();
+            await loadRecentActivity();
+            await loadPopularProducts();
+            createCharts();
+            console.log('Dashboard initialization complete');
+        }
+
+        // Update dashboard statistics with real data
+        async function updateDashboardStats() {
+            try {
+                // Update total items count
+                const totalItems = products.length;
+                document.getElementById('totalItems').textContent = totalItems;
+
+                // Calculate total stock value
+                const totalValue = products.reduce((sum, product) => {
+                    return sum + (product.price * product.stock);
+                }, 0);
+                document.getElementById('totalValue').textContent = totalValue.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                });
+
+                // Count items needing restock (stock <= 5)
+                const itemsNeedingRestock = products.filter(product => product.stock <= 5).length;
+                document.getElementById('itemsNeedingRestock').textContent = itemsNeedingRestock;
+
+                // Fetch transactions count for orders
+                try {
+                    const transactionsResponse = await fetch('/api/transactions');
+                    if (transactionsResponse.ok) {
+                        const transactions = await transactionsResponse.json();
+                        // Count unique orders (transactions with type VENTE)
+                        const orders = transactions.filter(t => t.type === 'VENTE' || t.type === 'vente');
+                        document.getElementById('ordersCount').textContent = orders.length;
+                    }
+                } catch (e) {
+                    console.log('Could not fetch transactions:', e.message);
+                    // Keep default value if transactions endpoint fails
+                }
+
+                console.log('Dashboard stats updated:', {
+                    totalItems,
+                    totalValue: totalValue.toFixed(2) + '$',
+                    itemsNeedingRestock,
+                });
+            } catch (error) {
+                console.error('Error updating dashboard stats:', error);
+            }
+        }
+
+        // Load recent activity from transactions
+        async function loadRecentActivity() {
+            try {
+                const response = await fetch('/api/transactions');
+                if (!response.ok) throw new Error('Failed to fetch transactions');
+                
+                const transactions = await response.json();
+                const recentTransactions = transactions
+                    .sort((a, b) => new Date(b.dateTransaction) - new Date(a.dateTransaction))
+                    .slice(0, 5); // Get 5 most recent
+
+                const activityContainer = document.getElementById('recentActivity');
+                if (recentTransactions.length === 0) {
+                    activityContainer.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>Aucune activité récente</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const activityHTML = `
+                    <ul class="list-group list-group-flush">
+                        ${recentTransactions.map(transaction => {
+                            const date = new Date(transaction.dateTransaction);
+                            const timeAgo = getTimeAgo(date);
+                            const icon = transaction.type === 'VENTE' ? 'shopping-cart text-success' : 'box text-info';
+                            const typeLabel = transaction.type === 'VENTE' ? 'Vente' : 'Transaction';
+                            
+                            return `
+                                <li class="list-group-item">
+                                    <i class="fas fa-${icon}"></i> ${typeLabel} #${transaction.id}<br>
+                                    <small class="text-muted">${timeAgo}</small>
+                                </li>
+                            `;
+                        }).join('')}
+                    </ul>
+                    <a href="#" class="btn btn-link btn-sm mt-2" onclick="showSalesModal()">Voir tout</a>
+                `;
+                activityContainer.innerHTML = activityHTML;
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+                // Keep default content if API fails
+            }
+        }
+
+        // Load popular products based on stock levels (as a proxy)
+        async function loadPopularProducts() {
+            try {
+                const popularProducts = products
+                    .filter(product => product.stock > 0) // Only in-stock items
+                    .sort((a, b) => b.price - a.price) // Sort by price (as popularity proxy)
+                    .slice(0, 5); // Top 5
+
+                const popularContainer = document.getElementById('popularProducts');
+                if (popularProducts.length === 0) {
+                    popularContainer.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-star fa-2x mb-2"></i>
+                            <p>Aucun produit populaire</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const popularHTML = `
+                    <ol class="list-group list-group-numbered">
+                        ${popularProducts.map((product, index) => `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ${product.name}
+                                <span class="badge bg-primary rounded-pill">
+                                    ${product.price.toFixed(2)}$ • Stock: ${product.stock}
+                                </span>
+                            </li>
+                        `).join('')}
+                    </ol>
+                    <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer</a>
+                `;
+                popularContainer.innerHTML = popularHTML;
+            } catch (error) {
+                console.error('Error loading popular products:', error);
+            }
+        }
+
+        // Helper function to calculate time ago
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffMins < 1) return 'À l\'instant';
+            if (diffMins < 60) return `Il y a ${diffMins} min`;
+            if (diffHours < 24) return `Il y a ${diffHours}h`;
+            return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+        }
+
+        // Refresh dashboard data
+        async function refreshDashboard() {
+            console.log('Refreshing dashboard...');
+            await initializeDashboard();
+            alert('Dashboard actualisé !');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing dashboard...');
+            initializeDashboard();
+        });
+    </script>
+    <script>
+        // Fetch backend logs and print to browser console
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(logs => {
+                console.group('Backend Logs');
+                logs.forEach(line => console.log(line));
+                console.groupEnd();
+            })
+            .catch(e => console.error('Failed to fetch logs:', e));
+    </script>
+</body>
+</html>

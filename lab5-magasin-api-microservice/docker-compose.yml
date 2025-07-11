@@ -1,0 +1,181 @@
+services:
+  discovery-server:
+    build: ./discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8765:8765"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - SPRING_DATA_REDIS_HOST=redis
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/gateway_db
+      - POSTGRES_USER=magasin
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend-service:
+    build: ./frontend-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - GATEWAY_BASE_URL=http://api-gateway:8765
+      - GATEWAY_API_KEY=frontend-service-key-2024
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  inventory-service:
+    build: ./inventory-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/inventory_db
+      - POSTGRES_USER=magasin
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  transaction-service:
+    build: ./transaction-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/transaction_db
+      - POSTGRES_USER=magasin
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  store-service:
+    build: ./store-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/store_db
+      - POSTGRES_USER=magasin
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  personnel-service:
+    build: ./personnel-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-server:8761/eureka/
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/personnel_db
+      - POSTGRES_USER=magasin
+      - POSTGRES_PASSWORD=password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: magasin_db
+      POSTGRES_USER: magasin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U magasin -d magasin_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
