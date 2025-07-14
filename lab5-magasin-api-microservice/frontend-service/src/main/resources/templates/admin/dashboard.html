@@ -233,11 +233,193 @@
 
         Logger.info('Admin dashboard loaded');
 
-        // --- API-based products data ---
+        // --- Dashboard Data Management ---
         let products = [];
         let filteredProducts = [];
         let currentPage = 1;
         const productsPerPage = 8;
+
+        // Initialize dashboard with live data
+        async function initializeDashboard() {
+            try {
+                Logger.info('Initializing dashboard...');
+                await updateDashboardStats();
+                await loadRecentActivity();
+                await loadPopularProducts();
+                initializeCharts();
+                Logger.info('Dashboard initialization complete');
+            } catch (e) {
+                Logger.error('Error initializing dashboard:', e);
+                console.error('Dashboard initialization failed:', e);
+            }
+        }
+
+        // Update dashboard statistics cards
+        async function updateDashboardStats() {
+            try {
+                Logger.info('Updating dashboard stats...');
+                
+                // Fetch all products
+                const productsResponse = await fetch('/api/inventory/all');
+                if (productsResponse.ok) {
+                    const rawProducts = await productsResponse.json();
+                    products = rawProducts.map(product => ({
+                        id: product.id,
+                        name: product.name || product.nom,
+                        description: product.description || '',
+                        category: product.category || product.categorie,
+                        price: product.price || product.prix,
+                        stock: product.stock || product.stockCentral,
+                        status: product.status || (product.isActive ? 'active' : 'inactive'),
+                        brand: product.brand || product.marque || ''
+                    }));
+                    
+                    // Update total items
+                    document.getElementById('totalItems').textContent = products.length;
+                    
+                    // Calculate items needing restock (stock < 10)
+                    const lowStockItems = products.filter(p => p.stock < 10);
+                    document.getElementById('itemsNeedingRestock').textContent = lowStockItems.length;
+                    
+                    Logger.info(`Dashboard stats updated: ${products.length} total items, ${lowStockItems.length} low stock`);
+                }
+                
+                // For now, set orders count to 0 (TODO: integrate with transaction service)
+                document.getElementById('ordersCount').textContent = '0';
+                
+            } catch (e) {
+                Logger.error('Error updating dashboard stats:', e);
+                console.error('Failed to update dashboard stats:', e);
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            try {
+                const activityContainer = document.getElementById('recentActivity');
+                // For now, show a placeholder message
+                activityContainer.innerHTML = `
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-info-circle text-info"></i> Système initialisé<br>
+                            <small class="text-muted">Il y a quelques instants</small>
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-boxes text-primary"></i> ${products.length} produits chargés<br>
+                            <small class="text-muted">Il y a quelques instants</small>
+                        </li>
+                    </ul>
+                    <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer les produits</a>
+                `;
+                Logger.info('Recent activity loaded');
+            } catch (e) {
+                Logger.error('Error loading recent activity:', e);
+            }
+        }
+
+        // Load popular products
+        async function loadPopularProducts() {
+            try {
+                const popularContainer = document.getElementById('popularProducts');
+                // Show top 5 products by stock level (as a proxy for popularity)
+                const topProducts = [...products]
+                    .sort((a, b) => b.stock - a.stock)
+                    .slice(0, 5);
+                
+                if (topProducts.length > 0) {
+                    const list = topProducts.map((product, index) => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${product.name} 
+                            <span class="badge bg-primary rounded-pill">Stock: ${product.stock} • ${product.price.toFixed(2)}$</span>
+                        </li>
+                    `).join('');
+                    
+                    popularContainer.innerHTML = `
+                        <ol class="list-group list-group-numbered">
+                            ${list}
+                        </ol>
+                        <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer tous les produits</a>
+                    `;
+                } else {
+                    popularContainer.innerHTML = `
+                        <p class="text-muted">Aucun produit disponible</p>
+                        <a href="/admin/products" class="btn btn-link btn-sm mt-2">Ajouter des produits</a>
+                    `;
+                }
+                Logger.info('Popular products loaded');
+            } catch (e) {
+                Logger.error('Error loading popular products:', e);
+            }
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            try {
+                // Sales Chart (placeholder data)
+                const salesCtx = document.getElementById('salesChart');
+                if (salesCtx) {
+                    new Chart(salesCtx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({length: 30}, (_, i) => `J-${29-i}`),
+                            datasets: [{
+                                label: 'Ventes ($)',
+                                data: Array.from({length: 30}, () => Math.floor(Math.random() * 1000)),
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+
+                // Categories Chart
+                const categoriesCtx = document.getElementById('categoriesChart');
+                if (categoriesCtx && products.length > 0) {
+                    const categoryStats = {};
+                    products.forEach(product => {
+                        categoryStats[product.category] = (categoryStats[product.category] || 0) + 1;
+                    });
+                    
+                    new Chart(categoriesCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(categoryStats),
+                            datasets: [{
+                                data: Object.values(categoryStats),
+                                backgroundColor: [
+                                    '#FF6384',
+                                    '#36A2EB',
+                                    '#FFCE56',
+                                    '#4BC0C0',
+                                    '#9966FF',
+                                    '#FF9F40'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+                Logger.info('Charts initialized');
+            } catch (e) {
+                Logger.error('Error initializing charts:', e);
+            }
+        }
+
+        // Refresh dashboard
+        async function refreshDashboard() {
+            Logger.info('Refreshing dashboard...');
+            await initializeDashboard();
+        }
+
+        // --- Product Management Functions (for shared use) ---
 
         // Use the REST API endpoint for all product data fetches
         async function fetchProducts() {
@@ -260,7 +442,19 @@
                     throw new Error(errorMsg);
                 }
                 
-                products = await response.json();
+                const rawProducts = await response.json();
+                // Map backend field names to frontend expected names
+                products = rawProducts.map(product => ({
+                    id: product.id,
+                    name: product.name || product.nom,
+                    description: product.description || '',
+                    category: product.category || product.categorie,
+                    price: product.price || product.prix,
+                    stock: product.stock || product.stockCentral,
+                    status: product.status || (product.isActive ? 'active' : 'inactive'),
+                    brand: product.brand || product.marque || ''
+                }));
+                
                 filteredProducts = [...products];
                 Logger.info(`Products loaded successfully: ${products.length} items`);
                 Logger.debug('Products data:', products);
@@ -887,184 +1081,11 @@
             if (sortBy) sortBy.addEventListener('change', applyFilters);
         }
         
-        // Initialize dashboard with real data
-        async function initializeDashboard() {
-            console.log('Initializing dashboard...');
-            attachEventListeners();
-            await fetchProducts();
-            await updateDashboardStats();
-            await loadRecentActivity();
-            await loadPopularProducts();
-            createCharts();
-            console.log('Dashboard initialization complete');
-        }
-
-        // Update dashboard statistics with real data
-        async function updateDashboardStats() {
-            try {
-                // Update total items count
-                const totalItems = products.length;
-                document.getElementById('totalItems').textContent = totalItems;
-
-                // Calculate total stock value
-                const totalValue = products.reduce((sum, product) => {
-                    return sum + (product.price * product.stock);
-                }, 0);
-                document.getElementById('totalValue').textContent = totalValue.toLocaleString('fr-FR', {
-                    style: 'currency',
-                    currency: 'EUR'
-                });
-
-                // Count items needing restock (stock <= 5)
-                const itemsNeedingRestock = products.filter(product => product.stock <= 5).length;
-                document.getElementById('itemsNeedingRestock').textContent = itemsNeedingRestock;
-
-                // Fetch transactions count for orders
-                try {
-                    const transactionsResponse = await fetch('/api/transactions');
-                    if (transactionsResponse.ok) {
-                        const transactions = await transactionsResponse.json();
-                        // Count unique orders (transactions with type VENTE)
-                        const orders = transactions.filter(t => t.type === 'VENTE' || t.type === 'vente');
-                        document.getElementById('ordersCount').textContent = orders.length;
-                    }
-                } catch (e) {
-                    console.log('Could not fetch transactions:', e.message);
-                    // Keep default value if transactions endpoint fails
-                }
-
-                console.log('Dashboard stats updated:', {
-                    totalItems,
-                    totalValue: totalValue.toFixed(2) + '$',
-                    itemsNeedingRestock,
-                });
-            } catch (error) {
-                console.error('Error updating dashboard stats:', error);
-            }
-        }
-
-        // Load recent activity from transactions
-        async function loadRecentActivity() {
-            try {
-                const response = await fetch('/api/transactions');
-                if (!response.ok) throw new Error('Failed to fetch transactions');
-                
-                const transactions = await response.json();
-                const recentTransactions = transactions
-                    .sort((a, b) => new Date(b.dateTransaction) - new Date(a.dateTransaction))
-                    .slice(0, 5); // Get 5 most recent
-
-                const activityContainer = document.getElementById('recentActivity');
-                if (recentTransactions.length === 0) {
-                    activityContainer.innerHTML = `
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-inbox fa-2x mb-2"></i>
-                            <p>Aucune activité récente</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const activityHTML = `
-                    <ul class="list-group list-group-flush">
-                        ${recentTransactions.map(transaction => {
-                            const date = new Date(transaction.dateTransaction);
-                            const timeAgo = getTimeAgo(date);
-                            const icon = transaction.type === 'VENTE' ? 'shopping-cart text-success' : 'box text-info';
-                            const typeLabel = transaction.type === 'VENTE' ? 'Vente' : 'Transaction';
-                            
-                            return `
-                                <li class="list-group-item">
-                                    <i class="fas fa-${icon}"></i> ${typeLabel} #${transaction.id}<br>
-                                    <small class="text-muted">${timeAgo}</small>
-                                </li>
-                            `;
-                        }).join('')}
-                    </ul>
-                    <a href="#" class="btn btn-link btn-sm mt-2" onclick="showSalesModal()">Voir tout</a>
-                `;
-                activityContainer.innerHTML = activityHTML;
-            } catch (error) {
-                console.error('Error loading recent activity:', error);
-                // Keep default content if API fails
-            }
-        }
-
-        // Load popular products based on stock levels (as a proxy)
-        async function loadPopularProducts() {
-            try {
-                const popularProducts = products
-                    .filter(product => product.stock > 0) // Only in-stock items
-                    .sort((a, b) => b.price - a.price) // Sort by price (as popularity proxy)
-                    .slice(0, 5); // Top 5
-
-                const popularContainer = document.getElementById('popularProducts');
-                if (popularProducts.length === 0) {
-                    popularContainer.innerHTML = `
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-star fa-2x mb-2"></i>
-                            <p>Aucun produit populaire</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const popularHTML = `
-                    <ol class="list-group list-group-numbered">
-                        ${popularProducts.map((product, index) => `
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                ${product.name}
-                                <span class="badge bg-primary rounded-pill">
-                                    ${product.price.toFixed(2)}$ • Stock: ${product.stock}
-                                </span>
-                            </li>
-                        `).join('')}
-                    </ol>
-                    <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer</a>
-                `;
-                popularContainer.innerHTML = popularHTML;
-            } catch (error) {
-                console.error('Error loading popular products:', error);
-            }
-        }
-
-        // Helper function to calculate time ago
-        function getTimeAgo(date) {
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMins / 60);
-            const diffDays = Math.floor(diffHours / 24);
-
-            if (diffMins < 1) return 'À l\'instant';
-            if (diffMins < 60) return `Il y a ${diffMins} min`;
-            if (diffHours < 24) return `Il y a ${diffHours}h`;
-            return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-        }
-
-        // Refresh dashboard data
-        async function refreshDashboard() {
-            console.log('Refreshing dashboard...');
-            await initializeDashboard();
-            alert('Dashboard actualisé !');
-        }
-
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing dashboard...');
             initializeDashboard();
         });
-    </script>
-    <script>
-        // Fetch backend logs and print to browser console
-        fetch('/api/logs')
-            .then(response => response.json())
-            .then(logs => {
-                console.group('Backend Logs');
-                logs.forEach(line => console.log(line));
-                console.groupEnd();
-            })
-            .catch(e => console.error('Failed to fetch logs:', e));
     </script>
 </body>
 </html>

@@ -309,9 +309,24 @@ async function fetchProducts() {
         Logger.debug('Raw API response:', responseText);
         
         try {
-            products = JSON.parse(responseText);
-            Logger.info(`Products parsed successfully: ${products.length} items`);
-            Logger.debug('Products data:', products);
+            const rawProducts = JSON.parse(responseText);
+            Logger.info(`Products parsed successfully: ${rawProducts.length} items`);
+            Logger.debug('Raw products data:', rawProducts);
+            
+            // Map backend field names to frontend expected names
+            products = rawProducts.map(product => ({
+                id: product.id,
+                name: product.name || product.nom,
+                description: product.description || '',
+                category: product.category || product.categorie,
+                price: product.price || product.prix,
+                stock: product.stock || product.stockCentral,
+                status: product.status || (product.isActive ? 'active' : 'inactive'),
+                brand: product.brand || product.marque || ''
+            }));
+            
+            Logger.info(`Products mapped successfully: ${products.length} items`);
+            Logger.debug('Mapped products data:', products);
             renderProducts();
         } catch (jsonError) {
             console.error('JSON parse error:', jsonError);
@@ -355,13 +370,13 @@ function renderProducts() {
                 </div>
                 <div class="card-footer bg-transparent">
                     <div class="btn-group w-100" role="group">
-                        <button class="btn btn-outline-primary btn-sm" onclick="openProductModal(${product.id})">
+                        <button class="btn btn-outline-primary btn-sm" onclick="openProductModal(${product.id})" title="Éditer">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-outline-success btn-sm" onclick="duplicateProduct(${product.id})">
+                        <button class="btn btn-outline-success btn-sm" onclick="duplicateProduct(${product.id})" title="Dupliquer">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteProduct(${product.id})">
+                        <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteProduct(${product.id})" title="Supprimer">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
