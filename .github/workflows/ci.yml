@@ -68,7 +68,7 @@ jobs:
 
       - name: Build image for app only
         working-directory: lab5-magasin-api-microservice
-        run: docker compose -f docker-compose.yml build api
+        run: docker compose -f docker-compose.yml build
 
       - name: Log in to DockerHub
         uses: docker/login-action@v2
