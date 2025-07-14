@@ -53,9 +53,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build docker-compose stack (db)
+      - name: Build docker-compose stack
+        working-directory: lab5-magasin-api-microservice
         run: docker compose -f docker-compose.yml build
-
 # ──────────────────────────── Integration section maybe? To Do ────────────────────────────
 
 # ──────────────────────────── PUBLISH DOCKER HUB ────────────────────────────
@@ -66,19 +66,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-        # Rebuild l'image
       - name: Build image for app only
+        working-directory: lab5-magasin-api-microservice
         run: docker compose -f docker-compose.yml build api
 
-      # Authentification Docker Hub
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}  
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Tag + push seulement magasin-app
       - name: Tag & Push image
+        working-directory: lab5-magasin-api-microservice
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
           docker tag magasin-api-app $IMAGE_NAME:latest
