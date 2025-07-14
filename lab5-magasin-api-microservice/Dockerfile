@@ -39,6 +39,6 @@ WORKDIR /app
 
 # Copy the built JAR from the previous stage
 COPY --from=build /build/target/*.jar app.jar
-
+EXPOSE 8080
 # Run the app
-CMD ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
