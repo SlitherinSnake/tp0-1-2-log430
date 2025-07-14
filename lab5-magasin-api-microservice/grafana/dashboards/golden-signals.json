@@ -1,0 +1,378 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Microservices Golden Signals Dashboard",
+    "tags": ["microservices", "golden signals"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Latency - Request Duration (95th Percentile)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_duration_seconds_bucket[5m])) by (le, service))",
+            "legendFormat": "{{service}} - 95th percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_duration_seconds_bucket[5m])) by (le, service))",
+            "legendFormat": "{{service}} - 50th percentile",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "show": true
+          },
+          {
+            "show": true
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "show": true
+        }
+      },
+      {
+        "id": 2,
+        "title": "Traffic - Request Rate (requests/second)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_total[5m])) by (service)",
+            "legendFormat": "{{service}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "show": true
+          },
+          {
+            "show": true
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "show": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "Errors - Error Rate (%)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_total{status=~\"5..\"}[5m])) by (service) / sum(rate(http_server_requests_total[5m])) by (service) * 100",
+            "legendFormat": "{{service}} - 5xx errors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_server_requests_total{status=~\"4..\"}[5m])) by (service) / sum(rate(http_server_requests_total[5m])) by (service) * 100",
+            "legendFormat": "{{service}} - 4xx errors",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Percentage",
+            "show": true,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "show": true
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "show": true
+        }
+      },
+      {
+        "id": 4,
+        "title": "Saturation - JVM Memory Usage (%)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{area=\"heap\"} / jvm_memory_max_bytes{area=\"heap\"} * 100",
+            "legendFormat": "{{service}} - Heap Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_memory_used_bytes{area=\"nonheap\"} / jvm_memory_max_bytes{area=\"nonheap\"} * 100",
+            "legendFormat": "{{service}} - Non-Heap Memory",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Percentage",
+            "show": true,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "show": true
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "show": true
+        }
+      },
+      {
+        "id": 5,
+        "title": "CPU Usage (%)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_cpu_usage * 100",
+            "legendFormat": "{{service}} - CPU Usage",
+            "refId": "A"
+          },
+          {
+            "expr": "process_cpu_usage * 100",
+            "legendFormat": "{{service}} - Process CPU Usage",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Percentage",
+            "show": true,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "show": true
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "show": true
+        }
+      },
+      {
+        "id": 6,
+        "title": "Database Connection Pool Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active",
+            "legendFormat": "{{service}} - Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "hikaricp_connections_max",
+            "legendFormat": "{{service}} - Max Connections",
+            "refId": "B"
+          },
+          {
+            "expr": "hikaricp_connections_idle",
+            "legendFormat": "{{service}} - Idle Connections",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "show": true
+          },
+          {
+            "show": true
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "tooltip": {
+          "shared": true
+        },
+        "legend": {
+          "show": true
+        }
+      },
+      {
+        "id": 7,
+        "title": "Service Availability",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN"
+                  },
+                  "1": {
+                    "text": "UP"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "HTTP Status Code Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_total[5m])) by (status)",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 9,
+        "title": "GC Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_pause_seconds_count[5m])",
+            "legendFormat": "{{service}} - GC Count/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(jvm_gc_pause_seconds_sum[5m])",
+            "legendFormat": "{{service}} - GC Time/sec",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 32
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ]
+    },
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 0,
+    "links": []
+  }
+}
