@@ -1,0 +1,195 @@
+@startuml microservices-monitoring
+title Architecture de Monitoring - Observabilité Microservices
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam rectangle {
+  BackgroundColor #e8f5e8
+  BorderColor #388e3c
+}
+skinparam component {
+  BackgroundColor #fff3e0
+  BorderColor #f57c00
+}
+
+' === Services Microservices ===
+rectangle "Microservices" as Services {
+  component "Discovery Server\n:8761" as Discovery
+  component "API Gateway\n:8765" as Gateway
+  component "Frontend Service\n:8080" as Frontend
+  component "Inventory Service\n:8081" as Inventory
+  component "Transaction Service\n:8082" as Transaction
+  component "Store Service\n:8083" as Store
+  component "Personnel Service\n:8084" as Personnel
+}
+
+' === Collecte de Métriques ===
+rectangle "Metrics Collection" as MetricsCollection {
+  component "Spring Boot Actuator" as Actuator
+  component "Micrometer" as Micrometer
+  component "Prometheus Client" as PrometheusClient
+  
+  interface "/actuator/prometheus" as MetricsEndpoint
+  interface "/actuator/health" as HealthEndpoint
+  interface "/actuator/info" as InfoEndpoint
+  
+  Actuator --> Micrometer
+  Micrometer --> PrometheusClient
+  PrometheusClient --> MetricsEndpoint
+  Actuator --> HealthEndpoint
+  Actuator --> InfoEndpoint
+}
+
+' === Prometheus ===
+rectangle "Prometheus Server\n:9090" as PrometheusServer {
+  component "Metrics Storage" as MetricsStorage
+  component "Query Engine" as QueryEngine
+  component "Alert Manager" as AlertManager
+  component "Service Discovery" as ServiceDiscovery
+  
+  interface "HTTP API" as PrometheusAPI
+  interface "Web UI" as PrometheusUI
+  
+  MetricsStorage --> QueryEngine
+  QueryEngine --> AlertManager
+  QueryEngine --> PrometheusAPI
+  QueryEngine --> PrometheusUI
+}
+
+' === Grafana ===
+rectangle "Grafana Dashboard\n:3000" as GrafanaServer {
+  component "Dashboard Engine" as DashboardEngine
+  component "Visualization" as Visualization
+  component "Alerting" as GrafanaAlerting
+  component "Data Sources" as DataSources
+  
+  interface "Web Dashboard" as GrafanaDashboard
+  interface "API" as GrafanaAPI
+  
+  DashboardEngine --> Visualization
+  DashboardEngine --> GrafanaAlerting
+  DashboardEngine --> DataSources
+  DashboardEngine --> GrafanaDashboard
+  DashboardEngine --> GrafanaAPI
+}
+
+' === Dashboards ===
+rectangle "Monitoring Dashboards" as Dashboards {
+  component "Golden Signals Dashboard" as GoldenSignals
+  component "JVM Metrics Dashboard" as JVMMetrics
+  component "Business Metrics Dashboard" as BusinessMetrics
+  component "Infrastructure Dashboard" as InfrastructureMetrics
+  
+  note right of GoldenSignals
+    **Golden Signals:**
+    • Latency (P50, P95, P99)
+    • Traffic (RPS)
+    • Errors (4xx, 5xx)
+    • Saturation (CPU, Memory)
+  end note
+  
+  note right of BusinessMetrics
+    **Business Metrics:**
+    • Nombre de ventes
+    • Valeur transactions
+    • Stock levels
+    • Utilisateurs actifs
+  end note
+}
+
+' === Configuration ===
+rectangle "Configuration" as Configuration {
+  component "prometheus.yml" as PrometheusConfig
+  component "alert_rules.yml" as AlertRules
+  component "provisioning/" as GrafanaProvisioning
+  
+  note right of PrometheusConfig
+    **Scrape Configs:**
+    • discovery-server:8761/actuator/prometheus
+    • api-gateway:8765/actuator/prometheus
+    • frontend-service:8080/actuator/prometheus
+    • inventory-service:8081/actuator/prometheus
+    • transaction-service:8082/actuator/prometheus
+    • store-service:8083/actuator/prometheus
+    • personnel-service:8084/actuator/prometheus
+  end note
+}
+
+' === Alerting ===
+rectangle "Alerting System" as AlertingSystem {
+  component "Alert Rules" as AlertRulesComponent
+  component "Alert Manager" as AlertManagerComponent
+  component "Notification Channels" as NotificationChannels
+  
+  note right of AlertRulesComponent
+    **Alert Rules:**
+    • High latency (> 1s)
+    • High error rate (> 5%)
+    • Service down
+    • High CPU usage (> 80%)
+    • Low disk space (< 10%)
+  end note
+  
+  note right of NotificationChannels
+    **Notifications:**
+    • Email
+    • Slack
+    • PagerDuty
+    • Webhook
+  end note
+}
+
+' === Connexions de Monitoring ===
+Services --> MetricsCollection : Expose metrics
+MetricsCollection --> PrometheusServer : Scrape metrics (15s)
+PrometheusServer --> GrafanaServer : Data source
+GrafanaServer --> Dashboards : Visualize
+
+' === Configuration ===
+Configuration --> PrometheusServer : Config file
+Configuration --> GrafanaServer : Provisioning
+Configuration --> AlertingSystem : Alert rules
+
+' === Alerting Flow ===
+PrometheusServer --> AlertingSystem : Trigger alerts
+AlertingSystem --> NotificationChannels : Send notifications
+
+' === Métriques collectées ===
+note top of Services
+  **Métriques par service:**
+  • HTTP requests (count, duration)
+  • JVM metrics (heap, GC, threads)
+  • Database connections
+  • Custom business metrics
+  • System metrics (CPU, memory)
+end note
+
+' === Types de métriques ===
+note bottom of MetricsCollection
+  **Types de métriques Prometheus:**
+  • Counter: Valeurs cumulatives
+  • Gauge: Valeurs instantanées
+  • Histogram: Distribution de valeurs
+  • Summary: Quantiles précalculés
+end note
+
+' === Retention et stockage ===
+note bottom of PrometheusServer
+  **Stockage:**
+  • Rétention: 15 jours
+  • Compression: Efficient storage
+  • Backup: Volume persistant
+  • Scaling: Fédération possible
+end note
+
+' === Dashboards disponibles ===
+note bottom of GrafanaServer
+  **Dashboards principaux:**
+  • Golden Signals (4 métriques clés)
+  • JVM & System metrics
+  • Business KPIs
+  • Infrastructure overview
+  • Service-specific dashboards
+end note
+
+@enduml

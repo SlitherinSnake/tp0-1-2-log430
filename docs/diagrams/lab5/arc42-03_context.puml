@@ -1,0 +1,129 @@
+@startuml arc42-microservices-context
+title ARC42 - Contexte et périmètre - Architecture Microservices
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam rectangle {
+  BackgroundColor #e3f2fd
+  BorderColor #1976d2
+}
+
+' === Acteurs principaux ===
+actor "Clients" as Clients
+actor "Employés" as Employees
+actor "Administrateurs" as Admins
+actor "Développeurs API" as ApiDevelopers
+
+' === Systèmes externes ===
+rectangle "Systèmes externes" as ExternalSystems {
+  component "Services de paiement" as PaymentServices
+  component "Fournisseurs API" as Suppliers
+  component "Systèmes de monitoring" as MonitoringSystems
+}
+
+' === Système principal ===
+rectangle "Magasin Microservices Platform" as MainSystem {
+  
+  ' === Point d'entrée ===
+  rectangle "Points d'entrée" as EntryPoints {
+    component "Frontend Web\n:8080" as WebFrontend
+    component "API Gateway\n:8765" as ApiGateway
+  }
+  
+  ' === Services Core ===
+  rectangle "Services Métier" as BusinessServices {
+    component "Inventory Service" as InventoryService
+    component "Transaction Service" as TransactionService
+    component "Store Service" as StoreService
+    component "Personnel Service" as PersonnelService
+  }
+  
+  ' === Infrastructure ===
+  rectangle "Services Infrastructure" as InfraServices {
+    component "Service Discovery" as Discovery
+    component "Configuration" as Config
+    component "Monitoring" as Monitoring
+  }
+}
+
+' === Données ===
+database "PostgreSQL\nCluster" as PostgreSQLCluster
+database "Redis\nCache" as RedisCache
+
+' === Monitoring et Observabilité ===
+rectangle "Observabilité" as Observability {
+  component "Prometheus" as Prometheus
+  component "Grafana" as Grafana
+  component "Logs" as Logs
+}
+
+' === Relations avec les acteurs ===
+Clients --> WebFrontend : "Interface web\n(HTML/CSS/JS)"
+Employees --> WebFrontend : "Interface employé\n(Gestion ventes/stock)"
+Admins --> WebFrontend : "Dashboard admin\n(Configuration système)"
+ApiDevelopers --> ApiGateway : "APIs REST\n(JSON/HTTP)"
+
+' === Relations avec systèmes externes ===
+MainSystem --> ExternalSystems : "Intégrations\n(REST/SOAP)"
+ExternalSystems --> MainSystem : "Callbacks\n(Webhooks)"
+
+' === Relations internes ===
+WebFrontend --> ApiGateway : "API Calls\n(REST/JSON)"
+ApiGateway --> BusinessServices : "Service Calls\n(Load Balanced)"
+BusinessServices --> Discovery : "Service Registration\n(Eureka)"
+BusinessServices --> PostgreSQLCluster : "Database Access\n(JPA/JDBC)"
+ApiGateway --> RedisCache : "Cache & Sessions\n(Redis Protocol)"
+
+' === Monitoring ===
+MainSystem --> Observability : "Metrics & Logs\n(Prometheus/Actuator)"
+Observability --> Admins : "Alertes & Dashboards\n(Grafana/Email)"
+
+' === Flux de données principaux ===
+note top of MainSystem
+  **Système de gestion de magasin distribué**
+  
+  **Fonctionnalités principales:**
+  • Gestion d'inventaire multi-magasins
+  • Traitement des transactions (ventes/retours)
+  • Gestion du personnel et des rôles
+  • Monitoring et observabilité temps réel
+  
+  **Architecture:**
+  • 7 microservices indépendants
+  • Base de données par service
+  • Communication via REST API
+  • Service discovery automatique
+end note
+
+note bottom of BusinessServices
+  **Services métier autonomes:**
+  • Inventory: Produits, stock, approvisionnement
+  • Transaction: Ventes, retours, historique
+  • Store: Magasins, localisations, configuration
+  • Personnel: Employés, rôles, authentification
+  
+  **Isolation:** Chaque service a sa propre base de données
+end note
+
+note right of Observability
+  **Monitoring complet:**
+  • Métriques système et business
+  • Logs centralisés et structurés
+  • Alertes proactives
+  • Dashboards temps réel
+  • Tracing distribué
+end note
+
+' === Technologies utilisées ===
+note left of MainSystem
+  **Stack technique:**
+  • Spring Boot 3.2
+  • Spring Cloud 2025.0.0
+  • PostgreSQL 14
+  • Redis 7
+  • Docker & Docker Compose
+  • Prometheus & Grafana
+  • Eureka Service Discovery
+end note
+
+@enduml

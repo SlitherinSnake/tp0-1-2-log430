@@ -1,0 +1,220 @@
+@startuml microservices-security
+title Architecture de sécurité - Microservices
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam rectangle {
+  BackgroundColor #ffebee
+  BorderColor #d32f2f
+}
+skinparam component {
+  BackgroundColor #e8f5e8
+  BorderColor #388e3c
+}
+
+' === Acteurs ===
+actor "Client Web" as WebClient
+actor "Employé" as Employee
+actor "Admin" as Admin
+actor "API Client" as ApiClient
+
+' === Zone DMZ ===
+rectangle "DMZ (Réseau public)" as DMZ {
+  component "Load Balancer\n(Future)" as LoadBalancer
+  component "WAF\n(Future)" as WAF
+  
+  note right of LoadBalancer
+    **Futures améliorations:**
+    • SSL Termination
+    • Rate Limiting
+    • IP Whitelisting
+  end note
+}
+
+' === Frontend Service ===
+rectangle "Frontend Service\n:8080" as FrontendService {
+  component "Spring Security" as FrontendSecurity
+  component "Session Management" as SessionMgmt
+  component "CSRF Protection" as CSRFProtection
+  component "XSS Protection" as XSSProtection
+  
+  interface "Web Interface" as WebInterface
+  
+  FrontendSecurity --> SessionMgmt
+  FrontendSecurity --> CSRFProtection
+  FrontendSecurity --> XSSProtection
+  FrontendSecurity --> WebInterface
+}
+
+' === API Gateway ===
+rectangle "API Gateway\n:8765" as APIGateway {
+  component "Authentication Filter" as AuthFilter
+  component "JWT Validation" as JWTValidation
+  component "Rate Limiting" as RateLimiting
+  component "API Key Validation" as ApiKeyValidation
+  component "CORS Handler" as CORSHandler
+  
+  interface "Public API" as PublicAPI
+  interface "Internal API" as InternalAPI
+  
+  AuthFilter --> JWTValidation
+  AuthFilter --> ApiKeyValidation
+  AuthFilter --> RateLimiting
+  AuthFilter --> CORSHandler
+  AuthFilter --> PublicAPI
+  AuthFilter --> InternalAPI
+}
+
+' === Service Discovery ===
+rectangle "Discovery Server\n:8761" as DiscoveryServer {
+  component "Eureka Security" as EurekaSecurity
+  component "Service Authentication" as ServiceAuth
+  
+  interface "Service Registry" as ServiceRegistry
+  
+  EurekaSecurity --> ServiceAuth
+  EurekaSecurity --> ServiceRegistry
+}
+
+' === Business Services ===
+rectangle "Business Services" as BusinessServices {
+  
+  rectangle "Inventory Service\n:8081" as InventoryService {
+    component "Service Security" as InventorySecurity
+    component "Method Security" as InventoryMethodSecurity
+    component "Data Access Control" as InventoryDataAccess
+  }
+  
+  rectangle "Transaction Service\n:8082" as TransactionService {
+    component "Service Security" as TransactionSecurity
+    component "Transaction Validation" as TransactionValidation
+    component "Audit Logging" as AuditLogging
+  }
+  
+  rectangle "Store Service\n:8083" as StoreService {
+    component "Service Security" as StoreSecurity
+    component "Store Access Control" as StoreAccessControl
+  }
+  
+  rectangle "Personnel Service\n:8084" as PersonnelService {
+    component "Service Security" as PersonnelSecurity
+    component "User Management" as UserManagement
+    component "Role-based Access" as RoleBasedAccess
+  }
+}
+
+' === Data Layer ===
+rectangle "Data Security" as DataSecurity {
+  database "PostgreSQL\nCluster" as PostgreSQL {
+    component "DB Authentication" as DBAuth
+    component "Connection Pooling" as ConnectionPool
+    component "SSL Encryption" as SSLEncryption
+    component "Row Level Security" as RLS
+  }
+  
+  database "Redis Cache" as Redis {
+    component "Redis AUTH" as RedisAuth
+    component "SSL/TLS" as RedisTLS
+  }
+}
+
+' === Security Services ===
+rectangle "Security Services" as SecurityServices {
+  component "JWT Token Service" as JWTService
+  component "Session Store" as SessionStore
+  component "API Key Manager" as ApiKeyManager
+  component "Audit Logger" as AuditLogger
+  
+  note right of JWTService
+    **JWT Configuration:**
+    • Algorithm: RS256
+    • Expiration: 1 hour
+    • Refresh token: 7 days
+    • Claims: user_id, roles, permissions
+  end note
+}
+
+' === Monitoring Security ===
+rectangle "Security Monitoring" as SecurityMonitoring {
+  component "Security Metrics" as SecurityMetrics
+  component "Failed Login Tracking" as FailedLoginTracking
+  component "Intrusion Detection" as IntrusionDetection
+  component "Security Alerts" as SecurityAlerts
+}
+
+' === Flux de sécurité ===
+WebClient --> FrontendService : HTTPS
+Employee --> FrontendService : HTTPS (Session)
+Admin --> FrontendService : HTTPS (Session)
+ApiClient --> APIGateway : HTTPS + JWT/API Key
+
+FrontendService --> APIGateway : Internal API Call
+APIGateway --> DiscoveryServer : Service Discovery
+APIGateway --> BusinessServices : Authenticated Requests
+
+BusinessServices --> SecurityServices : Token Validation
+BusinessServices --> DataSecurity : Secure DB Access
+BusinessServices --> SecurityMonitoring : Security Events
+
+SecurityServices --> Redis : Session & Token Storage
+SecurityServices --> PostgreSQL : User & Permission Data
+
+' === Relations avec monitoring ===
+SecurityMonitoring --> SecurityMetrics : Metrics Collection
+SecurityMonitoring --> SecurityAlerts : Alert Triggering
+
+' === Types d'authentification ===
+note top of APIGateway
+  **Types d'authentification supportés:**
+  • JWT Bearer Token (APIs)
+  • API Key (Services externes)
+  • Session Cookie (Web interface)
+  • Service-to-service (Internal)
+  
+  **Sécurité par couche:**
+  • Network: HTTPS/TLS
+  • Application: Spring Security
+  • Service: JWT/API Keys
+  • Database: SSL + Row Level Security
+end note
+
+' === Bonnes pratiques ===
+note bottom of SecurityServices
+  **Bonnes pratiques implémentées:**
+  • Principle of least privilege
+  • Defense in depth
+  • Input validation
+  • Output encoding
+  • Secure session management
+  • Password hashing (BCrypt)
+  • SQL injection prevention
+  • XSS protection
+end note
+
+' === Vulnérabilités à surveiller ===
+note bottom of SecurityMonitoring
+  **Surveillance sécurité:**
+  • Tentatives de connexion échouées
+  • Requêtes suspectes
+  • Accès non autorisés
+  • Exploitation de vulnérabilités
+  • Déni de service (DDoS)
+  • Injection SQL
+  • Cross-site scripting (XSS)
+  • Cross-site request forgery (CSRF)
+end note
+
+' === Améliorations futures ===
+note right of BusinessServices
+  **Améliorations prévues:**
+  • OAuth 2.0 / OpenID Connect
+  • Multi-factor authentication
+  • Certificate-based authentication
+  • Service mesh (mTLS)
+  • Zero-trust architecture
+  • API versioning security
+  • Data encryption at rest
+  • Key rotation automation
+end note
+
+@enduml

@@ -1,0 +1,151 @@
+@startuml
+title Architecture Microservices - Vue d'ensemble
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam rectangle {
+  BackgroundColor #e3f2fd
+  BorderColor #1976d2
+}
+skinparam component {
+  BackgroundColor #f3e5f5
+  BorderColor #7b1fa2
+}
+skinparam database {
+  BackgroundColor #e8f5e8
+  BorderColor #388e3c
+}
+skinparam cloud {
+  BackgroundColor #fff3e0
+  BorderColor #f57c00
+}
+
+' === Acteurs externes ===
+actor "Clients" as Clients
+actor "Employés" as Employees
+actor "Administrateurs" as Admins
+actor "Développeurs" as Developers
+
+' === Load Balancer / Reverse Proxy ===
+cloud "Internet" as Internet
+
+' === Frontend ===
+rectangle "Frontend Service" as Frontend {
+  component "Web Interface" as WebUI
+  component "Thymeleaf Templates" as Templates
+  component "Static Assets" as Assets
+  note right : Port 8080
+}
+
+' === API Gateway ===
+rectangle "API Gateway" as Gateway {
+  component "Spring Cloud Gateway" as GatewayCore
+  component "Authentication" as Auth
+  component "Rate Limiting" as RateLimit
+  component "Routing" as Routing
+  note right : Port 8765
+}
+
+' === Service Discovery ===
+rectangle "Discovery Server" as Discovery {
+  component "Eureka Server" as Eureka
+  note right : Port 8761
+}
+
+' === Business Services ===
+rectangle "Business Services" as BusinessServices {
+  component "Inventory Service" as InventoryService
+  component "Transaction Service" as TransactionService
+  component "Store Service" as StoreService
+  component "Personnel Service" as PersonnelService
+  
+  note right of InventoryService : Port 8081
+  note right of TransactionService : Port 8082
+  note right of StoreService : Port 8083
+  note right of PersonnelService : Port 8084
+}
+
+' === Bases de données ===
+database "PostgreSQL Cluster" as PostgreSQL {
+  database "gateway_db" as GatewayDB
+  database "inventory_db" as InventoryDB
+  database "transaction_db" as TransactionDB
+  database "store_db" as StoreDB
+  database "personnel_db" as PersonnelDB
+  note right : Port 5432
+}
+
+' === Cache ===
+database "Redis Cache" as Redis {
+  component "Session Store" as SessionStore
+  component "API Cache" as ApiCache
+  note right : Port 6379
+}
+
+' === Monitoring ===
+rectangle "Monitoring & Observability" as Monitoring {
+  component "Prometheus" as Prometheus
+  component "Grafana" as Grafana
+  component "Alert Manager" as AlertManager
+  
+  note right of Prometheus : Port 9090
+  note right of Grafana : Port 3000
+}
+
+' === Relations externes ===
+Internet --> Frontend : HTTP/HTTPS
+Clients --> Internet : Web Browser
+Employees --> Internet : Web Browser
+Admins --> Internet : Web Browser
+Developers --> Internet : API Calls
+
+' === Relations internes ===
+Frontend --> Gateway : REST API Calls
+Gateway --> Discovery : Service Discovery
+Gateway --> Redis : Session & Cache
+Gateway --> BusinessServices : Load Balanced Calls
+
+' === Service Registration ===
+BusinessServices --> Discovery : Service Registration
+Frontend --> Discovery : Service Registration
+Gateway --> Discovery : Service Registration
+
+' === Database Connections ===
+Gateway --> GatewayDB : JDBC
+InventoryService --> InventoryDB : JPA/Hibernate
+TransactionService --> TransactionDB : JPA/Hibernate
+StoreService --> StoreDB : JPA/Hibernate
+PersonnelService --> PersonnelDB : JPA/Hibernate
+
+' === Monitoring Connections ===
+BusinessServices --> Prometheus : Metrics Export
+Frontend --> Prometheus : Metrics Export
+Gateway --> Prometheus : Metrics Export
+Discovery --> Prometheus : Metrics Export
+Prometheus --> Grafana : Data Source
+
+' === Notes ===
+note top of Gateway
+  **Point d'entrée unique**
+  • Authentification JWT
+  • Rate Limiting
+  • Request Routing
+  • CORS Handling
+end note
+
+note top of BusinessServices
+  **Services métier autonomes**
+  • Inventory: Produits & Stock
+  • Transaction: Ventes & Retours
+  • Store: Magasins & Localisations
+  • Personnel: Employés & Rôles
+end note
+
+note bottom of PostgreSQL
+  **Base de données par service**
+  • Isolation des données
+  • Autonomie des équipes
+  • Évolutivité indépendante
+end note
+
+@enduml

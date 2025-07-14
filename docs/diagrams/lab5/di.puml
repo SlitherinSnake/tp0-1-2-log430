@@ -1,0 +1,116 @@
+@startuml Architecture DDD Spring Boot
+allowmixing
+title Vue d'implémentation - Architecture DDD Spring Boot
+
+' === Presentation Layer ===
+package "com.log430.tp4.presentation" {
+  
+  package "api" {
+    class InventoryController
+    class TransactionController
+    class LogController
+    
+    package "dto" {
+      class InventoryItemDto
+      class TransactionDto
+    }
+  }
+  
+  package "web" {
+    class WebController
+  }
+}
+
+' === Application Layer ===
+package "com.log430.tp4.application" {
+  package "service" {
+    class InventoryService
+  }
+}
+
+' === Domain Layer ===
+package "com.log430.tp4.domain" {
+  
+  package "inventory" {
+    class InventoryItem
+  }
+  
+  package "transaction" {
+    class Transaction
+    class TransactionItem
+    enum TypeTransaction
+    enum StatutTransaction
+  }
+  
+  package "store" {
+    class Store
+    class StoreInventory
+  }
+  
+  package "personnel" {
+    class Personnel
+    class Role
+  }
+}
+
+' === Infrastructure Layer ===
+package "com.log430.tp4.infrastructure" {
+  
+  package "repository" {
+    interface InventoryItemRepository
+    interface TransactionRepository
+    interface StoreRepository
+    interface PersonnelRepository
+    interface RoleRepository
+  }
+  
+  package "config" {
+    class HttpConfig
+  }
+}
+
+' === Spring Boot Configuration ===
+package "Spring Boot Core" {
+  class MagasinApiApplication
+  annotation SpringBootApplication
+  annotation EnableJpaRepositories
+  annotation EnableCaching
+}
+
+' === External Dependencies ===
+package "External" {
+  database PostgreSQL
+  component "Swagger/OpenAPI"
+  component "Prometheus"
+  component "Docker"
+}
+
+' === Relations ===
+InventoryController --> InventoryService : uses
+TransactionController --> TransactionRepository : uses
+TransactionController --> InventoryService : uses
+WebController --> InventoryService : uses
+WebController --> TransactionRepository : uses
+
+InventoryService --> InventoryItemRepository : uses
+InventoryItemRepository --> InventoryItem : manages
+TransactionRepository --> Transaction : manages
+StoreRepository --> Store : manages
+PersonnelRepository --> Personnel : manages
+
+MagasinApiApplication --> SpringBootApplication : annotated
+MagasinApiApplication --> EnableJpaRepositories : annotated
+MagasinApiApplication --> EnableCaching : annotated
+
+InventoryItemRepository --> PostgreSQL : connects
+TransactionRepository --> PostgreSQL : connects
+StoreRepository --> PostgreSQL : connects
+PersonnelRepository --> PostgreSQL : connects
+
+InventoryController --> "Swagger/OpenAPI" : documented
+TransactionController --> "Swagger/OpenAPI" : documented
+
+MagasinApiApplication --> "Prometheus" : metrics
+MagasinApiApplication --> "Docker" : containerized
+
+@enduml

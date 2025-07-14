@@ -1,0 +1,236 @@
+@startuml microservices-data-flow
+title Flux de données - Architecture Microservices
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam sequence {
+  ArrowColor #1976d2
+  ActorBorderColor #1976d2
+  LifeLineBorderColor #1976d2
+  LifeLineBackgroundColor #f8f9fa
+}
+
+' === Acteurs ===
+actor "Client Web" as Client
+actor "Employé" as Employee
+actor "Admin" as Admin
+
+' === Services ===
+participant "Frontend Service\n:8080" as Frontend
+participant "API Gateway\n:8765" as Gateway
+participant "Discovery Server\n:8761" as Discovery
+participant "Inventory Service\n:8081" as Inventory
+participant "Transaction Service\n:8082" as Transaction
+participant "Store Service\n:8083" as Store
+participant "Personnel Service\n:8084" as Personnel
+participant "Redis Cache\n:6379" as Redis
+participant "PostgreSQL\n:5432" as Database
+participant "Prometheus\n:9090" as Prometheus
+
+' === Séquence 1: Démarrage du système ===
+group Démarrage du système
+  Discovery -> Discovery : Démarrage Eureka Server
+  activate Discovery
+  
+  Inventory -> Discovery : Enregistrement service
+  Transaction -> Discovery : Enregistrement service
+  Store -> Discovery : Enregistrement service
+  Personnel -> Discovery : Enregistrement service
+  
+  Gateway -> Discovery : Découverte des services
+  Gateway -> Redis : Configuration cache
+  
+  Frontend -> Discovery : Enregistrement service
+  Frontend -> Gateway : Test connectivité
+  
+  note over Discovery, Personnel : Tous les services sont maintenant découvrables
+end
+
+' === Séquence 2: Consultation produits (Client) ===
+group Consultation produits
+  Client -> Frontend : GET /products
+  activate Frontend
+  
+  Frontend -> Gateway : GET /api/inventory/products
+  activate Gateway
+  
+  Gateway -> Redis : Vérification cache
+  Redis -> Gateway : Cache miss
+  
+  Gateway -> Inventory : GET /products
+  activate Inventory
+  
+  Inventory -> Database : SELECT * FROM inventory_items
+  activate Database
+  Database -> Inventory : Résultats produits
+  deactivate Database
+  
+  Inventory -> Gateway : JSON Response
+  deactivate Inventory
+  
+  Gateway -> Redis : Mise en cache
+  Gateway -> Frontend : JSON Response
+  deactivate Gateway
+  
+  Frontend -> Client : HTML Page
+  deactivate Frontend
+  
+  ' Monitoring
+  Inventory -> Prometheus : Metrics (latence, requêtes)
+  Gateway -> Prometheus : Metrics (routing)
+  Frontend -> Prometheus : Metrics (pages vues)
+end
+
+' === Séquence 3: Vente (Employé) ===
+group Traitement vente
+  Employee -> Frontend : POST /admin/sales
+  activate Frontend
+  
+  Frontend -> Gateway : POST /api/transactions
+  activate Gateway
+  
+  Gateway -> Gateway : Validation JWT
+  Gateway -> Personnel : GET /personnel/{id}
+  activate Personnel
+  
+  Personnel -> Database : Vérification employé
+  activate Database
+  Database -> Personnel : Données employé
+  deactivate Database
+  
+  Personnel -> Gateway : Employé validé
+  deactivate Personnel
+  
+  Gateway -> Transaction : POST /transactions
+  activate Transaction
+  
+  Transaction -> Database : BEGIN TRANSACTION
+  activate Database
+  Transaction -> Database : INSERT INTO transactions
+  
+  ' Vérification stock
+  Transaction -> Gateway : GET /api/inventory/stock/{productId}
+  Gateway -> Inventory : GET /stock/{productId}
+  activate Inventory
+  
+  Inventory -> Database : SELECT stock FROM inventory_items
+  Database -> Inventory : Stock disponible
+  Inventory -> Gateway : Stock response
+  deactivate Inventory
+  
+  Gateway -> Transaction : Stock response
+  
+  ' Mise à jour stock
+  Transaction -> Gateway : PUT /api/inventory/stock/{productId}
+  Gateway -> Inventory : PUT /stock/{productId}
+  activate Inventory
+  
+  Inventory -> Database : UPDATE inventory_items SET stock = stock - quantity
+  Database -> Inventory : OK
+  Inventory -> Gateway : Stock updated
+  deactivate Inventory
+  
+  Gateway -> Transaction : Stock updated
+  
+  Transaction -> Database : COMMIT TRANSACTION
+  Database -> Transaction : Transaction committed
+  deactivate Database
+  
+  Transaction -> Gateway : Transaction created
+  deactivate Transaction
+  
+  Gateway -> Frontend : Success response
+  deactivate Gateway
+  
+  Frontend -> Employee : Confirmation page
+  deactivate Frontend
+  
+  ' Monitoring
+  Transaction -> Prometheus : Metrics (ventes)
+  Inventory -> Prometheus : Metrics (stock)
+  Gateway -> Prometheus : Metrics (authentification)
+end
+
+' === Séquence 4: Génération rapport (Admin) ===
+group Génération rapport
+  Admin -> Frontend : GET /admin/reports
+  activate Frontend
+  
+  Frontend -> Gateway : GET /api/transactions/reports
+  activate Gateway
+  
+  Gateway -> Transaction : GET /reports/sales
+  activate Transaction
+  
+  Transaction -> Database : SELECT avec agrégations
+  activate Database
+  Database -> Transaction : Données agrégées
+  deactivate Database
+  
+  Transaction -> Gateway : GET /api/inventory/summary
+  Gateway -> Inventory : GET /summary
+  activate Inventory
+  
+  Inventory -> Database : SELECT stock summary
+  activate Database
+  Database -> Inventory : Résumé stock
+  deactivate Database
+  
+  Inventory -> Gateway : Stock summary
+  deactivate Inventory
+  
+  Gateway -> Transaction : Combined data
+  Transaction -> Gateway : Report data
+  deactivate Transaction
+  
+  Gateway -> Frontend : Report JSON
+  deactivate Gateway
+  
+  Frontend -> Admin : Dashboard avec graphiques
+  deactivate Frontend
+  
+  ' Monitoring
+  Transaction -> Prometheus : Metrics (rapports)
+  Inventory -> Prometheus : Metrics (consultation)
+end
+
+' === Séquence 5: Surveillance système ===
+group Surveillance système
+  loop Chaque 15 secondes
+    Prometheus -> Discovery : Scrape /actuator/prometheus
+    Prometheus -> Gateway : Scrape /actuator/prometheus
+    Prometheus -> Frontend : Scrape /actuator/prometheus
+    Prometheus -> Inventory : Scrape /actuator/prometheus
+    Prometheus -> Transaction : Scrape /actuator/prometheus
+    Prometheus -> Store : Scrape /actuator/prometheus
+    Prometheus -> Personnel : Scrape /actuator/prometheus
+  end
+  
+  note over Prometheus : Stockage des métriques\nDétection d'anomalies\nDéclenchement d'alertes
+end
+
+' === Notes ===
+note over Client, Admin
+  **Points d'entrée:**
+  • Client: Interface web publique
+  • Employé: Interface admin
+  • Admin: Dashboard complet
+end note
+
+note over Gateway, Redis
+  **API Gateway:**
+  • Authentification JWT
+  • Rate limiting
+  • Circuit breaker
+  • Cache Redis
+end note
+
+note over Inventory, Personnel
+  **Services métier:**
+  • Autonomes
+  • Base de données dédiée
+  • APIs REST
+  • Monitoring intégré
+end note
+
+@enduml

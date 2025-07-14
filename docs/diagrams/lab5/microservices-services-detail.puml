@@ -1,0 +1,225 @@
+@startuml microservices-services-detail
+title Architecture des Services - Vue Détaillée
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam package {
+  BackgroundColor #e3f2fd
+  BorderColor #1976d2
+}
+
+' === Discovery Server ===
+package "Discovery Server\n(Port 8761)" as DiscoveryService {
+  component "Eureka Server" as EurekaServer
+  component "Service Registry" as ServiceRegistry
+  component "Health Monitor" as HealthMonitor
+  
+  interface "REST API" as DiscoveryAPI
+  interface "Web Dashboard" as EurekaDashboard
+  
+  EurekaServer --> ServiceRegistry
+  EurekaServer --> HealthMonitor
+  EurekaServer --> DiscoveryAPI
+  EurekaServer --> EurekaDashboard
+}
+
+' === API Gateway ===
+package "API Gateway\n(Port 8765)" as APIGateway {
+  component "Spring Cloud Gateway" as Gateway
+  component "Authentication Filter" as AuthFilter
+  component "Rate Limiter" as RateLimiter
+  component "Circuit Breaker" as CircuitBreaker
+  component "Load Balancer" as LoadBalancer
+  
+  interface "Public API" as PublicAPI
+  interface "Admin API" as AdminAPI
+  
+  Gateway --> AuthFilter
+  Gateway --> RateLimiter
+  Gateway --> CircuitBreaker
+  Gateway --> LoadBalancer
+  Gateway --> PublicAPI
+  Gateway --> AdminAPI
+}
+
+' === Frontend Service ===
+package "Frontend Service\n(Port 8080)" as FrontendService {
+  component "Thymeleaf Engine" as ThymeleafEngine
+  component "Web Controllers" as WebControllers
+  component "Static Resources" as StaticResources
+  component "WebClient" as WebClient
+  
+  interface "Web Interface" as WebInterface
+  
+  WebControllers --> ThymeleafEngine
+  WebControllers --> WebClient
+  WebControllers --> StaticResources
+  WebControllers --> WebInterface
+}
+
+' === Inventory Service ===
+package "Inventory Service\n(Port 8081)" as InventoryService {
+  component "REST Controller" as InventoryController
+  component "Service Layer" as InventoryServiceLayer
+  component "Domain Models" as InventoryDomain
+  component "JPA Repository" as InventoryRepo
+  
+  interface "Inventory API" as InventoryAPI
+  
+  InventoryController --> InventoryServiceLayer
+  InventoryServiceLayer --> InventoryDomain
+  InventoryServiceLayer --> InventoryRepo
+  InventoryController --> InventoryAPI
+}
+
+' === Transaction Service ===
+package "Transaction Service\n(Port 8082)" as TransactionService {
+  component "REST Controller" as TransactionController
+  component "Service Layer" as TransactionServiceLayer
+  component "Domain Models" as TransactionDomain
+  component "JPA Repository" as TransactionRepo
+  
+  interface "Transaction API" as TransactionAPI
+  
+  TransactionController --> TransactionServiceLayer
+  TransactionServiceLayer --> TransactionDomain
+  TransactionServiceLayer --> TransactionRepo
+  TransactionController --> TransactionAPI
+}
+
+' === Store Service ===
+package "Store Service\n(Port 8083)" as StoreService {
+  component "REST Controller" as StoreController
+  component "Service Layer" as StoreServiceLayer
+  component "Domain Models" as StoreDomain
+  component "JPA Repository" as StoreRepo
+  
+  interface "Store API" as StoreAPI
+  
+  StoreController --> StoreServiceLayer
+  StoreServiceLayer --> StoreDomain
+  StoreServiceLayer --> StoreRepo
+  StoreController --> StoreAPI
+}
+
+' === Personnel Service ===
+package "Personnel Service\n(Port 8084)" as PersonnelService {
+  component "REST Controller" as PersonnelController
+  component "Service Layer" as PersonnelServiceLayer
+  component "Domain Models" as PersonnelDomain
+  component "JPA Repository" as PersonnelRepo
+  
+  interface "Personnel API" as PersonnelAPI
+  
+  PersonnelController --> PersonnelServiceLayer
+  PersonnelServiceLayer --> PersonnelDomain
+  PersonnelServiceLayer --> PersonnelRepo
+  PersonnelController --> PersonnelAPI
+}
+
+' === Databases ===
+database "PostgreSQL" as PostgreSQL {
+  database "gateway_db" as GatewayDB
+  database "inventory_db" as InventoryDB
+  database "transaction_db" as TransactionDB
+  database "store_db" as StoreDB
+  database "personnel_db" as PersonnelDB
+}
+
+database "Redis Cache" as Redis
+
+' === Monitoring ===
+package "Monitoring Stack" as MonitoringStack {
+  component "Prometheus" as Prometheus
+  component "Grafana" as Grafana
+  component "Alert Manager" as AlertManager
+  
+  interface "Metrics API" as MetricsAPI
+  interface "Dashboard" as Dashboard
+  
+  Prometheus --> MetricsAPI
+  Grafana --> Dashboard
+  Prometheus --> Grafana
+  Prometheus --> AlertManager
+}
+
+' === Service Registration ===
+DiscoveryService <-- APIGateway : Service Registration
+DiscoveryService <-- FrontendService : Service Registration
+DiscoveryService <-- InventoryService : Service Registration
+DiscoveryService <-- TransactionService : Service Registration
+DiscoveryService <-- StoreService : Service Registration
+DiscoveryService <-- PersonnelService : Service Registration
+
+' === API Gateway Routing ===
+APIGateway --> FrontendService : Route /frontend/**
+APIGateway --> InventoryService : Route /api/inventory/**
+APIGateway --> TransactionService : Route /api/transactions/**
+APIGateway --> StoreService : Route /api/stores/**
+APIGateway --> PersonnelService : Route /api/personnel/**
+
+' === Frontend to Services ===
+FrontendService --> APIGateway : API Calls
+
+' === Cache ===
+APIGateway --> Redis : Session & Cache
+
+' === Database Connections ===
+APIGateway --> GatewayDB
+InventoryService --> InventoryDB
+TransactionService --> TransactionDB
+StoreService --> StoreDB
+PersonnelService --> PersonnelDB
+
+' === Monitoring ===
+DiscoveryService --> Prometheus : Metrics Export
+APIGateway --> Prometheus : Metrics Export
+FrontendService --> Prometheus : Metrics Export
+InventoryService --> Prometheus : Metrics Export
+TransactionService --> Prometheus : Metrics Export
+StoreService --> Prometheus : Metrics Export
+PersonnelService --> Prometheus : Metrics Export
+
+' === Notes ===
+note top of APIGateway
+  **Fonctionnalités:**
+  • JWT Authentication
+  • Rate Limiting
+  • Circuit Breaker
+  • Load Balancing
+  • CORS Handling
+end note
+
+note top of InventoryService
+  **Domaine Inventory:**
+  • Gestion des produits
+  • Stock central
+  • Approvisionnement
+  • Catégories
+end note
+
+note top of TransactionService
+  **Domaine Transaction:**
+  • Ventes
+  • Retours
+  • Historique
+  • Calculs
+end note
+
+note top of StoreService
+  **Domaine Store:**
+  • Magasins
+  • Localisations
+  • Configuration
+  • Stock local
+end note
+
+note top of PersonnelService
+  **Domaine Personnel:**
+  • Employés
+  • Rôles
+  • Permissions
+  • Authentification
+end note
+
+@enduml

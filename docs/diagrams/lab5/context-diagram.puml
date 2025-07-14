@@ -1,0 +1,123 @@
+@startuml context-microservices
+title Diagramme de contexte - Architecture Microservices
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+' === Acteurs externes ===
+actor "Clients" as Clients
+actor "Employés" as Employees
+actor "Administrateurs" as Admins
+actor "Développeurs" as Developers
+actor "Équipes DevOps" as DevOps
+
+' === Systèmes externes ===
+database "PostgreSQL\nCluster" as DB
+component "Docker\nContainers" as Docker
+component "Prometheus\nMonitoring" as Prometheus
+component "Grafana\nDashboards" as Grafana
+component "Navigateurs Web" as Browser
+component "Applications\nMobiles/Externes" as MobileApps
+component "Services\nTiers" as ExternalServices
+
+' === Système principal ===
+package "Microservices Ecosystem" as System {
+  component "API Gateway\n:8765" as Gateway
+  component "Discovery Server\n:8761" as Discovery
+  component "Frontend Service\n:8080" as Frontend
+  component "Inventory Service\n:8081" as InventoryService
+  component "Transaction Service\n:8082" as TransactionService
+  component "Store Service\n:8083" as StoreService
+  component "Personnel Service\n:8084" as PersonnelService
+}
+
+component "Redis Cache\n:6379" as Redis
+
+' === Relations avec les acteurs ===
+Clients --> Browser : Navigation web
+Employees --> Browser : Interface employé
+Admins --> Browser : Dashboard admin
+Developers --> MobileApps : Intégration API
+DevOps --> Prometheus : Surveillance
+DevOps --> Grafana : Visualisation
+
+' === Relations avec les navigateurs ===
+Browser --> Frontend : HTTP/HTTPS :8080
+MobileApps --> Gateway : REST API :8765
+ExternalServices --> Gateway : API Integration :8765
+
+' === Relations entre services ===
+Frontend --> Gateway : API Calls
+Gateway --> Discovery : Service Discovery
+Gateway --> Redis : Cache & Sessions
+
+Gateway --> InventoryService : Route /api/inventory/**
+Gateway --> TransactionService : Route /api/transactions/**
+Gateway --> StoreService : Route /api/stores/**
+Gateway --> PersonnelService : Route /api/personnel/**
+
+' === Service Registration ===
+InventoryService --> Discovery : Service Registration
+TransactionService --> Discovery : Service Registration
+StoreService --> Discovery : Service Registration
+PersonnelService --> Discovery : Service Registration
+Frontend --> Discovery : Service Registration
+Gateway --> Discovery : Service Registration
+
+' === Relations avec les bases de données ===
+Gateway --> DB : gateway_db
+InventoryService --> DB : inventory_db
+TransactionService --> DB : transaction_db
+StoreService --> DB : store_db
+PersonnelService --> DB : personnel_db
+
+' === Monitoring ===
+InventoryService --> Prometheus : Metrics Export
+TransactionService --> Prometheus : Metrics Export
+StoreService --> Prometheus : Metrics Export
+PersonnelService --> Prometheus : Metrics Export
+Frontend --> Prometheus : Metrics Export
+Gateway --> Prometheus : Metrics Export
+Discovery --> Prometheus : Metrics Export
+
+Prometheus --> Grafana : Data Source
+DevOps --> Grafana : Monitoring Dashboards
+
+' === Infrastructure ===
+System --> Docker : Containerized Deployment
+Docker --> DB : Database Containers
+Docker --> Redis : Cache Container
+Docker --> Prometheus : Monitoring Container
+Docker --> Grafana : Visualization Container
+
+' === Flux de données principaux ===
+note right of System
+  **Interfaces principales:**
+  • Frontend: Interface web unifiée
+  • API Gateway: Point d'entrée unique
+  • Services: APIs REST spécialisées
+  • Monitoring: Observabilité complète
+  
+  **Ports exposés:**
+  • :8080 - Frontend Web
+  • :8765 - API Gateway
+  • :8761 - Service Discovery
+  • :9090 - Prometheus
+  • :3000 - Grafana
+end note
+
+note bottom of System
+  **Architecture distribuée:**
+  • 7 services indépendants
+  • Base de données par service
+  • Communication via REST API
+  • Service discovery automatique
+  • Monitoring centralisé
+  • Cache distribué
+end note
+
+@enduml
+  • Documentation: /api-docs/swagger-ui
+end note
+
+@enduml

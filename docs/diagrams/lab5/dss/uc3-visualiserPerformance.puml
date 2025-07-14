@@ -1,0 +1,99 @@
+@startuml
+title DSS – Visualiser les performances des magasins (Spring Boot Web)
+
+' === Acteur principal ===
+actor Gestionnaire
+' Le gestionnaire représente un utilisateur ayant une vue d’ensemble sur les opérations des magasins.
+
+' === Composants Web (architecture MVC Spring Boot) ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+' Interface web utilisée pour afficher les indicateurs visuels (tableaux, graphiques, alertes).
+
+participant "RapportController" as Controller
+' Contrôleur Spring gérant les requêtes HTTP liées au tableau de bord.
+
+participant "RapportService" as Service
+' Service métier réalisant le traitement, l’agrégation et l’analyse des données.
+
+participant "VenteRepository" as VenteRepo
+' Repository utilisé pour accéder aux ventes enregistrées (chiffre d’affaires, tendances, etc.).
+
+participant "ProduitRepository" as ProduitRepo
+' (Optionnel ici) Repository permettant de croiser des données produits si nécessaire.
+
+participant "StockMagasinRepository" as StockRepo
+' Repository Spring accédant aux niveaux de stock de chaque magasin.
+
+database "PostgreSQL"
+' Base de données relationnelle centralisée utilisée par tous les composants via Spring Data JPA.
+
+== Étape 1 : Accès au tableau de bord ==
+Gestionnaire -> Vue : accède à /dashboard (GET)
+' Le gestionnaire clique sur "Tableau de bord" dans l’interface web pour obtenir un résumé global.
+
+Vue -> Controller : HTTP GET /dashboard
+' La requête HTTP est transmise automatiquement au contrôleur `RapportController`.
+
+== Étape 2 : Récupération du chiffre d'affaires par magasin ==
+Controller -> Service : getChiffreAffairesParMagasin()
+' Le contrôleur appelle le service pour obtenir le total des ventes, regroupé par magasin.
+
+Service -> VenteRepo : findChiffreAffairesParMagasin()
+' Requête de type GROUP BY exécutée pour chaque magasin.
+
+VenteRepo -> PostgreSQL : SELECT magasin_id, SUM(montant_total) \n FROM ventes \n GROUP BY magasin_id
+' Requête SQL utilisée pour regrouper les montants par magasin.
+
+PostgreSQL --> VenteRepo : List<{magasin, total}>
+' La base retourne une liste de paires (magasin, total des ventes).
+
+VenteRepo --> Service : Résultats agrégés
+' Les résultats sont retournés pour traitement ou affichage.
+
+== Étape 3 : Récupération des alertes de stock ==
+Controller -> Service : getProduitsEnRuptureOuSurstock()
+' Le contrôleur demande les alertes (produits manquants ou en surstock).
+
+Service -> StockRepo : findAll()
+' Le service interroge tous les niveaux de stock pour appliquer une logique de filtrage.
+
+StockRepo -> PostgreSQL : SELECT * FROM stock_magasin
+' Lecture complète des niveaux de stock en base de données.
+
+PostgreSQL --> StockRepo : List<StockMagasin>
+StockRepo --> Service : Stock complet
+
+' Traitement métier : extraction des produits en rupture ou surstock
+Service -> Service : filtrer ruptures et surstocks
+' Le service applique une logique de seuils : 
+' - Rupture si quantité == 0 ou < seuil min
+' - Surstock si quantité > seuil max
+
+== Étape 4 : Analyse des tendances hebdomadaires ==
+Controller -> Service : getTendancesHebdo()
+' Le contrôleur demande une analyse des ventes par semaine pour visualiser les tendances.
+
+Service -> VenteRepo : findVentesParSemaine()
+' Le service demande les ventes regroupées par semaine.
+
+VenteRepo -> PostgreSQL : SELECT WEEK(date_vente), SUM(montant_total) \n FROM ventes \n GROUP BY WEEK(date_vente)
+' La base de données retourne un résumé hebdomadaire des montants vendus.
+
+PostgreSQL --> VenteRepo : List<{semaine, montant}>
+VenteRepo --> Service : tendances de vente
+' Ces données peuvent alimenter un graphique linéaire (courbe de tendance).
+
+== Étape 5 : Rendu visuel ==
+Service --> Controller : données tableau de bord (CA, alertes, tendances)
+' Toutes les données nécessaires sont agrégées et renvoyées au contrôleur.
+
+Controller --> Vue : retourne dashboard.html avec indicateurs
+' La page HTML est rendue avec les indicateurs comme attributs du modèle Thymeleaf.
+
+Vue --> Gestionnaire : affiche KPI, alertes et courbes
+' L’interface montre au gestionnaire :
+' - Le chiffre d’affaires par magasin
+' - Les produits critiques (alerte stock)
+' - Les tendances de vente hebdomadaires (graphiques)
+
+@enduml

@@ -1,0 +1,91 @@
+@startuml
+title Diagramme de cas d'utilisation – Système de gestion de magasin (Spring Boot DDD)
+
+' === Acteurs ===
+actor "Client" as Client
+actor "Employé" as Employee
+actor "Administrateur" as Admin
+actor "Système externe" as ExtSystem
+
+' === Package principal ===
+rectangle "MagasinAPI - Spring Boot Application" {
+
+  ' === Gestion des produits et inventaire ===
+  package "Gestion Inventaire" {
+    usecase "Consulter catalogue produits" as UC_VIEW_PRODUCTS
+    usecase "Rechercher produit" as UC_SEARCH_PRODUCT
+    usecase "Consulter stock central" as UC_VIEW_STOCK
+    usecase "Mettre à jour stock" as UC_UPDATE_STOCK
+    usecase "Gérer produits (CRUD)" as UC_MANAGE_PRODUCTS
+    usecase "Identifier produits à réapprovisionner" as UC_RESTOCK_ALERT
+  }
+
+  ' === Gestion des transactions ===
+  package "Gestion Transactions" {
+    usecase "Enregistrer vente" as UC_RECORD_SALE
+    usecase "Traiter retour" as UC_PROCESS_RETURN
+    usecase "Consulter historique ventes" as UC_VIEW_SALES_HISTORY
+    usecase "Générer rapport de vente" as UC_GENERATE_REPORT
+  }
+
+  ' === Interface utilisateur ===
+  package "Interface Web" {
+    usecase "Naviguer site web" as UC_BROWSE_WEB
+    usecase "Gérer panier" as UC_MANAGE_CART
+    usecase "Accéder dashboard admin" as UC_ADMIN_DASHBOARD
+    usecase "Consulter performance magasin" as UC_VIEW_PERFORMANCE
+  }
+
+  ' === APIs et intégration ===
+  package "APIs REST" {
+    usecase "Accéder API Inventaire" as UC_API_INVENTORY
+    usecase "Accéder API Transactions" as UC_API_TRANSACTIONS
+    usecase "Consulter logs système" as UC_API_LOGS
+    usecase "Obtenir métriques Prometheus" as UC_API_METRICS
+  }
+
+  ' === Gestion du système ===
+  package "Administration Système" {
+    usecase "Gérer personnel et rôles" as UC_MANAGE_PERSONNEL
+    usecase "Configurer magasins" as UC_MANAGE_STORES
+    usecase "Surveiller application" as UC_MONITOR_APP
+  }
+}
+
+' === Relations Client ===
+Client --> UC_VIEW_PRODUCTS
+Client --> UC_SEARCH_PRODUCT
+Client --> UC_BROWSE_WEB
+Client --> UC_MANAGE_CART
+
+' === Relations Employé ===
+Employee --> UC_VIEW_PRODUCTS
+Employee --> UC_VIEW_STOCK
+Employee --> UC_RECORD_SALE
+Employee --> UC_PROCESS_RETURN
+Employee --> UC_VIEW_SALES_HISTORY
+Employee --> UC_RESTOCK_ALERT
+
+' === Relations Administrateur ===
+Admin --> UC_MANAGE_PRODUCTS
+Admin --> UC_UPDATE_STOCK
+Admin --> UC_ADMIN_DASHBOARD
+Admin --> UC_VIEW_PERFORMANCE
+Admin --> UC_GENERATE_REPORT
+Admin --> UC_MANAGE_PERSONNEL
+Admin --> UC_MANAGE_STORES
+Admin --> UC_MONITOR_APP
+
+' === Relations Système externe ===
+ExtSystem --> UC_API_INVENTORY
+ExtSystem --> UC_API_TRANSACTIONS
+ExtSystem --> UC_API_LOGS
+ExtSystem --> UC_API_METRICS
+
+' === Extensions et inclusions ===
+UC_RECORD_SALE <|-- UC_UPDATE_STOCK : <<include>>
+UC_PROCESS_RETURN <|-- UC_UPDATE_STOCK : <<include>>
+UC_ADMIN_DASHBOARD <|-- UC_VIEW_PERFORMANCE : <<include>>
+UC_VIEW_PERFORMANCE <|-- UC_GENERATE_REPORT : <<extend>>
+
+@enduml

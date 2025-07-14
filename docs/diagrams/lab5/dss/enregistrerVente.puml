@@ -1,0 +1,67 @@
+@startuml Enregistrer une vente 
+title DSS - Enregistrer une vente (Architecture Spring Boot DDD)
+
+' === Acteurs ===
+actor Employee as "Employé"
+
+' === Composants Spring Boot DDD ===
+participant "WebController" as WebCtrl
+participant "TransactionController" as TxnCtrl
+participant "InventoryService" as InvSvc
+participant "TransactionRepository" as TxnRepo
+participant "InventoryItemRepository" as InvRepo
+database "PostgreSQL"
+
+== Scénario 1: Interface Web ==
+Employee -> WebCtrl : GET /admin/sales
+WebCtrl -> InvSvc : getAllActiveItems()
+InvSvc -> InvRepo : findByIsActiveTrue()
+InvRepo -> PostgreSQL : SELECT * FROM inventory_items WHERE is_active = true
+PostgreSQL --> InvRepo : Liste des produits
+InvRepo --> InvSvc : List<InventoryItem>
+InvSvc --> WebCtrl : Liste des produits
+WebCtrl --> Employee : Page de vente avec produits
+
+Employee -> WebCtrl : Sélectionne produits + quantités
+note right : L'employé utilise l'interface\npour construire la vente
+
+== Scénario 2: Finalisation via API ==
+Employee -> TxnCtrl : POST /api/transactions\n{items: [{inventoryItemId, quantity}], personnelId, storeId}
+
+TxnCtrl -> InvSvc : Valider stock pour chaque item
+loop Pour chaque item
+  InvSvc -> InvRepo : findById(inventoryItemId)
+  InvRepo -> PostgreSQL : SELECT * FROM inventory_items WHERE id = ?
+  PostgreSQL --> InvRepo : InventoryItem
+  InvRepo --> InvSvc : InventoryItem
+  InvSvc -> InvSvc : hasStock(quantity)
+  alt Stock insuffisant
+    InvSvc --> TxnCtrl : Exception "Stock insuffisant"
+    TxnCtrl --> Employee : 400 Bad Request
+  end
+end
+
+TxnCtrl -> TxnCtrl : Créer Transaction(VENTE)
+TxnCtrl -> TxnRepo : save(transaction)
+TxnRepo -> PostgreSQL : INSERT INTO transactions...
+PostgreSQL --> TxnRepo : Transaction saved
+
+loop Pour chaque item
+  TxnCtrl -> InvSvc : decreaseStock(itemId, quantity)
+  InvSvc -> InvRepo : findById(itemId)
+  InvRepo -> PostgreSQL : SELECT...
+  PostgreSQL --> InvRepo : InventoryItem
+  InvRepo --> InvSvc : InventoryItem
+  InvSvc -> InvSvc : item.decreaseStock(quantity)
+  InvSvc -> InvRepo : save(updatedItem)
+  InvRepo -> PostgreSQL : UPDATE inventory_items...
+  PostgreSQL --> InvRepo : Updated
+end
+
+TxnCtrl -> TxnCtrl : transaction.complete()
+TxnCtrl -> TxnRepo : save(completedTransaction)
+TxnRepo -> PostgreSQL : UPDATE transactions SET statut = 'COMPLETED'...
+
+TxnCtrl --> Employee : 200 OK + TransactionDto
+
+@enduml

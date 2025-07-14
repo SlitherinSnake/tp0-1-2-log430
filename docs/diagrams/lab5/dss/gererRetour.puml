@@ -1,0 +1,86 @@
+@startuml
+title DSS – Gérer un retour (Spring Boot Web)
+
+' === Acteur principal ===
+actor Employe
+
+' === Composants du système ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+participant "RetourController" as Controller
+participant "RetourService" as Service
+participant "VenteRepository" as VenteRepo
+participant "RetourRepository" as RetourRepo
+participant "ProduitRepository" as ProduitRepo
+database "PostgreSQL"
+
+== Étape 1 : Accès à la page de retour ==
+Employe -> Vue : accède à /retour (GET)
+' L’employé clique sur le lien ou le bouton "Retour" dans l’interface
+
+Vue -> Controller : HTTP GET /retour
+' Le navigateur envoie une requête GET au contrôleur pour charger le formulaire
+
+Controller -> Vue : retourne formulaire retour.html
+' Le contrôleur retourne la vue HTML contenant le formulaire de recherche de vente
+
+== Étape 2 : Recherche de la vente ==
+Employe -> Vue : saisit l’ID de la vente
+' L’utilisateur entre l’identifiant de la vente concernée dans le champ prévu
+
+Vue -> Controller : HTTP POST /retour/rechercheVente
+' Le formulaire est soumis au contrôleur via une requête POST
+
+Controller -> VenteRepo : findById(venteId)
+' Le contrôleur appelle le repository pour retrouver la vente correspondante
+
+VenteRepo -> PostgreSQL : SELECT * \n FROM vente \n WHERE id = ?
+' Exécution d’une requête SQL pour récupérer la vente et ses détails
+
+PostgreSQL --> VenteRepo : Vente
+' Résultat : l’objet Vente avec ses produits associés est retourné
+
+VenteRepo --> Controller : Vente
+' Le repository transmet l’objet Vente au contrôleur
+
+Controller -> Vue : affiche les produits de la vente
+' Le contrôleur passe les détails de la vente à la vue pour affichage
+
+== Étape 3 : Sélection des produits à retourner ==
+Employe -> Vue : sélectionne produits + quantités à retourner
+' L’utilisateur coche les produits à retourner et entre les quantités
+
+Vue -> Controller : HTTP POST /retour/valider
+' Le formulaire de retour est soumis pour validation et traitement
+
+Controller -> Service : enregistrerRetour(venteId, mapProduits)
+' Le contrôleur délègue la logique métier de validation et sauvegarde au service
+
+Service -> ProduitRepo : mise à jour des stocks (x produits)
+' Le service met à jour les quantités disponibles en stock pour chaque produit retourné
+
+ProduitRepo -> PostgreSQL : UPDATE produits \n SET quantite = ...
+' Exécution des requêtes SQL de mise à jour pour chaque produit
+
+Service -> RetourRepo : save(retour + lignesRetour)
+' Le service sauvegarde l’objet `Retour` et les lignes associées (produits retournés)
+
+RetourRepo -> PostgreSQL : INSERT INTO retour + retour_produit
+' Insertion dans les tables `retour` et `retour_produit` via JPA/Hibernate
+
+PostgreSQL --> RetourRepo : OK
+' Confirmation de la persistance en base
+
+RetourRepo --> Service : confirmation
+' Retour du statut de sauvegarde au service
+
+== Étape 4 : Confirmation ==
+Service --> Controller : retour enregistré
+' Le service confirme que le retour a été correctement enregistré
+
+Controller --> Vue : redirection ou affichage reçu
+' Le contrôleur redirige l’utilisateur ou génère une page de reçu
+
+Vue --> Employe : affiche reçu retour
+' L’interface affiche le reçu récapitulatif du retour à l’employé
+
+@enduml

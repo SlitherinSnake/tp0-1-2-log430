@@ -1,0 +1,90 @@
+@startuml
+title DSS – Générer un rapport consolidé des ventes (Spring Boot Web)
+
+' === Acteur principal ===
+actor Gestionnaire
+' Le gestionnaire représente un utilisateur de la maison mère ayant une vue globale sur les opérations des différents magasins.
+
+' === Composants Web (architecture MVC Spring Boot) ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+' L’interface graphique qui permet de visualiser les rapports dans un navigateur.
+
+participant "RapportController" as Controller
+' Contrôleur Spring responsable de recevoir les requêtes HTTP liées au rapport.
+
+participant "RapportService" as Service
+' Service métier qui coordonne la génération du rapport : agrégation, tri, calculs.
+
+participant "VenteRepository" as VenteRepo
+' Repository JPA pour accéder aux ventes effectuées.
+
+participant "ProduitRepository" as ProduitRepo
+' Repository pour accéder aux produits (peut être utilisé pour enrichir les résultats).
+
+participant "StockMagasinRepository" as StockRepo
+' Repository pour accéder aux niveaux de stock actuels dans les magasins.
+
+database "PostgreSQL"
+' Base de données centralisée stockant toutes les entités persistées du système.
+
+== Étape 1 : Accès à l’interface ==
+Gestionnaire -> Vue : accède à /rapport (GET)
+' Le gestionnaire clique sur le lien "Rapport consolidé" depuis le menu ou la page d’accueil.
+
+Vue -> Controller : HTTP GET /rapport
+' Une requête GET est envoyée au `RapportController`.
+
+== Étape 2 : Récupération des ventes ==
+Controller -> Service : genererRapport()
+' Le contrôleur appelle le service métier pour lancer la génération du rapport.
+
+Service -> VenteRepo : findAll()
+' Le service demande la liste complète des ventes enregistrées dans le système.
+
+VenteRepo -> PostgreSQL : SELECT * FROM ventes
+' Une requête SQL est générée pour récupérer toutes les entrées de la table `ventes`.
+
+PostgreSQL --> VenteRepo : List<Vente>
+VenteRepo --> Service : Liste complète des ventes
+' Le résultat contient les ventes, avec dates, montants, employés, magasins, etc.
+
+== Étape 3 : Identification des produits populaires ==
+Service -> VenteRepo : findProduitsLesPlusVendus()
+' Le service exécute une requête groupée sur la table `vente_produit` pour détecter les best-sellers.
+
+VenteRepo -> PostgreSQL : SELECT produit_id, COUNT(*) \n FROM vente_produit \n GROUP BY produit_id \n ORDER BY COUNT DESC
+' Agrégation SQL classique : classement des produits selon leur fréquence d’achat.
+
+PostgreSQL --> VenteRepo : Top produits
+VenteRepo --> Service : Liste des produits les plus vendus
+' Le service récupère les `produit_id` les plus populaires et peut ensuite les enrichir via `ProduitRepository`.
+
+== Étape 4 : État actuel des stocks ==
+Service -> StockRepo : findAll()
+' Le service interroge le repository de stock pour connaître les quantités disponibles.
+
+StockRepo -> PostgreSQL : SELECT * FROM stock_magasin
+' Requête pour extraire tous les enregistrements de stock répartis par magasin.
+
+PostgreSQL --> StockRepo : List<StockMagasin>
+StockRepo --> Service : Stock par magasin
+' Ces données servent à afficher les niveaux de stock critiques, faibles ou excédentaires.
+
+== Étape 5 : Assemblage des données et réponse ==
+Service --> Controller : DTO rapport consolidé
+' Le service construit un objet DTO (Data Transfer Object) structuré avec :
+' - Les ventes (avec regroupement par magasin)
+' - Les produits les plus populaires
+' - Le stock actuel (par magasin et produit)
+
+Controller --> Vue : retourne rapport.html avec données
+' Le contrôleur injecte le DTO dans le modèle et retourne la vue Thymeleaf correspondante.
+
+Vue --> Gestionnaire : affiche rapport des ventes consolidé
+' L’interface web présente le rapport sous forme de :
+' - Graphiques ou diagrammes (ex. ventes par magasin)
+' - Tableaux synthétiques
+' - Listes de produits populaires
+' - État des stocks par magasin
+
+@enduml

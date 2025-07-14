@@ -1,0 +1,24 @@
+@startuml
+title Diagramme de déploiement – Application Web (Spring Boot + PostgreSQL)
+
+' === Noeud client (navigateur web) ===
+node "Client (navigateur Web)" {
+  artifact "Interface utilisateur\nHTML + JavaScript\n(Thymeleaf/AJAX)"
+}
+
+' === Noeud serveur applicatif (Spring Boot) ===
+node "Serveur applicatif (Docker - Spring Boot)" {
+  component "Application Web\n(Spring Boot MVC)"
+}
+
+' === Noeud base de données ===
+node "Serveur BD (Docker - PostgreSQL)" {
+  database "Base de données PostgreSQL"
+}
+
+' === Relations ===
+"Interface utilisateur\nHTML + JavaScript\n(Thymeleaf/AJAX)" --> "Application Web\n(Spring Boot MVC)" : Requêtes HTTP (GET/POST)
+
+"Application Web\n(Spring Boot MVC)" --> "Base de données PostgreSQL" : JDBC (Spring Data JPA)
+
+@enduml

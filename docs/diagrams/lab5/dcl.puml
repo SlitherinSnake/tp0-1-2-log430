@@ -1,0 +1,278 @@
+@startuml
+title Diagramme de classe - Magasin API (Architecture DDD)
+
+' === Couche Domain ===
+package "Domain Layer" {
+  
+  package "Inventory" {
+    class InventoryItem {
+      - id : Long
+      - nom : String
+      - categorie : String
+      - prix : Double
+      - description : String
+      - stockCentral : Integer
+      - stockMinimum : Integer
+      - dateDerniereMaj : LocalDate
+      - isActive : boolean
+      --
+      + hasStock(quantite : int) : boolean
+      + decreaseStock(quantite : int) : void
+      + increaseStock(quantite : int) : void
+      + needsRestock() : boolean
+    }
+  }
+
+  package "Transaction" {
+    class Transaction {
+      - id : Long
+      - typeTransaction : TypeTransaction
+      - dateTransaction : LocalDate
+      - montantTotal : Double
+      - personnelId : Long
+      - storeId : Long
+      - transactionOriginaleId : Long
+      - motifRetour : String
+      - statut : StatutTransaction
+      - items : List<TransactionItem>
+      --
+      + addItem(item : TransactionItem) : void
+      + calculateTotal() : void
+      + complete() : void
+      + cancel() : void
+    }
+
+    class TransactionItem {
+      - id : Long
+      - inventoryItemId : Long
+      - quantite : Integer
+      - prixUnitaire : Double
+      - sousTotal : Double
+      --
+      + calculateSubtotal() : void
+    }
+
+    enum TypeTransaction {
+      VENTE
+      RETOUR
+      AJUSTEMENT
+    }
+
+    enum StatutTransaction {
+      EN_COURS
+      COMPLETED
+      CANCELLED
+    }
+  }
+
+  package "Store" {
+    class Store {
+      - id : Long
+      - nom : String
+      - quartier : String
+      - adresse : String
+      - telephone : String
+      - isActive : boolean
+    }
+
+    class StoreInventory {
+      - id : Long
+      - storeId : Long
+      - inventoryItemId : Long
+      - quantiteDisponible : Integer
+      - seuilReapprovisionnement : Integer
+    }
+  }
+
+  package "Personnel" {
+    class Personnel {
+      - id : Long
+      - nom : String
+      - email : String
+      - username : String
+      - password : String
+      - isActive : boolean
+      - roles : Set<Role>
+    }
+
+    class Role {
+      - id : Long
+      - name : String
+      - description : String
+    }
+  }
+}
+
+' === Couche Application ===
+package "Application Layer" {
+  class InventoryService {
+    - inventoryItemRepository : InventoryItemRepository
+    --
+    + getAllActiveItems() : List<InventoryItem>
+    + getItemById(id : Long) : Optional<InventoryItem>
+    + createItem(item : InventoryItem) : InventoryItem
+    + updateStock(id : Long, quantity : Integer) : InventoryItem
+    + getItemsNeedingRestock() : List<InventoryItem>
+  }
+}
+
+' === Couche Infrastructure ===
+package "Infrastructure Layer" {
+  interface InventoryItemRepository
+  interface TransactionRepository
+  interface StoreRepository
+  interface PersonnelRepository
+  interface RoleRepository
+}
+
+' === Couche Presentation ===
+package "Presentation Layer" {
+  
+  package "API Controllers" {
+    class InventoryController {
+      - inventoryService : InventoryService
+      --
+      + getAllItems() : ResponseEntity<List<InventoryItemDto>>
+      + getItemById(id : Long) : ResponseEntity<InventoryItemDto>
+      + createItem(dto : InventoryItemDto) : ResponseEntity<InventoryItemDto>
+      + updateStock(id : Long, request : Map) : ResponseEntity<InventoryItemDto>
+    }
+
+    class TransactionController {
+      - transactionRepository : TransactionRepository
+      - inventoryService : InventoryService
+      --
+      + createSale(payload : Map) : ResponseEntity<?>
+      + getAllTransactions() : List<TransactionDto>
+    }
+  }
+
+  package "Web Controllers" {
+    class WebController {
+      - inventoryService : InventoryService
+      - transactionRepository : TransactionRepository
+      --
+      + home() : String
+      + products(model : Model) : String
+      + adminDashboard(model : Model) : String
+    }
+  }
+
+  package "DTOs" {
+    class InventoryItemDto
+    class TransactionDto
+  }
+}
+
+' === Relations ===
+Transaction ||--o{ TransactionItem : contains
+Transaction::typeTransaction --> TypeTransaction
+Transaction::statut --> StatutTransaction
+TransactionItem }o--|| InventoryItem
+Store ||--o{ StoreInventory : has
+InventoryItem ||--o{ StoreInventory : stored_in
+Personnel }o--o{ Role : has
+
+InventoryService --> InventoryItemRepository : uses
+InventoryController --> InventoryService : uses
+TransactionController --> TransactionRepository : uses
+WebController --> InventoryService : uses
+
+InventoryItemRepository ..> InventoryItem : manages
+TransactionRepository ..> Transaction : manages
+StoreRepository ..> Store : manages
+PersonnelRepository ..> Personnel : manages
+
+@enduml
+  - id : int
+  - quantite : int
+  --
+  + getId() : int
+  + getQuantite() : int
+}
+
+class Retour {
+  - id : int
+  - dateRetour : LocalDate
+  --
+  + getId() : int
+  + getDateRetour() : LocalDate
+}
+
+class RetourProduit {
+  - id : int
+  - quantite : int
+  --
+  + getId() : int
+  + getQuantite() : int
+}
+
+class StockMagasin {
+  - id : int
+  - quantite : int
+  --
+  + getId() : int
+  + getQuantite() : int
+}
+
+class StockCentral {
+  - id : int
+  - quantiteDemandee : int
+  - dateDemande : LocalDate
+  --
+  + getId() : int
+  + getQuantiteDemandee() : int
+  + getDateDemande() : LocalDate
+}
+
+class User {
+  - id : long
+  - username : String
+  - password : String
+}
+
+class Role {
+  - id : int
+  - name : ERole
+}
+
+' === Relations de base ===
+
+' Employé réalise ventes et retours
+Employe "1" --> "*" Vente : effectue >
+Employe "1" --> "*" Retour : traite >
+
+' Vente liée à un magasin
+Vente "*" --> "1" Magasin : lieu >
+
+' Retour lié à une vente
+Retour "1" --> "1" Vente : concerne >
+
+' Vente *-- VenteProduit (composition)
+Vente "1" *-- "*" VenteProduit : contient >
+
+' Retour *-- RetourProduit (composition)
+Retour "1" *-- "*" RetourProduit : contient >
+
+' Lignes de vente/retour concernent un produit
+VenteProduit "*" --> "1" Produit : cible >
+RetourProduit "*" --> "1" Produit : cible >
+
+' Magasin a un stock local
+Magasin "1" --> "*" StockMagasin : possède >
+
+' Produit présent dans stock local
+StockMagasin "*" --> "1" Produit
+
+' Stock central : une demande associe un produit à un magasin
+StockCentral "*" --> "1" Produit
+StockCentral "*" --> "1" Magasin
+
+' Many-to-Many User ↔ Role
+User "1" --> "*" Role : a pour rôles >
+
+' (Optionnel) Employé possède un User
+Employe "1" --> "1" User : compte >
+
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+title DSS – Rechercher un produit (Spring Boot Web)
+
+' === Acteur principal ===
+actor Employe
+
+' === Composants Web ===
+participant "Navigateur Web (Thymeleaf)" as Vue
+participant "ProduitController" as Controller
+participant "ProduitRepository" as Repo
+database "PostgreSQL"
+
+== Étape 1 : Saisie du critère de recherche ==
+Employe -> Vue : accède à /produits (GET)
+' L’employé ouvre la page de recherche de produits depuis l’interface web
+
+Vue -> Controller : HTTP GET /produits?query=...
+' La requête est envoyée au contrôleur avec un paramètre "query" (id, nom ou catégorie)
+
+' Le contrôleur reçoit la requête de recherche avec le critère saisi (id, nom ou catégorie)
+Controller -> Repo : recherche personnalisée selon critère
+' Il appelle une méthode du repository en fonction du contenu de "query"
+
+note right of Controller
+Exemples :
+- findById(id)
+- findByNomContainingIgnoreCase(nom)
+- findByCategorieContainingIgnoreCase(categorie)
+- findByNomContainingIgnoreCaseAndCategorieContainingIgnoreCase(...)
+end note
+' Le contrôleur choisit dynamiquement l’une de ces méthodes en analysant les filtres
+
+Repo -> PostgreSQL : SELECT * \n FROM produits WHERE ...
+' Le repository exécute une requête SQL vers la base de données
+
+PostgreSQL --> Repo : List<Produit>
+' PostgreSQL retourne la liste des produits correspondant aux critères
+
+Repo --> Controller : résultats correspondants
+' Les résultats sont renvoyés au contrôleur
+
+== Étape 2 : Affichage des résultats ==
+Controller --> Vue : retourne "home.html" avec liste de produits
+' Le contrôleur ajoute les résultats au modèle et renvoie la vue correspondante
+
+Vue --> Employe : affiche résultats dans un tableau filtré
+' L’interface web affiche un tableau avec les produits trouvés
+
+@enduml

@@ -1,0 +1,152 @@
+@startuml microservices-deployment
+title Diagramme de déploiement - Architecture Microservices
+
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+' === Docker Host ===
+node "Docker Host" as DockerHost {
+  
+  ' === Discovery Server ===
+  rectangle "discovery-server:8761" as DiscoveryContainer {
+    component "Eureka Server" as EurekaServer
+    component "Spring Boot App" as DiscoveryApp
+  }
+  
+  ' === API Gateway ===
+  rectangle "api-gateway:8765" as GatewayContainer {
+    component "Spring Cloud Gateway" as Gateway
+    component "Authentication" as GatewayAuth
+    component "Rate Limiting" as GatewayRateLimit
+  }
+  
+  ' === Frontend Service ===
+  rectangle "frontend-service:8080" as FrontendContainer {
+    component "Thymeleaf Web App" as WebApp
+    component "Static Resources" as StaticRes
+  }
+  
+  ' === Business Services ===
+  rectangle "inventory-service:8081" as InventoryContainer {
+    component "Inventory API" as InventoryAPI
+    component "JPA Repositories" as InventoryRepo
+  }
+  
+  rectangle "transaction-service:8082" as TransactionContainer {
+    component "Transaction API" as TransactionAPI
+    component "JPA Repositories" as TransactionRepo
+  }
+  
+  rectangle "store-service:8083" as StoreContainer {
+    component "Store API" as StoreAPI
+    component "JPA Repositories" as StoreRepo
+  }
+  
+  rectangle "personnel-service:8084" as PersonnelContainer {
+    component "Personnel API" as PersonnelAPI
+    component "JPA Repositories" as PersonnelRepo
+  }
+  
+  ' === Infrastructure Services ===
+  rectangle "postgres:5432" as PostgresContainer {
+    database "gateway_db" as GatewayDB
+    database "inventory_db" as InventoryDB
+    database "transaction_db" as TransactionDB
+    database "store_db" as StoreDB
+    database "personnel_db" as PersonnelDB
+  }
+  
+  rectangle "redis:6379" as RedisContainer {
+    component "Redis Cache" as RedisCache
+  }
+  
+  ' === Monitoring ===
+  rectangle "prometheus:9090" as PrometheusContainer {
+    component "Prometheus Server" as PrometheusServer
+    component "Metrics Storage" as MetricsStorage
+  }
+  
+  rectangle "grafana:3000" as GrafanaContainer {
+    component "Grafana Dashboard" as GrafanaDashboard
+    component "Visualizations" as GrafanaViz
+  }
+}
+
+' === External Network ===
+cloud "Internet" as Internet
+actor "Users" as Users
+
+' === External Connections ===
+Users --> Internet : HTTPS
+Internet --> FrontendContainer : Port 8080
+Internet --> GatewayContainer : Port 8765 (API)
+Internet --> GrafanaContainer : Port 3000 (Monitoring)
+Internet --> PrometheusContainer : Port 9090 (Metrics)
+
+' === Internal Network (Docker Network) ===
+FrontendContainer --> GatewayContainer : HTTP
+GatewayContainer --> DiscoveryContainer : Service Discovery
+GatewayContainer --> InventoryContainer : Load Balanced
+GatewayContainer --> TransactionContainer : Load Balanced
+GatewayContainer --> StoreContainer : Load Balanced
+GatewayContainer --> PersonnelContainer : Load Balanced
+GatewayContainer --> RedisContainer : Cache & Sessions
+
+' === Service Discovery ===
+InventoryContainer --> DiscoveryContainer : Registration
+TransactionContainer --> DiscoveryContainer : Registration
+StoreContainer --> DiscoveryContainer : Registration
+PersonnelContainer --> DiscoveryContainer : Registration
+FrontendContainer --> DiscoveryContainer : Registration
+GatewayContainer --> DiscoveryContainer : Registration
+
+' === Database Connections ===
+GatewayContainer --> GatewayDB : JDBC
+InventoryContainer --> InventoryDB : JPA
+TransactionContainer --> TransactionDB : JPA
+StoreContainer --> StoreDB : JPA
+PersonnelContainer --> PersonnelDB : JPA
+
+' === Monitoring Connections ===
+DiscoveryContainer --> PrometheusContainer : Metrics
+GatewayContainer --> PrometheusContainer : Metrics
+FrontendContainer --> PrometheusContainer : Metrics
+InventoryContainer --> PrometheusContainer : Metrics
+TransactionContainer --> PrometheusContainer : Metrics
+StoreContainer --> PrometheusContainer : Metrics
+PersonnelContainer --> PrometheusContainer : Metrics
+PrometheusContainer --> GrafanaContainer : Data Source
+
+' === Health Checks ===
+note right of DiscoveryContainer
+  **Health Check:**
+  curl -f http://localhost:8761/actuator/health
+end note
+
+note right of GatewayContainer
+  **Health Check:**
+  curl -f http://localhost:8765/actuator/health
+end note
+
+note right of PostgresContainer
+  **Health Check:**
+  pg_isready -U magasin -d magasin_db
+end note
+
+' === Deployment Info ===
+note top of DockerHost
+  **Déploiement Docker Compose**
+  • docker-compose up -d
+  • Démarrage avec dépendances
+  • Health checks configurés
+  • Restart policies
+end note
+
+note bottom of DockerHost
+  **Volumes persistants:**
+  • postgres_data
+  • prometheus_data
+  • grafana_data
+end note
+
+@enduml
