@@ -6,7 +6,7 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
-COPY --from=build /build/target/store-service-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /build/target/transaction-service-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8083
 RUN apk add --no-cache curl
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
