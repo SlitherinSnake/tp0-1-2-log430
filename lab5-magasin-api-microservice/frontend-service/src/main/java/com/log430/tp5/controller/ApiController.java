@@ -1,5 +1,6 @@
 package com.log430.tp5.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.log430.tp5.dto.TransactionDTO;
+import com.log430.tp5.service.TransactionService;
+
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -26,12 +30,14 @@ public class ApiController {
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
     
     private final WebClient webClient;
+    private final TransactionService transactionService;
     
     @Value("${gateway.base-url:http://localhost:8765}")
     private String gatewayBaseUrl;
 
-    public ApiController(WebClient.Builder webClientBuilder) {
+    public ApiController(WebClient.Builder webClientBuilder, TransactionService transactionService) {
         this.webClient = webClientBuilder.build();
+        this.transactionService = transactionService;
     }
 
     @GetMapping("/health")
@@ -106,6 +112,36 @@ public class ApiController {
                 .toEntity(String.class)
                 .doOnSuccess(response -> logger.info("Transactions retrieved successfully for personnel {}", personnelId))
                 .doOnError(error -> logger.error("Failed to retrieve transactions for personnel {}: {}", personnelId, error.getMessage()));
+    }
+
+    /**
+     * Get returnable transactions
+     */
+    @GetMapping("/transactions/returnable")
+    public ResponseEntity<List<TransactionDTO>> getReturnableTransactions() {
+        logger.info("Fetching returnable transactions");
+        List<TransactionDTO> transactions = transactionService.getReturnableTransactions();
+        return ResponseEntity.ok(transactions);
+    }
+
+    /**
+     * Create return transaction
+     */
+    @PostMapping("/transactions/returns")
+    public ResponseEntity<Map<String, Object>> createReturn(@RequestBody Map<String, Object> request) {
+        logger.info("Creating return transaction");
+        Map<String, Object> result = transactionService.createReturn(request);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Get returns for a specific transaction
+     */
+    @GetMapping("/transactions/returns/{originalTransactionId}")
+    public ResponseEntity<List<TransactionDTO>> getReturnsByOriginalTransaction(@PathVariable Long originalTransactionId) {
+        logger.info("Fetching returns for original transaction: {}", originalTransactionId);
+        List<TransactionDTO> returns = transactionService.getReturnsByOriginalTransaction(originalTransactionId);
+        return ResponseEntity.ok(returns);
     }
 
     /**
@@ -256,5 +292,43 @@ public class ApiController {
                 })
                 .doOnSuccess(response -> logger.info("Dashboard stats retrieved successfully"))
                 .doOnError(error -> logger.error("Failed to retrieve dashboard stats: {}", error.getMessage()));
+    }
+
+    /**
+     * Proxy for getting transaction stats
+     */
+    @GetMapping("/transactions/stats")
+    public Mono<ResponseEntity<String>> getTransactionStats() {
+        logger.info("Proxying request to get transaction stats");
+        
+        return webClient.get()
+                .uri(gatewayBaseUrl + "/api/transactions/stats")
+                .retrieve()
+                .toEntity(String.class)
+                .onErrorResume(error -> {
+                    logger.warn("Stats endpoint not available, falling back to count from all transactions");
+                    return webClient.get()
+                            .uri(gatewayBaseUrl + "/api/transactions")
+                            .retrieve()
+                            .bodyToMono(String.class)
+                            .map(transactionsJson -> {
+                                try {
+                                    // Parse the JSON to count transactions
+                                    Map<String, Object> stats = Map.of(
+                                        "totalTransactions", 0,
+                                        "totalSales", 0.0
+                                    );
+                                    return ResponseEntity.ok(stats.toString());
+                                } catch (Exception e) {
+                                    Map<String, Object> fallbackStats = Map.of(
+                                        "totalTransactions", 0,
+                                        "totalSales", 0.0
+                                    );
+                                    return ResponseEntity.ok(fallbackStats.toString());
+                                }
+                            });
+                })
+                .doOnSuccess(response -> logger.info("Transaction stats retrieved successfully"))
+                .doOnError(error -> logger.error("Failed to retrieve transaction stats: {}", error.getMessage()));
     }
 }

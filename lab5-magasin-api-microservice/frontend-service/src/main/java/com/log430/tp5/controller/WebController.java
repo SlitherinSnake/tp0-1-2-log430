@@ -91,8 +91,27 @@ public class WebController {
      * Returns page for clients.
      */
     @GetMapping("/returns")
-    public String returns() {
+    public String returns(Model model) {
         logger.info("Access to returns page");
+        
+        try {
+            // Get returnable transactions (completed sales)
+            List<TransactionDTO> returnableTransactions = transactionService.getReturnableTransactions();
+            logger.info("Found {} returnable transactions", returnableTransactions.size());
+            
+            // Add data to model
+            model.addAttribute("returnableTransactions", returnableTransactions);
+            
+            // Add some sample data for demo if no transactions exist
+            if (returnableTransactions.isEmpty()) {
+                logger.info("No returnable transactions found - page will show empty state");
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error loading returnable transactions", e);
+            model.addAttribute("error", "Unable to load returnable transactions. Please try again later.");
+        }
+        
         return "returns";
     }
 

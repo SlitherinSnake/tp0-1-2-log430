@@ -1,6 +1,7 @@
 package com.log430.tp5.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,73 @@ public class TransactionService {
         } catch (Exception e) {
             logger.error("Error creating transaction", e);
             return null;
+        }
+    }
+
+    public List<TransactionDTO> getReturnableTransactions() {
+        try {
+            logger.info("Fetching returnable transactions");
+            
+            String url = gatewayBaseUrl + "/api/transactions/returnable";
+            logger.info("Making request to: {}", url);
+            
+            List<TransactionDTO> result = webClient.get()
+                    .uri(url)
+                    .header(API_KEY_HEADER, apiKey)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<TransactionDTO>>() {})
+                    .block();
+            
+            logger.info("Received {} returnable transactions from API", result != null ? result.size() : 0);
+            return result != null ? result : List.of();
+        } catch (Exception e) {
+            logger.error("Error fetching returnable transactions", e);
+            return List.of();
+        }
+    }
+
+    public Map<String, Object> createReturn(Map<String, Object> returnRequest) {
+        try {
+            logger.info("Creating return transaction");
+            
+            String url = gatewayBaseUrl + "/api/transactions/returns";
+            logger.info("Making request to: {}", url);
+            
+            Map<String, Object> result = webClient.post()
+                    .uri(url)
+                    .header(API_KEY_HEADER, apiKey)
+                    .bodyValue(returnRequest)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+            
+            logger.info("Return transaction created with response: {}", result);
+            return result != null ? result : Map.of("success", false, "error", "No response from API");
+        } catch (Exception e) {
+            logger.error("Error creating return transaction", e);
+            return Map.of("success", false, "error", e.getMessage());
+        }
+    }
+
+    public List<TransactionDTO> getReturnsByOriginalTransaction(Long originalTransactionId) {
+        try {
+            logger.info("Fetching returns for original transaction: {}", originalTransactionId);
+            
+            String url = gatewayBaseUrl + "/api/transactions/returns/" + originalTransactionId;
+            logger.info("Making request to: {}", url);
+            
+            List<TransactionDTO> result = webClient.get()
+                    .uri(url)
+                    .header(API_KEY_HEADER, apiKey)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<TransactionDTO>>() {})
+                    .block();
+            
+            logger.info("Received {} returns from API", result != null ? result.size() : 0);
+            return result != null ? result : List.of();
+        } catch (Exception e) {
+            logger.error("Error fetching returns for original transaction: {}", originalTransactionId, e);
+            return List.of();
         }
     }
 }

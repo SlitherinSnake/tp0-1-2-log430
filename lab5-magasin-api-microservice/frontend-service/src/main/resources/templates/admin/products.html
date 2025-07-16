@@ -90,134 +90,53 @@
                 </div>
                 <div class="card mb-4 filters-section">
                     <div class="card-body">
-                        <form class="row g-2 align-items-end" method="get" th:action="@{/admin/products}">
+                        <div class="row g-2 align-items-end">
                             <div class="col-md-4">
-                                <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Rechercher un produit...">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un produit..." onkeyup="filterProducts()">
                             </div>
                             <div class="col-md-2">
-                                <select name="category" class="form-select">
+                                <select id="categoryFilter" class="form-select" onchange="filterProducts()">
                                     <option value="">Toutes catégories</option>
-                                    <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}" th:selected="${cat == category}"></option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <select name="stock" class="form-select">
+                                <select id="stockFilter" class="form-select" onchange="filterProducts()">
                                     <option value="">Tous stocks</option>
-                                    <option value="instock" th:selected="${stock == 'instock'}">En stock</option>
-                                    <option value="lowstock" th:selected="${stock == 'lowstock'}">Stock faible</option>
-                                    <option value="outofstock" th:selected="${stock == 'outofstock'}">Rupture</option>
+                                    <option value="instock">En stock (≥10)</option>
+                                    <option value="lowstock">Stock faible (1-9)</option>
+                                    <option value="outofstock">Rupture (0)</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <select name="status" class="form-select">
+                                <select id="statusFilter" class="form-select" onchange="filterProducts()">
                                     <option value="">Tous statuts</option>
-                                    <option value="active" th:selected="${status == 'active'}">Actif</option>
-                                    <option value="inactive" th:selected="${status == 'inactive'}">Inactif</option>
-                                    <option value="draft" th:selected="${status == 'draft'}">Brouillon</option>
+                                    <option value="active">Actif</option>
+                                    <option value="inactive">Inactif</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <select name="sortBy" class="form-select">
-                                    <option value="name" th:selected="${sortBy == 'name'}">Nom</option>
-                                    <option value="price" th:selected="${sortBy == 'price'}">Prix</option>
-                                    <option value="stock" th:selected="${sortBy == 'stock'}">Stock</option>
-                                    <option value="created" th:selected="${sortBy == 'created'}">Date d'ajout</option>
+                                <select id="sortByFilter" class="form-select" onchange="filterProducts()">
+                                    <option value="name">Nom</option>
+                                    <option value="price">Prix</option>
+                                    <option value="stock">Stock</option>
+                                    <option value="category">Catégorie</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-auto">
-                                <button type="submit" class="btn btn-outline-primary"><i class="fas fa-search"></i> Filtrer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="row" id="productsGrid">
-                    <div th:if="${#lists.isEmpty(products)}" class="col-12 text-center py-5">
-                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                        <h3>Aucun produit trouvé</h3>
-                        <p class="text-muted">Essayez de modifier vos critères de recherche</p>
-                    </div>
-                    <div th:each="product : ${products}" class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                        <div class="card product-card h-100 position-relative">
-                            <span th:if="${product.stockCentral == 0}" class="badge bg-danger stock-badge">Rupture</span>
-                            <span th:if="${product.stockCentral > 0 and product.stockCentral < 10}" class="badge bg-warning stock-badge">Stock faible</span>
-                            <span th:if="${product.stockCentral >= 10}" class="badge bg-success stock-badge">En stock</span>
-                            <div class="product-image">
-                                <i class="fas fa-box fa-3x text-muted"></i>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="card-title" th:text="${product.nom}"></h6>
-                                <p class="card-text text-muted small" th:text="${product.description}"></p>
-                                <div class="mb-2">
-                                    <span class="badge bg-light text-dark" th:text="${product.categorie}"></span>
-                                    <span th:if="${product.isActive}" class="badge bg-success">Actif</span>
-                                    <span th:if="${!product.isActive}" class="badge bg-secondary">Inactif</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong class="text-primary" th:text="${product.prix} + ' $'"></strong>
-                                    <small class="text-muted">Stock: <span th:text="${product.stockCentral}"></span></small>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <div class="btn-group w-100" role="group">
-                                    <button class="btn btn-outline-primary btn-sm" th:attr="onclick='openProductModal(' + ${product.id} + ')'">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-outline-success btn-sm" th:attr="onclick='duplicateProduct(' + ${product.id} + ')'">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" th:attr="onclick='confirmDeleteProduct(' + ${product.id} + ')'">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                                    <i class="fas fa-times"></i> Réinitialiser
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Pagination (if needed) -->
-                <nav aria-label="Pagination produits">
-                    <ul class="pagination justify-content-center" th:if="${totalPages > 1}">
-                        <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                            <a class="page-link"
-                               th:href="@{/admin/products(
-                                   page=${currentPage-1},
-                                   search=${search},
-                                   category=${category},
-                                   stock=${stock},
-                                   status=${status},
-                                   sortBy=${sortBy}
-                               )}"
-                               aria-label="Page précédente">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" th:classappend="${i == currentPage} ? 'active'">
-                            <a class="page-link"
-                               th:href="@{/admin/products(
-                                   page=${i},
-                                   search=${search},
-                                   category=${category},
-                                   stock=${stock},
-                                   status=${status},
-                                   sortBy=${sortBy}
-                               )}"
-                               th:text="${i}"></a>
-                        </li>
-                        <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                            <a class="page-link"
-                               th:href="@{/admin/products(
-                                   page=${currentPage+1},
-                                   search=${search},
-                                   category=${category},
-                                   stock=${stock},
-                                   status=${status},
-                                   sortBy=${sortBy}
-                               )}"
-                               aria-label="Page suivante">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+                <div class="row" id="productsGrid">
+                    <!-- Products will be loaded here by JavaScript -->
+                </div>
+                <!-- Pagination will be implemented if needed -->
+                <div id="paginationContainer" class="d-flex justify-content-center mt-4" style="display: none;">
+                    <!-- Pagination will be added here if needed -->
+                </div>
             </div>
         </div>
     </div>
@@ -286,8 +205,39 @@ const Logger = {
 
 Logger.info('Admin products page loaded');
 
+// --- Activity Logging Functions ---
+function logActivity(type, message) {
+    try {
+        const activity = {
+            type: type,
+            message: message,
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('fr-FR'),
+            time: new Date().toLocaleTimeString('fr-FR')
+        };
+        
+        // Get existing activities or initialize empty array
+        let activities = JSON.parse(localStorage.getItem('recentActivities') || '[]');
+        
+        // Add new activity at the beginning
+        activities.unshift(activity);
+        
+        // Keep only the last 10 activities
+        activities = activities.slice(0, 10);
+        
+        // Save back to localStorage
+        localStorage.setItem('recentActivities', JSON.stringify(activities));
+        
+        Logger.info('Activity logged:', activity);
+    } catch (e) {
+        Logger.error('Error logging activity:', e);
+    }
+}
+
 // --- Product Modal Management & Dynamic Product Grid ---
 let products = [];
+let filteredProducts = [];
+let allCategories = [];
 
 // Fetch products from backend and render
 async function fetchProducts() {
@@ -327,7 +277,10 @@ async function fetchProducts() {
             
             Logger.info(`Products mapped successfully: ${products.length} items`);
             Logger.debug('Mapped products data:', products);
-            renderProducts();
+            
+            // Initialize filters
+            setupFilters();
+            filterProducts();
         } catch (jsonError) {
             console.error('JSON parse error:', jsonError);
             console.error('Response text that failed to parse:', responseText);
@@ -339,9 +292,98 @@ async function fetchProducts() {
     }
 }
 
+// Setup category filter options
+function setupFilters() {
+    // Get unique categories
+    allCategories = [...new Set(products.map(p => p.category))].sort();
+    
+    // Populate category filter
+    const categoryFilter = document.getElementById('categoryFilter');
+    categoryFilter.innerHTML = '<option value="">Toutes catégories</option>';
+    allCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categoryFilter.appendChild(option);
+    });
+    
+    Logger.info('Filters setup completed', { categories: allCategories });
+}
+
+// Filter products based on current filter settings
+function filterProducts() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const stockFilter = document.getElementById('stockFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const sortBy = document.getElementById('sortByFilter').value;
+    
+    Logger.debug('Filtering products with:', { searchTerm, categoryFilter, stockFilter, statusFilter, sortBy });
+    
+    // Start with all products
+    filteredProducts = products.slice();
+    
+    // Apply search filter
+    if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product => 
+            product.name.toLowerCase().includes(searchTerm) ||
+            product.description.toLowerCase().includes(searchTerm) ||
+            product.category.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // Apply category filter
+    if (categoryFilter) {
+        filteredProducts = filteredProducts.filter(product => product.category === categoryFilter);
+    }
+    
+    // Apply stock filter
+    if (stockFilter) {
+        filteredProducts = filteredProducts.filter(product => {
+            switch(stockFilter) {
+                case 'instock': return product.stock >= 10;
+                case 'lowstock': return product.stock > 0 && product.stock < 10;
+                case 'outofstock': return product.stock === 0;
+                default: return true;
+            }
+        });
+    }
+    
+    // Apply status filter
+    if (statusFilter) {
+        filteredProducts = filteredProducts.filter(product => product.status === statusFilter);
+    }
+    
+    // Apply sorting
+    filteredProducts.sort((a, b) => {
+        switch(sortBy) {
+            case 'name': return a.name.localeCompare(b.name);
+            case 'price': return a.price - b.price;
+            case 'stock': return b.stock - a.stock;
+            case 'category': return a.category.localeCompare(b.category);
+            default: return 0;
+        }
+    });
+    
+    Logger.info(`Products filtered: ${filteredProducts.length} of ${products.length} products`);
+    renderProducts();
+}
+
+// Reset all filters
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('stockFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('sortByFilter').value = 'name';
+    
+    filterProducts();
+    Logger.info('Filters reset');
+}
+
 function renderProducts() {
     const grid = document.getElementById('productsGrid');
-    if (!products.length) {
+    if (!filteredProducts.length) {
         grid.innerHTML = `<div class="col-12 text-center py-5">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
             <h3>Aucun produit trouvé</h3>
@@ -349,7 +391,7 @@ function renderProducts() {
         </div>`;
         return;
     }
-    grid.innerHTML = products.map(product => `
+    grid.innerHTML = filteredProducts.map(product => `
         <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
             <div class="card product-card h-100 position-relative">
                 ${getStockBadge(product.stock)}
@@ -490,7 +532,15 @@ async function saveProduct() {
         
         await fetchProducts();
         bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
-        alert('Produit enregistré avec succès !');
+        
+        // Log activity
+        if (!id) {
+            logActivity('product_created', `Produit "${name}" créé`);
+            alert('Produit créé avec succès !');
+        } else {
+            logActivity('product_updated', `Produit "${name}" modifié`);
+            alert('Produit modifié avec succès !');
+        }
     } catch (e) {
         console.error('Save product error:', e);
         alert('Erreur: ' + e.message);
@@ -537,6 +587,9 @@ async function duplicateProduct(productId) {
         console.log('Duplicate result:', result);
         
         await fetchProducts();
+        
+        // Log activity
+        logActivity('product_duplicated', `Produit "${product.name}" dupliqué`);
         alert('Produit dupliqué avec succès !');
     } catch (e) {
         console.error('Duplicate product error:', e);
@@ -579,6 +632,10 @@ async function deleteProduct() {
 async function deleteProductById(productId) {
     console.log('Deleting product by ID:', productId);
     
+    // Get product name before deletion for logging
+    const product = products.find(p => p.id == productId);
+    const productName = product ? product.name : `ID ${productId}`;
+    
     try {
         const response = await fetch('/api/inventory/' + productId, { 
             method: 'DELETE',
@@ -595,6 +652,9 @@ async function deleteProductById(productId) {
         
         console.log('Product deleted successfully');
         await fetchProducts();
+        
+        // Log activity
+        logActivity('product_deleted', `Produit "${productName}" supprimé`);
         alert('Produit supprimé avec succès !');
     } catch (e) {
         console.error('Delete product error:', e);

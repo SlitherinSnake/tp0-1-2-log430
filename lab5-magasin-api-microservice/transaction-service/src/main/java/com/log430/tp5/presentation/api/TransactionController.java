@@ -179,6 +179,94 @@ public class TransactionController {
     }
 
     /**
+     * Create a new return transaction.
+     */
+    @Operation(summary = "Créer un retour", description = "Crée une nouvelle transaction de retour.")
+    @PostMapping("/returns")
+    public ResponseEntity<Map<String, Object>> createReturn(@RequestBody CreateReturnRequest request) {
+        log.info("API call: createReturn for personnel {} store {} original transaction {}", 
+                request.personnelId(), request.storeId(), request.originalTransactionId());
+        try {
+            // Validate that the original transaction exists
+            Transaction originalTransaction = transactionService.getTransactionById(request.originalTransactionId())
+                    .orElseThrow(() -> new RuntimeException("Original transaction not found"));
+            
+            // Check if the original transaction is a sale
+            if (!originalTransaction.isSale()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Can only return from sales transactions"));
+            }
+            
+            // Create the return transaction
+            Transaction returnTransaction = transactionService.createReturnTransaction(
+                    request.personnelId(), 
+                    request.storeId(), 
+                    request.originalTransactionId(), 
+                    request.motifRetour()
+            );
+            
+            // If items are provided, add them to the return
+            if (request.items() != null && !request.items().isEmpty()) {
+                for (ReturnItem item : request.items()) {
+                    returnTransaction.addItem(item.id(), item.quantity(), item.price());
+                }
+            }
+            
+            // Complete the return transaction
+            returnTransaction.complete();
+            Transaction savedTransaction = transactionRepository.save(returnTransaction);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "success", true, 
+                "transactionId", savedTransaction.getId(),
+                "message", "Return transaction created successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Error in createReturn: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get completed sales transactions that can be returned.
+     */
+    @Operation(summary = "Obtenir les transactions retournables", description = "Retourne les transactions de vente complétées qui peuvent être retournées.")
+    @GetMapping("/returnable")
+    public ResponseEntity<List<TransactionDto>> getReturnableTransactions() {
+        log.info("API call: getReturnableTransactions");
+        try {
+            List<Transaction> transactions = transactionRepository.findAll().stream()
+                    .filter(t -> t.isSale() && t.isCompleted())
+                    .toList();
+            List<TransactionDto> transactionDtos = transactions.stream()
+                    .map(TransactionDto::fromEntity)
+                    .toList();
+            return ResponseEntity.ok(transactionDtos);
+        } catch (Exception e) {
+            log.error("Error in getReturnableTransactions: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get return transactions for a specific original transaction.
+     */
+    @Operation(summary = "Obtenir les retours d'une transaction", description = "Retourne les transactions de retour pour une transaction originale.")
+    @GetMapping("/returns/{originalTransactionId}")
+    public ResponseEntity<List<TransactionDto>> getReturnsByOriginalTransaction(@PathVariable Long originalTransactionId) {
+        log.info("API call: getReturnsByOriginalTransaction with originalTransactionId {}", originalTransactionId);
+        try {
+            List<Transaction> returns = transactionRepository.findByTransactionOriginaleId(originalTransactionId);
+            List<TransactionDto> returnDtos = returns.stream()
+                    .map(TransactionDto::fromEntity)
+                    .toList();
+            return ResponseEntity.ok(returnDtos);
+        } catch (Exception e) {
+            log.error("Error in getReturnsByOriginalTransaction: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
      * Simple test endpoint to verify API is working.
      */
     @GetMapping("/test")
@@ -201,6 +289,20 @@ public class TransactionController {
     ) {}
 
     public record SaleItem(
+            Long id,
+            Integer quantity,
+            Double price
+    ) {}
+
+    public record CreateReturnRequest(
+            Long personnelId,
+            Long storeId,
+            Long originalTransactionId,
+            String motifRetour,
+            List<ReturnItem> items
+    ) {}
+
+    public record ReturnItem(
             Long id,
             Integer quantity,
             Double price

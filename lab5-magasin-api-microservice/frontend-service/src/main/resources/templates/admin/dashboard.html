@@ -243,15 +243,74 @@
         async function initializeDashboard() {
             try {
                 Logger.info('Initializing dashboard...');
+                
+                // Show loading state
+                showLoadingState();
+                
+                // Load data in the correct order
                 await updateDashboardStats();
                 await loadRecentActivity();
                 await loadPopularProducts();
-                initializeCharts();
+                await initializeCharts();
+                
+                // Hide loading state
+                hideLoadingState();
+                
                 Logger.info('Dashboard initialization complete');
             } catch (e) {
                 Logger.error('Error initializing dashboard:', e);
                 console.error('Dashboard initialization failed:', e);
+                
+                // Hide loading state even on error
+                hideLoadingState();
+                
+                // Show error message
+                showErrorMessage('Erreur lors de l\'initialisation du tableau de bord: ' + e.message);
             }
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const loadingHtml = `
+                <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <span class="ms-2">Chargement des données...</span>
+                </div>
+            `;
+            
+            // Show loading in main content areas
+            const elementsToLoad = ['recentActivity', 'popularProducts'];
+            elementsToLoad.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.innerHTML = loadingHtml;
+                }
+            });
+        }
+
+        // Hide loading state
+        function hideLoadingState() {
+            // Loading state is removed when content is loaded
+        }
+
+        // Show error message
+        function showErrorMessage(message) {
+            const errorHtml = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> ${message}
+                </div>
+            `;
+            
+            // Show error in main content areas if they're empty
+            const elementsToCheck = ['recentActivity', 'popularProducts'];
+            elementsToCheck.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && element.innerHTML.includes('spinner-border')) {
+                    element.innerHTML = errorHtml;
+                }
+            });
         }
 
         // Update dashboard statistics cards
@@ -282,14 +341,36 @@
                     document.getElementById('itemsNeedingRestock').textContent = lowStockItems.length;
                     
                     Logger.info(`Dashboard stats updated: ${products.length} total items, ${lowStockItems.length} low stock`);
+                } else {
+                    Logger.error('Failed to fetch products:', productsResponse.status);
+                    document.getElementById('totalItems').textContent = '0';
+                    document.getElementById('itemsNeedingRestock').textContent = '0';
                 }
                 
-                // For now, set orders count to 0 (TODO: integrate with transaction service)
-                document.getElementById('ordersCount').textContent = '0';
+                // Fetch transaction count by getting all transactions
+                try {
+                    const transactionsResponse = await fetch('/api/transactions');
+                    if (transactionsResponse.ok) {
+                        const transactions = await transactionsResponse.json();
+                        document.getElementById('ordersCount').textContent = transactions.length.toString();
+                        Logger.info('Transaction count loaded:', transactions.length);
+                    } else {
+                        Logger.warn('Could not fetch transactions:', transactionsResponse.status);
+                        document.getElementById('ordersCount').textContent = '0';
+                    }
+                } catch (e) {
+                    Logger.warn('Error fetching transactions:', e);
+                    document.getElementById('ordersCount').textContent = '0';
+                }
                 
             } catch (e) {
                 Logger.error('Error updating dashboard stats:', e);
                 console.error('Failed to update dashboard stats:', e);
+                
+                // Set default values on error
+                document.getElementById('totalItems').textContent = '0';
+                document.getElementById('itemsNeedingRestock').textContent = '0';
+                document.getElementById('ordersCount').textContent = '0';
             }
         }
 
@@ -297,23 +378,128 @@
         async function loadRecentActivity() {
             try {
                 const activityContainer = document.getElementById('recentActivity');
-                // For now, show a placeholder message
+                
+                // Fetch recent activities from localStorage
+                let activityItems = [];
+                
+                try {
+                    const storedActivities = JSON.parse(localStorage.getItem('recentActivities') || '[]');
+                    activityItems = storedActivities.map(activity => ({
+                        type: activity.type,
+                        message: activity.message,
+                        time: activity.date,
+                        icon: getActivityIcon(activity.type)
+                    }));
+                } catch (e) {
+                    Logger.warn('Could not load stored activities:', e);
+                }
+                
+                // Fetch recent transactions/activity from API
+                try {
+                    // Fetch all transactions (we'll take the most recent ones)
+                    const transactionsResponse = await fetch('/api/transactions');
+                    if (transactionsResponse.ok) {
+                        const transactions = await transactionsResponse.json();
+                        // Sort by date and take the most recent 3
+                        const recentTransactions = transactions
+                            .sort((a, b) => new Date(b.date) - new Date(a.date))
+                            .slice(0, 3);
+                        
+                        const transactionItems = recentTransactions.map(transaction => ({
+                            type: 'transaction',
+                            message: `Transaction #${transaction.id} - ${(transaction.total || 0).toFixed(2)}$`,
+                            time: new Date(transaction.date).toLocaleDateString('fr-FR'),
+                            icon: 'fas fa-shopping-cart text-success'
+                        }));
+                        
+                        // Merge with product activities
+                        activityItems = [...activityItems, ...transactionItems];
+                    }
+                } catch (e) {
+                    Logger.warn('Could not fetch recent transactions:', e);
+                }
+                
+                // Add system activity if no activities exist
+                if (activityItems.length === 0) {
+                    activityItems.push({
+                        type: 'system',
+                        message: 'Système initialisé',
+                        time: 'Il y a quelques instants',
+                        icon: 'fas fa-info-circle text-info'
+                    });
+                }
+                
+                if (products.length > 0) {
+                    activityItems.push({
+                        type: 'products',
+                        message: `${products.length} produits chargés`,
+                        time: 'Il y a quelques instants',
+                        icon: 'fas fa-boxes text-primary'
+                    });
+                }
+                
+                // Sort by timestamp if available, otherwise keep order
+                activityItems.sort((a, b) => {
+                    if (a.timestamp && b.timestamp) {
+                        return new Date(b.timestamp) - new Date(a.timestamp);
+                    }
+                    return 0;
+                });
+                
+                // Keep only the most recent 5 activities
+                activityItems = activityItems.slice(0, 5);
+                
+                const activityHTML = activityItems.map(item => `
+                    <li class="list-group-item">
+                        <i class="${item.icon}"></i> ${item.message}<br>
+                        <small class="text-muted">${item.time}</small>
+                    </li>
+                `).join('');
+                
+                activityContainer.innerHTML = `
+                    <ul class="list-group list-group-flush">
+                        ${activityHTML}
+                    </ul>
+                    <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer les produits</a>
+                `;
+                
+                Logger.info('Recent activity loaded');
+            } catch (e) {
+                Logger.error('Error loading recent activity:', e);
+                
+                // Fallback to basic activity
+                const activityContainer = document.getElementById('recentActivity');
                 activityContainer.innerHTML = `
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <i class="fas fa-info-circle text-info"></i> Système initialisé<br>
                             <small class="text-muted">Il y a quelques instants</small>
                         </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-boxes text-primary"></i> ${products.length} produits chargés<br>
-                            <small class="text-muted">Il y a quelques instants</small>
-                        </li>
                     </ul>
                     <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer les produits</a>
                 `;
-                Logger.info('Recent activity loaded');
-            } catch (e) {
-                Logger.error('Error loading recent activity:', e);
+            }
+        }
+        
+        // Get appropriate icon for activity type
+        function getActivityIcon(type) {
+            switch(type) {
+                case 'product_created':
+                    return 'fas fa-plus-circle text-success';
+                case 'product_updated':
+                    return 'fas fa-edit text-warning';
+                case 'product_deleted':
+                    return 'fas fa-trash text-danger';
+                case 'product_duplicated':
+                    return 'fas fa-copy text-info';
+                case 'transaction':
+                    return 'fas fa-shopping-cart text-success';
+                case 'system':
+                    return 'fas fa-info-circle text-info';
+                case 'products':
+                    return 'fas fa-boxes text-primary';
+                default:
+                    return 'fas fa-info-circle text-muted';
             }
         }
 
@@ -321,102 +507,315 @@
         async function loadPopularProducts() {
             try {
                 const popularContainer = document.getElementById('popularProducts');
-                // Show top 5 products by stock level (as a proxy for popularity)
-                const topProducts = [...products]
-                    .sort((a, b) => b.stock - a.stock)
-                    .slice(0, 5);
                 
-                if (topProducts.length > 0) {
-                    const list = topProducts.map((product, index) => `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            ${product.name} 
-                            <span class="badge bg-primary rounded-pill">Stock: ${product.stock} • ${product.price.toFixed(2)}$</span>
-                        </li>
-                    `).join('');
-                    
-                    popularContainer.innerHTML = `
-                        <ol class="list-group list-group-numbered">
-                            ${list}
-                        </ol>
-                        <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer tous les produits</a>
-                    `;
-                } else {
+                if (products.length === 0) {
                     popularContainer.innerHTML = `
                         <p class="text-muted">Aucun produit disponible</p>
                         <a href="/admin/products" class="btn btn-link btn-sm mt-2">Ajouter des produits</a>
                     `;
+                    return;
                 }
+                
+                // Since we don't have a popular products endpoint, we'll use products by stock level
+                // This is a reasonable approximation for a dashboard
+                let popularProducts = [...products]
+                    .sort((a, b) => b.stock - a.stock)
+                    .slice(0, 5)
+                    .map(product => ({
+                        ...product,
+                        salesCount: 0 // No sales data available
+                    }));
+                
+                const list = popularProducts.map((product, index) => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${product.name}</strong>
+                            <br><small class="text-muted">${product.category}</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            Stock: ${product.stock} • ${product.price.toFixed(2)}$
+                        </span>
+                    </li>
+                `).join('');
+                
+                popularContainer.innerHTML = `
+                    <ol class="list-group list-group-numbered">
+                        ${list}
+                    </ol>
+                    <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer tous les produits</a>
+                `;
+                
                 Logger.info('Popular products loaded');
             } catch (e) {
                 Logger.error('Error loading popular products:', e);
+                
+                // Fallback display
+                const popularContainer = document.getElementById('popularProducts');
+                popularContainer.innerHTML = `
+                    <p class="text-muted">Erreur lors du chargement des produits populaires</p>
+                    <a href="/admin/products" class="btn btn-link btn-sm mt-2">Gérer les produits</a>
+                `;
             }
         }
 
         // Initialize charts
-        function initializeCharts() {
+        // Chart.js instance variables
+        let salesChartInstance = null;
+        let categoriesChartInstance = null;
+
+        async function initializeCharts() {
             try {
-                // Sales Chart (placeholder data)
+                // Sales Chart
                 const salesCtx = document.getElementById('salesChart');
                 if (salesCtx) {
-                    new Chart(salesCtx, {
-                        type: 'line',
-                        data: {
-                            labels: Array.from({length: 30}, (_, i) => `J-${29-i}`),
-                            datasets: [{
-                                label: 'Ventes ($)',
-                                data: Array.from({length: 30}, () => Math.floor(Math.random() * 1000)),
-                                borderColor: 'rgb(75, 192, 192)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                                tension: 0.1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false
-                        }
-                    });
+                    // Destroy previous instance if exists
+                    if (salesChartInstance) {
+                        salesChartInstance.destroy();
+                        salesChartInstance = null;
+                    }
+                    
+                    // Try to fetch real sales data
+                    try {
+                        const salesData = await fetchSalesData();
+                        const ctx = salesCtx.getContext('2d');
+                        salesChartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: salesData.labels,
+                                datasets: [{
+                                    label: 'Ventes ($)',
+                                    data: salesData.data,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: 'Ventes des 30 derniers jours'
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        Logger.warn('Could not fetch sales data, using placeholder:', e);
+                        // Fallback to placeholder data
+                        const ctx = salesCtx.getContext('2d');
+                        salesChartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: Array.from({length: 30}, (_, i) => `J-${29-i}`),
+                                datasets: [{
+                                    label: 'Ventes ($)',
+                                    data: Array.from({length: 30}, () => Math.floor(Math.random() * 1000)),
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false
+                            }
+                        });
+                    }
                 }
 
                 // Categories Chart
                 const categoriesCtx = document.getElementById('categoriesChart');
-                if (categoriesCtx && products.length > 0) {
-                    const categoryStats = {};
-                    products.forEach(product => {
-                        categoryStats[product.category] = (categoryStats[product.category] || 0) + 1;
-                    });
+                if (categoriesCtx) {
+                    // Destroy previous instance if exists
+                    if (categoriesChartInstance) {
+                        categoriesChartInstance.destroy();
+                        categoriesChartInstance = null;
+                    }
                     
-                    new Chart(categoriesCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(categoryStats),
-                            datasets: [{
-                                data: Object.values(categoryStats),
-                                backgroundColor: [
-                                    '#FF6384',
-                                    '#36A2EB',
-                                    '#FFCE56',
-                                    '#4BC0C0',
-                                    '#9966FF',
-                                    '#FF9F40'
-                                ]
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false
-                        }
-                    });
+                    if (products.length > 0) {
+                        const categoryStats = {};
+                        products.forEach(product => {
+                            const category = product.category || 'Non catégorisé';
+                            categoryStats[category] = (categoryStats[category] || 0) + 1;
+                        });
+                        
+                        const ctx = categoriesCtx.getContext('2d');
+                        categoriesChartInstance = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: Object.keys(categoryStats),
+                                datasets: [{
+                                    data: Object.values(categoryStats),
+                                    backgroundColor: [
+                                        '#FF6384',
+                                        '#36A2EB',
+                                        '#FFCE56',
+                                        '#4BC0C0',
+                                        '#9966FF',
+                                        '#FF9F40'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: 'Répartition par catégorie'
+                                    },
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        // Show placeholder when no products
+                        const ctx = categoriesCtx.getContext('2d');
+                        categoriesChartInstance = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Aucun produit'],
+                                datasets: [{
+                                    data: [1],
+                                    backgroundColor: ['#e9ecef']
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: 'Répartition par catégorie'
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
+                
                 Logger.info('Charts initialized');
             } catch (e) {
                 Logger.error('Error initializing charts:', e);
             }
         }
 
+        // Fetch sales data for the chart
+        async function fetchSalesData() {
+            try {
+                // Since we don't have a sales-data endpoint, we'll use the transactions endpoint
+                // to build basic sales data
+                const response = await fetch('/api/transactions');
+                if (response.ok) {
+                    const transactions = await response.json();
+                    Logger.info('Fetched transactions for chart:', transactions.length);
+                    
+                    // Group transactions by date and calculate daily sales
+                    const salesByDate = {};
+                    const last30Days = [];
+                    
+                    // Generate last 30 days
+                    for (let i = 29; i >= 0; i--) {
+                        const date = new Date();
+                        date.setDate(date.getDate() - i);
+                        const dateKey = date.toISOString().split('T')[0];
+                        last30Days.push(dateKey);
+                        salesByDate[dateKey] = 0;
+                    }
+                    
+                    // Sum transactions by date
+                    transactions.forEach(transaction => {
+                        if (transaction.date) {
+                            // Handle different date formats
+                            let transactionDate;
+                            if (transaction.date.includes('T')) {
+                                transactionDate = transaction.date.split('T')[0];
+                            } else {
+                                transactionDate = transaction.date;
+                            }
+                            
+                            if (salesByDate.hasOwnProperty(transactionDate)) {
+                                salesByDate[transactionDate] += transaction.total || 0;
+                            }
+                        }
+                    });
+                    
+                    const salesData = {
+                        labels: last30Days.map((date, index) => `J-${29-index}`),
+                        data: last30Days.map(date => salesByDate[date] || 0)
+                    };
+                    
+                    Logger.info('Sales data prepared:', salesData);
+                    return salesData;
+                }
+            } catch (e) {
+                Logger.warn('Error fetching sales data:', e);
+            }
+            
+            // Fallback to zero data if no transactions
+            return {
+                labels: Array.from({length: 30}, (_, i) => `J-${29-i}`),
+                data: Array.from({length: 30}, () => 0)
+            };
+        }
+
         // Refresh dashboard
         async function refreshDashboard() {
-            Logger.info('Refreshing dashboard...');
-            await initializeDashboard();
+            try {
+                Logger.info('Refreshing dashboard...');
+                
+                // Show loading state
+                const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
+                if (refreshBtn) {
+                    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualisation...';
+                    refreshBtn.disabled = true;
+                }
+                
+                // Clear existing data
+                products = [];
+                filteredProducts = [];
+                
+                // Destroy existing charts before recreating
+                if (salesChartInstance) {
+                    salesChartInstance.destroy();
+                    salesChartInstance = null;
+                }
+                if (categoriesChartInstance) {
+                    categoriesChartInstance.destroy();
+                    categoriesChartInstance = null;
+                }
+                
+                // Reinitialize dashboard
+                await initializeDashboard();
+                
+                // Restore refresh button
+                if (refreshBtn) {
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Actualiser';
+                    refreshBtn.disabled = false;
+                }
+                
+                Logger.info('Dashboard refresh complete');
+            } catch (e) {
+                Logger.error('Error refreshing dashboard:', e);
+                
+                // Restore refresh button on error
+                const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
+                if (refreshBtn) {
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Actualiser';
+                    refreshBtn.disabled = false;
+                }
+                
+                alert('Erreur lors de l\'actualisation du tableau de bord: ' + e.message);
+            }
         }
 
         // --- Product Management Functions (for shared use) ---
