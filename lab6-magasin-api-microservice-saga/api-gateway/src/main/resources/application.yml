@@ -1,0 +1,166 @@
+server:
+  port: 8765
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: inventory-service
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/inventory/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: inventory-service
+            
+            - id: inventory-service-alt
+              uri: lb://inventory-service
+              predicates:
+                - Path=/inventory-service/**
+              filters:
+                - name: RewritePath
+                  args:
+                    regexp: /inventory-service/(?<segment>.*)
+                    replacement: /${segment}
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: inventory-service
+            
+            - id: transaction-service
+              uri: lb://transaction-service
+              predicates:
+                - Path=/api/transactions/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: transaction-service
+            
+            - id: transaction-service-alt
+              uri: lb://transaction-service
+              predicates:
+                - Path=/transaction-service/**
+              filters:
+                - name: RewritePath
+                  args:
+                    regexp: /transaction-service/(?<segment>.*)
+                    replacement: /${segment}
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: transaction-service
+            
+            - id: store-service
+              uri: lb://store-service
+              predicates:
+                - Path=/api/stores/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: store-service
+            
+            - id: store-service-alt
+              uri: lb://store-service
+              predicates:
+                - Path=/store-service/**
+              filters:
+                - name: RewritePath
+                  args:
+                    regexp: /store-service/(?<segment>.*)
+                    replacement: /${segment}
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: store-service
+            
+            - id: personnel-service
+              uri: lb://personnel-service
+              predicates:
+                - Path=/api/personnel/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: personnel-service
+            
+            - id: personnel-service-alt
+              uri: lb://personnel-service
+              predicates:
+                - Path=/personnel-service/**
+              filters:
+                - name: RewritePath
+                  args:
+                    regexp: /personnel-service/(?<segment>.*)
+                    replacement: /${segment}
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: personnel-service
+
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/gateway_db}
+    username: ${POSTGRES_USER:magasin}
+    password: ${POSTGRES_PASSWORD:password}
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+    
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      service: api-gateway
+    distribution:
+      percentiles:
+        http.server.requests: 0.5,0.9,0.95,0.99
+      percentiles-histogram:
+        http.server.requests: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway.filter: INFO
+    org.springframework.cloud.gateway.route: INFO
+    reactor.netty.http.client: INFO
+    com.log430.tp6: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %level - %msg%n"
