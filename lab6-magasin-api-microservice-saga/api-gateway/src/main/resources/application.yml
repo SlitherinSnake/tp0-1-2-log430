@@ -108,6 +108,30 @@ spring:
                   args:
                     name: X-Service-Name
                     value: personnel-service
+            
+            - id: saga-orchestrator-service
+              uri: lb://saga-orchestrator-service
+              predicates:
+                - Path=/api/saga/**
+              filters:
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: saga-orchestrator-service
+            
+            - id: saga-orchestrator-service-alt
+              uri: lb://saga-orchestrator-service
+              predicates:
+                - Path=/saga-orchestrator-service/**
+              filters:
+                - name: RewritePath
+                  args:
+                    regexp: /saga-orchestrator-service/(?<segment>.*)
+                    replacement: /${segment}
+                - name: AddRequestHeader
+                  args:
+                    name: X-Service-Name
+                    value: saga-orchestrator-service
 
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/gateway_db}
