@@ -19,11 +19,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.log430.tp6.application.service.SagaOrderService;
 import com.log430.tp6.application.service.StoreService;
 import com.log430.tp6.domain.store.Store;
+import com.log430.tp6.presentation.api.dto.OrderRequest;
+import com.log430.tp6.presentation.api.dto.OrderResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * REST API controller for store management.
@@ -38,9 +42,11 @@ public class StoreController {
     private static final Logger log = LoggerFactory.getLogger(StoreController.class);
 
     private final StoreService storeService;
+    private final SagaOrderService sagaOrderService;
 
-    public StoreController(StoreService storeService) {
+    public StoreController(StoreService storeService, SagaOrderService sagaOrderService) {
         this.storeService = storeService;
+        this.sagaOrderService = sagaOrderService;
     }
 
     /**
@@ -278,6 +284,41 @@ public class StoreController {
         );
         return ResponseEntity.ok(response);
     }
+
+    // ========== SAGA ENDPOINTS ==========
+
+    /**
+     * Create order for saga operations.
+     */
+    @Operation(summary = "Créer une commande", description = "Crée une commande pour une opération saga.")
+    @PostMapping("/api/v1/orders/create-order")
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest request) {
+        log.info("Saga API call: createOrder for saga {} - customer: {}, store: {}, amount: {}", 
+            request.sagaId(), request.customerId(), request.storeId(), request.totalAmount());
+        
+        try {
+            OrderResponse response = sagaOrderService.createOrder(request);
+            
+            if (response.success()) {
+                log.info("Order created successfully for saga {} - orderId: {}", 
+                    request.sagaId(), response.orderId());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Order creation failed for saga {}: {}", request.sagaId(), response.message());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in createOrder for saga {}: {}", request.sagaId(), e.getMessage(), e);
+            OrderResponse errorResponse = OrderResponse.failure(
+                request.sagaId(), request.customerId(), request.storeId(),
+                request.totalAmount(), "Internal server error"
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    // ========== END SAGA ENDPOINTS ==========
 
     // Request DTOs
     public record CreateStoreRequest(
