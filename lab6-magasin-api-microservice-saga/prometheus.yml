@@ -4,6 +4,7 @@ global:
 
 rule_files:
   - "alert_rules.yml"
+  - "saga-orchestrator-alerting-rules.yml"
 
 alerting:
   alertmanagers:
@@ -60,6 +61,14 @@ scrape_configs:
       - targets: ['personnel-service:8084']
     metrics_path: '/actuator/prometheus'
     scrape_interval: 15s
+
+  # Saga Orchestrator Service
+  - job_name: 'saga-orchestrator-service'
+    static_configs:
+      - targets: ['saga-orchestrator-service:8085']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s  # More frequent scraping for saga metrics
+    scrape_timeout: 5s
 
   # Prometheus itself
   - job_name: 'prometheus'
