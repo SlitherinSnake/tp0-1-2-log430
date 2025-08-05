@@ -1,0 +1,195 @@
+groups:
+  - name: saga-orchestrator-alerts
+    rules:
+      # High saga failure rate alert
+      - alert: HighSagaFailureRate
+        expr: (rate(saga_failed_total[5m]) / (rate(saga_completed_total[5m]) + rate(saga_failed_total[5m]))) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: saga-execution
+        annotations:
+          summary: "High saga failure rate detected"
+          description: "Saga failure rate is {{ $value | humanizePercentage }} over the last 5 minutes, which is above the 10% threshold."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/high-failure-rate"
+
+      # Critical saga failure rate alert
+      - alert: CriticalSagaFailureRate
+        expr: (rate(saga_failed_total[5m]) / (rate(saga_completed_total[5m]) + rate(saga_failed_total[5m]))) > 0.25
+        for: 1m
+        labels:
+          severity: critical
+          service: saga-orchestrator
+          component: saga-execution
+        annotations:
+          summary: "Critical saga failure rate detected"
+          description: "Saga failure rate is {{ $value | humanizePercentage }} over the last 5 minutes, which is above the 25% critical threshold."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/critical-failure-rate"
+
+      # High saga duration alert
+      - alert: HighSagaDuration
+        expr: histogram_quantile(0.95, rate(saga_duration_seconds_bucket[5m])) > 30
+        for: 3m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: performance
+        annotations:
+          summary: "High saga execution duration detected"
+          description: "95th percentile saga duration is {{ $value }}s over the last 5 minutes, which is above the 30s threshold."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/high-duration"
+
+      # Too many active sagas alert
+      - alert: TooManyActiveSagas
+        expr: saga_active_count > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: capacity
+        annotations:
+          summary: "Too many active sagas"
+          description: "There are {{ $value }} active sagas, which is above the 100 saga threshold. This may indicate a bottleneck or processing issues."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/too-many-active"
+
+      # High compensation rate alert
+      - alert: HighCompensationRate
+        expr: rate(saga_compensation_executed_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: compensation
+        annotations:
+          summary: "High compensation execution rate"
+          description: "Compensation actions are being executed at a rate of {{ $value }} per second over the last 5 minutes, indicating frequent saga failures."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/high-compensation"
+
+      # Service call failure alerts
+      - alert: HighStockVerificationFailureRate
+        expr: (rate(saga_stock_verification_total{result="failure"}[5m]) / rate(saga_stock_verification_total[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: inventory-integration
+        annotations:
+          summary: "High stock verification failure rate"
+          description: "Stock verification failure rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/stock-verification-failures"
+
+      - alert: HighPaymentProcessingFailureRate
+        expr: (rate(saga_payment_processing_total{result="failure"}[5m]) / rate(saga_payment_processing_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: payment-integration
+        annotations:
+          summary: "High payment processing failure rate"
+          description: "Payment processing failure rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/payment-failures"
+
+      # Service unavailability alerts
+      - alert: SagaOrchestratorDown
+        expr: up{job="saga-orchestrator-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: saga-orchestrator
+          component: availability
+        annotations:
+          summary: "Saga Orchestrator service is down"
+          description: "The Saga Orchestrator service has been down for more than 1 minute."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/service-down"
+
+      # Database connectivity alert
+      - alert: SagaDatabaseConnectionIssues
+        expr: increase(saga_errors_total{error_type="DatabaseException"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: database
+        annotations:
+          summary: "Saga database connection issues"
+          description: "There have been {{ $value }} database errors in the last 5 minutes."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/database-issues"
+
+      # Pending saga alerts
+      - alert: TooManyPendingStockVerifications
+        expr: saga_pending_stock_verification_count > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: inventory-integration
+        annotations:
+          summary: "Too many pending stock verifications"
+          description: "There are {{ $value }} sagas pending stock verification, which may indicate inventory service issues."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/pending-stock-verification"
+
+      - alert: TooManyPendingPayments
+        expr: saga_pending_payment_count > 20
+        for: 3m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: payment-integration
+        annotations:
+          summary: "Too many pending payment processes"
+          description: "There are {{ $value }} sagas pending payment processing, which may indicate payment service issues."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/pending-payments"
+
+      # Service call duration alerts
+      - alert: SlowStockVerification
+        expr: histogram_quantile(0.95, rate(saga_stock_verification_duration_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: inventory-integration
+        annotations:
+          summary: "Slow stock verification calls"
+          description: "95th percentile stock verification duration is {{ $value }}s, which is above the 5s threshold."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/slow-stock-verification"
+
+      - alert: SlowPaymentProcessing
+        expr: histogram_quantile(0.95, rate(saga_payment_processing_duration_seconds_bucket[5m])) > 10
+        for: 3m
+        labels:
+          severity: warning
+          service: saga-orchestrator
+          component: payment-integration
+        annotations:
+          summary: "Slow payment processing calls"
+          description: "95th percentile payment processing duration is {{ $value }}s, which is above the 10s threshold."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/slow-payment-processing"
+
+  - name: saga-orchestrator-sla-alerts
+    rules:
+      # SLA breach alerts
+      - alert: SagaSLABreach
+        expr: histogram_quantile(0.99, rate(saga_duration_seconds_bucket[10m])) > 60
+        for: 5m
+        labels:
+          severity: critical
+          service: saga-orchestrator
+          component: sla
+        annotations:
+          summary: "Saga SLA breach - 99th percentile duration too high"
+          description: "99th percentile saga duration is {{ $value }}s over the last 10 minutes, breaching the 60s SLA."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/sla-breach"
+
+      - alert: SagaAvailabilitySLABreach
+        expr: (rate(saga_completed_total[10m]) / (rate(saga_completed_total[10m]) + rate(saga_failed_total[10m]))) < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          service: saga-orchestrator
+          component: sla
+        annotations:
+          summary: "Saga availability SLA breach"
+          description: "Saga success rate is {{ $value | humanizePercentage }} over the last 10 minutes, below the 99% SLA."
+          runbook_url: "https://wiki.company.com/runbooks/saga-orchestrator/availability-sla-breach"
