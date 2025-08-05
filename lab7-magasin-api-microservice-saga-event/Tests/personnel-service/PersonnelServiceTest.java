@@ -1,8 +1,8 @@
-package com.log430.tp6.personnel.service;
+package com.log430.tp7.personnel.service;
 
-import com.log430.tp6.application.service.PersonnelService;
-import com.log430.tp6.domain.personnel.Personnel;
-import com.log430.tp6.infrastructure.repository.PersonnelRepository;
+import com.log430.tp7.application.service.PersonnelService;
+import com.log430.tp7.domain.personnel.Personnel;
+import com.log430.tp7.infrastructure.repository.PersonnelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

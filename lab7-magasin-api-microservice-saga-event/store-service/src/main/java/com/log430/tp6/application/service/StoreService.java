@@ -1,4 +1,4 @@
-package com.log430.tp6.application.service;
+package com.log430.tp7.application.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +11,8 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.log430.tp6.domain.store.Store;
-import com.log430.tp6.infrastructure.repository.StoreRepository;
+import com.log430.tp7.domain.store.Store;
+import com.log430.tp7.infrastructure.repository.StoreRepository;
 
 /**
  * Application service for store management operations.

@@ -30,7 +30,7 @@ spring:
     
 logging:
   level:
-    com.log430.tp6: DEBUG
+    com.log430.tp7: DEBUG
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
     

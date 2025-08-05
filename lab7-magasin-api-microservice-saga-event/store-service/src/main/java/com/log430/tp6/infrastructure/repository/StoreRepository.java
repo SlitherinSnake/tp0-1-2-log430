@@ -1,11 +1,11 @@
-package com.log430.tp6.infrastructure.repository;
+package com.log430.tp7.infrastructure.repository;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.log430.tp6.domain.store.Store;
+import com.log430.tp7.domain.store.Store;
 
 /**
  * Repository interface for Store entities.

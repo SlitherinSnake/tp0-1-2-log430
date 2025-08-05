@@ -1,9 +1,9 @@
-package com.log430.tp6.store.controller;
+package com.log430.tp7.store.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.log430.tp6.application.service.StoreService;
-import com.log430.tp6.domain.store.Store;
-import com.log430.tp6.presentation.api.StoreController;
+import com.log430.tp7.application.service.StoreService;
+import com.log430.tp7.domain.store.Store;
+import com.log430.tp7.presentation.api.StoreController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

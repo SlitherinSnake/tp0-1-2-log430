@@ -1,6 +1,6 @@
-package com.log430.tp6.presentation.api.dto;
+package com.log430.tp7.presentation.api.dto;
 
-import com.log430.tp6.domain.inventory.InventoryItem;
+import com.log430.tp7.domain.inventory.InventoryItem;
 
 /**
  * Data Transfer Object for InventoryItem API responses.

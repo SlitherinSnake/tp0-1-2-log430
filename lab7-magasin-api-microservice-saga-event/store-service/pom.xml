@@ -9,7 +9,7 @@
 		<version>3.5.0</version>
 		<relativePath/>
 	</parent>
-	<groupId>com.log430.tp6</groupId>
+	<groupId>com.log430.tp7</groupId>
 	<artifactId>store-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>store-service</name>

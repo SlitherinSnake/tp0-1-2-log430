@@ -1,4 +1,4 @@
-package com.log430.tp6.presentation.api;
+package com.log430.tp7.presentation.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,14 +20,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.log430.tp6.application.service.InventoryService;
-import com.log430.tp6.application.service.SagaInventoryService;
-import com.log430.tp6.domain.inventory.InventoryItem;
-import com.log430.tp6.presentation.api.dto.InventoryItemDto;
-import com.log430.tp6.presentation.api.dto.StockReservationRequest;
-import com.log430.tp6.presentation.api.dto.StockReservationResponse;
-import com.log430.tp6.presentation.api.dto.StockVerificationRequest;
-import com.log430.tp6.presentation.api.dto.StockVerificationResponse;
+import com.log430.tp7.application.service.InventoryService;
+import com.log430.tp7.application.service.SagaInventoryService;
+import com.log430.tp7.domain.inventory.InventoryItem;
+import com.log430.tp7.presentation.api.dto.InventoryItemDto;
+import com.log430.tp7.presentation.api.dto.StockReservationRequest;
+import com.log430.tp7.presentation.api.dto.StockReservationResponse;
+import com.log430.tp7.presentation.api.dto.StockVerificationRequest;
+import com.log430.tp7.presentation.api.dto.StockVerificationResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,4 +1,4 @@
-package com.log430.tp6.transaction;
+package com.log430.tp7.transaction;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EntityScan("com.log430.tp6.domain.transaction")
-@EnableJpaRepositories("com.log430.tp6.infrastructure.repository")
-@ComponentScan(basePackages = "com.log430.tp6")
+@EntityScan("com.log430.tp7.domain.transaction")
+@EnableJpaRepositories("com.log430.tp7.infrastructure.repository")
+@ComponentScan(basePackages = "com.log430.tp7")
 public class TransactionServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(TransactionServiceApplication.class, args);

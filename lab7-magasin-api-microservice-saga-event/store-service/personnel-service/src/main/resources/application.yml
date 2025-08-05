@@ -60,5 +60,5 @@ springdoc:
 # Logging configuration
 logging:
   level:
-    com.log430.tp6: DEBUG
+    com.log430.tp7: DEBUG
     org.springframework.cache: DEBUG

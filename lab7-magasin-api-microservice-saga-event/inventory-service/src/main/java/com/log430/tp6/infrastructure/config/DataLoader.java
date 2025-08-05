@@ -1,4 +1,4 @@
-package com.log430.tp6.infrastructure.config;
+package com.log430.tp7.infrastructure.config;
 
 import java.util.List;
 
@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.log430.tp6.domain.inventory.InventoryItem;
-import com.log430.tp6.infrastructure.repository.InventoryItemRepository;
+import com.log430.tp7.domain.inventory.InventoryItem;
+import com.log430.tp7.infrastructure.repository.InventoryItemRepository;
 
 /**
  * Data loader to initialize sample inventory items.

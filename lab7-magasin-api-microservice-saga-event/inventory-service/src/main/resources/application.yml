@@ -54,7 +54,7 @@ springdoc:
 
 logging:
   level:
-    com.log430.tp6: INFO
+    com.log430.tp7: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN

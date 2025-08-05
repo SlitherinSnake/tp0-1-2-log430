@@ -1,4 +1,4 @@
-package com.log430.tp6.inventory;
+package com.log430.tp7.inventory;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@ComponentScan(basePackages = "com.log430.tp6")
-@EnableJpaRepositories(basePackages = "com.log430.tp6.infrastructure.repository")
-@EntityScan(basePackages = {"com.log430.tp6.domain.inventory"})
+@ComponentScan(basePackages = "com.log430.tp7")
+@EnableJpaRepositories(basePackages = "com.log430.tp7.infrastructure.repository")
+@EntityScan(basePackages = {"com.log430.tp7.domain.inventory"})
 public class InventoryServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(InventoryServiceApplication.class, args);

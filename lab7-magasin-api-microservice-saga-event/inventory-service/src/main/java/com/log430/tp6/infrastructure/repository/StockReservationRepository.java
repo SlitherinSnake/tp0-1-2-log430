@@ -1,4 +1,4 @@
-package com.log430.tp6.infrastructure.repository;
+package com.log430.tp7.infrastructure.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.log430.tp6.domain.inventory.StockReservation;
+import com.log430.tp7.domain.inventory.StockReservation;
 import jakarta.persistence.LockModeType;
 
 /**

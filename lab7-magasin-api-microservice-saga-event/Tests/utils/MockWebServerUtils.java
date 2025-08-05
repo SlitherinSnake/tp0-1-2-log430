@@ -1,4 +1,4 @@
-package com.log430.tp6.test.utils;
+package com.log430.tp7.test.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;

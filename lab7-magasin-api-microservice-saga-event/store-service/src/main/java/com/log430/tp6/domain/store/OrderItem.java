@@ -1,4 +1,4 @@
-package com.log430.tp6.domain.store;
+package com.log430.tp7.domain.store;
 
 import java.math.BigDecimal;
 

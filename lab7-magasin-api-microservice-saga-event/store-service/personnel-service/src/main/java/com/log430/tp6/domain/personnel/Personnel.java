@@ -1,4 +1,4 @@
-package com.log430.tp6.domain.personnel;
+package com.log430.tp7.domain.personnel;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,9 +1,9 @@
-package com.log430.tp6.presentation.api.dto;
+package com.log430.tp7.presentation.api.dto;
 
 import java.util.List;
 
-import com.log430.tp6.domain.transaction.Transaction;
-import com.log430.tp6.domain.transaction.TransactionItem;
+import com.log430.tp7.domain.transaction.Transaction;
+import com.log430.tp7.domain.transaction.TransactionItem;
 
 /**
  * Data Transfer Object for Transaction API responses.

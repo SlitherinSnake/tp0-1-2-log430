@@ -1,8 +1,8 @@
-package com.log430.tp6.inventory.service;
+package com.log430.tp7.inventory.service;
 
-import com.log430.tp6.application.service.InventoryService;
-import com.log430.tp6.domain.inventory.InventoryItem;
-import com.log430.tp6.infrastructure.repository.InventoryRepository;
+import com.log430.tp7.application.service.InventoryService;
+import com.log430.tp7.domain.inventory.InventoryItem;
+import com.log430.tp7.infrastructure.repository.InventoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package com.log430.tp6.domain.inventory;
+package com.log430.tp7.domain.inventory;
 
 import java.time.LocalDate;
 

@@ -64,20 +64,20 @@
     </appender>
     
     <!-- Specific logger for saga events with structured logging -->
-    <logger name="com.log430.tp6.sagaorchestrator.logging.SagaEventLogger" level="INFO" additivity="false">
+    <logger name="com.log430.tp7.sagaorchestrator.logging.SagaEventLogger" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_SAGA_FILE"/>
         <appender-ref ref="ASYNC_SAGA_JSON_FILE"/>
     </logger>
     
     <!-- Specific logger for saga orchestrator service -->
-    <logger name="com.log430.tp6.sagaorchestrator.service.SagaOrchestrator" level="INFO" additivity="false">
+    <logger name="com.log430.tp7.sagaorchestrator.service.SagaOrchestrator" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_SAGA_FILE"/>
     </logger>
     
     <!-- Specific logger for saga metrics -->
-    <logger name="com.log430.tp6.sagaorchestrator.metrics" level="DEBUG" additivity="false">
+    <logger name="com.log430.tp7.sagaorchestrator.metrics" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_SAGA_FILE"/>
     </logger>
@@ -97,7 +97,7 @@
         </root>
         
         <!-- More verbose logging for saga components in production -->
-        <logger name="com.log430.tp6.sagaorchestrator" level="INFO"/>
+        <logger name="com.log430.tp7.sagaorchestrator" level="INFO"/>
     </springProfile>
     
     <springProfile name="!development &amp; !production">
@@ -116,7 +116,7 @@
     <logger name="org.apache.http" level="WARN"/>
     
     <!-- Enable debug logging for saga components when needed -->
-    <logger name="com.log430.tp6.sagaorchestrator.client" level="INFO"/>
-    <logger name="com.log430.tp6.sagaorchestrator.repository" level="INFO"/>
+    <logger name="com.log430.tp7.sagaorchestrator.client" level="INFO"/>
+    <logger name="com.log430.tp7.sagaorchestrator.repository" level="INFO"/>
     
 </configuration>

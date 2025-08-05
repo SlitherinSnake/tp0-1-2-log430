@@ -1,10 +1,10 @@
-package com.log430.tp6.inventory.controller;
+package com.log430.tp7.inventory.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.log430.tp6.application.service.InventoryService;
-import com.log430.tp6.domain.inventory.InventoryItem;
-import com.log430.tp6.presentation.api.InventoryController;
-import com.log430.tp6.presentation.api.dto.InventoryItemDto;
+import com.log430.tp7.application.service.InventoryService;
+import com.log430.tp7.domain.inventory.InventoryItem;
+import com.log430.tp7.presentation.api.InventoryController;
+import com.log430.tp7.presentation.api.dto.InventoryItemDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package com.log430.tp6.presentation.api;
+package com.log430.tp7.presentation.api;
 
 import java.util.List;
 import java.util.Map;
@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.log430.tp6.application.service.SagaOrderService;
-import com.log430.tp6.application.service.StoreService;
-import com.log430.tp6.domain.store.Store;
-import com.log430.tp6.presentation.api.dto.OrderRequest;
-import com.log430.tp6.presentation.api.dto.OrderResponse;
+import com.log430.tp7.application.service.SagaOrderService;
+import com.log430.tp7.application.service.StoreService;
+import com.log430.tp7.domain.store.Store;
+import com.log430.tp7.presentation.api.dto.OrderRequest;
+import com.log430.tp7.presentation.api.dto.OrderResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

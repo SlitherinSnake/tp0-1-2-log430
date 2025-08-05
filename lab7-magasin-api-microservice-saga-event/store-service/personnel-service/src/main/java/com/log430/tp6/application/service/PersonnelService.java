@@ -1,4 +1,4 @@
-package com.log430.tp6.application.service;
+package com.log430.tp7.application.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,9 +11,9 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.log430.tp6.domain.personnel.Personnel;
-import com.log430.tp6.domain.personnel.Role;
-import com.log430.tp6.infrastructure.repository.PersonnelRepository;
+import com.log430.tp7.domain.personnel.Personnel;
+import com.log430.tp7.domain.personnel.Role;
+import com.log430.tp7.infrastructure.repository.PersonnelRepository;
 
 /**
  * Application service for personnel management operations.

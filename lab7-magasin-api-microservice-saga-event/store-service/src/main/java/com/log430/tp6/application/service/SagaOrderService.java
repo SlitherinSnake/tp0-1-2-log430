@@ -1,4 +1,4 @@
-package com.log430.tp6.application.service;
+package com.log430.tp7.application.service;
 
 import java.util.UUID;
 
@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.log430.tp6.domain.store.Order;
-import com.log430.tp6.domain.store.Store;
-import com.log430.tp6.infrastructure.repository.OrderRepository;
-import com.log430.tp6.infrastructure.repository.StoreRepository;
-import com.log430.tp6.presentation.api.dto.OrderRequest;
-import com.log430.tp6.presentation.api.dto.OrderResponse;
+import com.log430.tp7.domain.store.Order;
+import com.log430.tp7.domain.store.Store;
+import com.log430.tp7.infrastructure.repository.OrderRepository;
+import com.log430.tp7.infrastructure.repository.StoreRepository;
+import com.log430.tp7.presentation.api.dto.OrderRequest;
+import com.log430.tp7.presentation.api.dto.OrderResponse;
 
 /**
  * Application service for saga-specific order operations.

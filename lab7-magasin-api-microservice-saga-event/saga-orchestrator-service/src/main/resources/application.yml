@@ -83,7 +83,7 @@ info:
       version: ${java.version}
   build:
     artifact: saga-orchestrator-service
-    group: com.log430.tp6
+    group: com.log430.tp7
     time: ${BUILD_TIME:unknown}
   git:
     branch: ${GIT_BRANCH:unknown}

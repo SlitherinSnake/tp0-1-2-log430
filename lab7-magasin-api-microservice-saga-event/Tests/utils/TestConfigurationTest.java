@@ -1,4 +1,4 @@
-package com.log430.tp6.test.utils;
+package com.log430.tp7.test.utils;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

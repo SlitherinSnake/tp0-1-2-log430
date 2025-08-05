@@ -1,4 +1,4 @@
-package com.log430.tp6.infrastructure.repository;
+package com.log430.tp7.infrastructure.repository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.log430.tp6.domain.transaction.Transaction;
-import com.log430.tp6.domain.transaction.Transaction.StatutTransaction;
-import com.log430.tp6.domain.transaction.Transaction.TypeTransaction;
+import com.log430.tp7.domain.transaction.Transaction;
+import com.log430.tp7.domain.transaction.Transaction.StatutTransaction;
+import com.log430.tp7.domain.transaction.Transaction.TypeTransaction;
 
 /**
  * Repository interface for Transaction entities.

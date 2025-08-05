@@ -1,4 +1,4 @@
-package com.log430.tp6.presentation.api;
+package com.log430.tp7.presentation.api;
 
 import java.util.List;
 import java.util.Map;
@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.log430.tp6.application.service.PersonnelService;
-import com.log430.tp6.domain.personnel.Personnel;
+import com.log430.tp7.application.service.PersonnelService;
+import com.log430.tp7.domain.personnel.Personnel;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

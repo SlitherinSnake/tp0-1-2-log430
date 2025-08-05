@@ -1,4 +1,4 @@
-package com.log430.tp6.application.service;
+package com.log430.tp7.application.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.log430.tp6.domain.transaction.Transaction;
-import com.log430.tp6.infrastructure.repository.TransactionRepository;
-import com.log430.tp6.presentation.api.dto.PaymentRequest;
-import com.log430.tp6.presentation.api.dto.PaymentResponse;
+import com.log430.tp7.domain.transaction.Transaction;
+import com.log430.tp7.infrastructure.repository.TransactionRepository;
+import com.log430.tp7.presentation.api.dto.PaymentRequest;
+import com.log430.tp7.presentation.api.dto.PaymentResponse;
 
 /**
  * Application service for saga-specific payment operations.

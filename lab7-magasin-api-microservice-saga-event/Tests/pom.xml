@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
     
-    <groupId>com.log430.tp6</groupId>
+    <groupId>com.log430.tp7</groupId>
     <artifactId>centralized-tests</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>centralized-tests</name>

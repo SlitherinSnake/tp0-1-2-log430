@@ -1,6 +1,6 @@
-package com.log430.tp6.gateway;
+package com.log430.tp7.gateway;
 
-import com.log430.tp6.test.utils.MockWebServerUtils;
+import com.log430.tp7.test.utils.MockWebServerUtils;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

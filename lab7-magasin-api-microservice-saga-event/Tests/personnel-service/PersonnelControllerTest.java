@@ -1,9 +1,9 @@
-package com.log430.tp6.personnel.controller;
+package com.log430.tp7.personnel.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.log430.tp6.application.service.PersonnelService;
-import com.log430.tp6.domain.personnel.Personnel;
-import com.log430.tp6.presentation.api.PersonnelController;
+import com.log430.tp7.application.service.PersonnelService;
+import com.log430.tp7.domain.personnel.Personnel;
+import com.log430.tp7.presentation.api.PersonnelController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

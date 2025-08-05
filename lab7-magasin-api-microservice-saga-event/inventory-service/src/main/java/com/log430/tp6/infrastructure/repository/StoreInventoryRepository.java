@@ -1,4 +1,4 @@
-package com.log430.tp6.infrastructure.repository;
+package com.log430.tp7.infrastructure.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.log430.tp6.domain.inventory.StoreInventory;
+import com.log430.tp7.domain.inventory.StoreInventory;
 
 /**
  * Repository interface for StoreInventory entities.

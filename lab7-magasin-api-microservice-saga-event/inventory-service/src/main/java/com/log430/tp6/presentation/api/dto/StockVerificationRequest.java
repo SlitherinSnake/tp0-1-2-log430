@@ -1,4 +1,4 @@
-package com.log430.tp6.presentation.api.dto;
+package com.log430.tp7.presentation.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

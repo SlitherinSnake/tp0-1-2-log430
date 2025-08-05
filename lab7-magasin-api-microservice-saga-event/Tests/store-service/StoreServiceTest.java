@@ -1,8 +1,8 @@
-package com.log430.tp6.store.service;
+package com.log430.tp7.store.service;
 
-import com.log430.tp6.application.service.StoreService;
-import com.log430.tp6.domain.store.Store;
-import com.log430.tp6.infrastructure.repository.StoreRepository;
+import com.log430.tp7.application.service.StoreService;
+import com.log430.tp7.domain.store.Store;
+import com.log430.tp7.infrastructure.repository.StoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

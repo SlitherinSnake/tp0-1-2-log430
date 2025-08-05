@@ -1,4 +1,4 @@
-package com.log430.tp6.application.service;
+package com.log430.tp7.application.service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.log430.tp6.domain.inventory.InventoryItem;
-import com.log430.tp6.domain.inventory.StockReservation;
-import com.log430.tp6.infrastructure.repository.InventoryItemRepository;
-import com.log430.tp6.infrastructure.repository.StockReservationRepository;
-import com.log430.tp6.presentation.api.dto.StockReservationResponse;
-import com.log430.tp6.presentation.api.dto.StockVerificationResponse;
+import com.log430.tp7.domain.inventory.InventoryItem;
+import com.log430.tp7.domain.inventory.StockReservation;
+import com.log430.tp7.infrastructure.repository.InventoryItemRepository;
+import com.log430.tp7.infrastructure.repository.StockReservationRepository;
+import com.log430.tp7.presentation.api.dto.StockReservationResponse;
+import com.log430.tp7.presentation.api.dto.StockVerificationResponse;
 
 /**
  * Application service for saga-specific inventory operations.
