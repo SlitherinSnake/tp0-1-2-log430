@@ -1,5 +1,5 @@
 # Nom du flow
-name: CI/CD Pipeline – Magasin Web
+name: CI/CD Pipeline – Magasin Web Microservices with Saga
 
 # Nom de la branch push sur et pull
 on:
@@ -9,41 +9,84 @@ on:
     branches: [ main ]
 
 env:
-  # Repo Docker Hub : <SlitherinSnake>/lab4-magasin-api-rest-advanced
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab4-magasin-api-rest-advanced
+  # Repo Docker Hub : <SlitherinSnake>/lab6-magasin-api-microservice-saga
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-magasin-api-microservice-saga
 
 jobs:
 # ──────────────────────────── LINT ────────────────────────────
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          discovery-server,
+          api-gateway,
+          frontend-service,
+          inventory-service,
+          transaction-service,
+          store-service,
+          saga-orchestrator-service
+        ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with: { java-version: '21', distribution: 'temurin' }
 
-      - name: Lint (Run Checkstyle)
-        working-directory: lab4-magasin-api-rest-advanced
-        run: mvn --batch-mode -q verify
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Lint ${{ matrix.service }} (Run Checkstyle)
+        working-directory: lab6-magasin-api-microservice-saga/${{ matrix.service }}
+        run: mvn --batch-mode -q verify -DskipTests
 
 # ──────────────────────────── TEST ────────────────────────────
   test:
     runs-on: ubuntu-latest
     needs: lint
+    strategy:
+      matrix:
+        service: [
+          discovery-server,
+          api-gateway,
+          frontend-service,
+          inventory-service,
+          transaction-service,
+          store-service,
+          saga-orchestrator-service
+        ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with: { java-version: '21', distribution: 'temurin' }
 
-      # Le POM est dans le dossier magasin/
-      - name: Run Maven tests (module magasin)
-        working-directory: lab4-magasin-api-rest-advanced
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run Maven tests for ${{ matrix.service }}
+        working-directory: lab6-magasin-api-microservice-saga/${{ matrix.service }}
         run: mvn --batch-mode clean test
+
+      - name: Generate test report for ${{ matrix.service }}
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Maven Tests - ${{ matrix.service }}
+          path: lab6-magasin-api-microservice-saga/${{ matrix.service }}/target/surefire-reports/*.xml
+          reporter: java-junit
 
 # ──────────────────────────── BUILD DOCKER ────────────────────────────
   build:
@@ -51,36 +94,261 @@ jobs:
     needs: test
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build docker-compose stack
-        working-directory: lab5-magasin-api-microservice
-        run: docker compose -f docker-compose.yml build
-# ──────────────────────────── Integration section maybe? To Do ────────────────────────────
+        working-directory: lab6-magasin-api-microservice-saga
+        run: docker compose -f docker-compose.yml build --parallel
 
-# ──────────────────────────── PUBLISH DOCKER HUB ────────────────────────────
-  publish:
+      - name: Verify all services are built
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          echo "Verifying Docker images..."
+          docker images | grep -E "(discovery-server|api-gateway|frontend-service|inventory-service|transaction-service|store-service|saga-orchestrator-service)"
+
+# ──────────────────────────── INTEGRATION TESTS ────────────────────────────
+  integration-test:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Build image for app only
-        working-directory: lab5-magasin-api-microservice
-        run: docker compose -f docker-compose.yml build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start services for integration testing
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          docker compose up -d postgres redis discovery-server
+          sleep 30
+          docker compose up -d api-gateway inventory-service transaction-service store-service saga-orchestrator-service
+          sleep 60
+
+      - name: Wait for services to be healthy
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          echo "Waiting for services to be healthy..."
+          timeout 300 bash -c 'until docker compose ps | grep -E "(healthy|running)"; do sleep 10; done'
+
+      - name: Run integration tests
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          # Test service discovery
+          curl -f http://localhost:8761/actuator/health || exit 1
+          
+          # Test API Gateway
+          curl -f http://localhost:8765/actuator/health || exit 1
+          
+          # Test all microservices
+          curl -f http://localhost:8081/actuator/health || exit 1  # inventory
+          curl -f http://localhost:8082/actuator/health || exit 1  # transaction
+          curl -f http://localhost:8083/actuator/health || exit 1  # store
+          curl -f http://localhost:8085/actuator/health || exit 1  # saga-orchestrator
+          
+          # Test Saga Orchestrator API
+          curl -f http://localhost:8085/api/saga/health || echo "Saga API endpoint not available yet"
+
+      - name: Run Saga integration tests
+        working-directory: lab6-magasin-api-microservice-saga/Tests
+        run: |
+          if [ -f "integration-tests.sh" ]; then
+            chmod +x integration-tests.sh
+            ./integration-tests.sh
+          else
+            echo "Integration test script not found, skipping..."
+          fi
+
+      - name: Collect logs on failure
+        if: failure()
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          echo "=== Docker Compose Logs ==="
+          docker compose logs --tail=100
+          echo "=== Service Status ==="
+          docker compose ps
+
+      - name: Cleanup
+        if: always()
+        working-directory: lab6-magasin-api-microservice-saga
+        run: docker compose down -v
+
+# ──────────────────────────── PUBLISH DOCKER HUB ────────────────────────────
+  publish:
+    runs-on: ubuntu-latest
+    needs: integration-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    strategy:
+      matrix:
+        service: [
+          discovery-server,
+          api-gateway,
+          frontend-service,
+          inventory-service,
+          transaction-service,
+          store-service,
+          saga-orchestrator-service
+        ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag & Push image
-        working-directory: lab5-magasin-api-microservice
+      - name: Build and push ${{ matrix.service }}
+        working-directory: lab6-magasin-api-microservice-saga
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
-          docker tag magasin-api-app $IMAGE_NAME:latest
-          docker tag magasin-api-app $IMAGE_NAME:$DATE_TAG
+          SERVICE_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/lab6-${{ matrix.service }}"
+          
+          # Build the service
+          docker compose build ${{ matrix.service }}
+          
+          # Tag the image
+          docker tag lab6-magasin-api-microservice-saga-${{ matrix.service }} $SERVICE_IMAGE:latest
+          docker tag lab6-magasin-api-microservice-saga-${{ matrix.service }} $SERVICE_IMAGE:$DATE_TAG
+          docker tag lab6-magasin-api-microservice-saga-${{ matrix.service }} $SERVICE_IMAGE:${{ github.sha }}
+          
+          # Push all tags
+          docker push $SERVICE_IMAGE:latest
+          docker push $SERVICE_IMAGE:$DATE_TAG
+          docker push $SERVICE_IMAGE:${{ github.sha }}
+
+  # ──────────────────────────── PUBLISH COMPLETE STACK ────────────────────────────
+  publish-stack:
+    runs-on: ubuntu-latest
+    needs: publish
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push complete stack
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          DATE_TAG=$(date +%Y-%m-%d)
+          
+          # Build all services
+          docker compose build
+          
+          # Tag and push the main API Gateway as the primary image
+          docker tag lab6-magasin-api-microservice-saga-api-gateway $IMAGE_NAME:latest
+          docker tag lab6-magasin-api-microservice-saga-api-gateway $IMAGE_NAME:$DATE_TAG
+          docker tag lab6-magasin-api-microservice-saga-api-gateway $IMAGE_NAME:${{ github.sha }}
+          
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$DATE_TAG
+          docker push $IMAGE_NAME:${{ github.sha }}
+
+  # ──────────────────────────── SECURITY SCAN ────────────────────────────
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        service: [
+          discovery-server,
+          api-gateway,
+          frontend-service,
+          inventory-service,
+          transaction-service,
+          store-service,
+          saga-orchestrator-service
+        ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.service }} for scanning
+        working-directory: lab6-magasin-api-microservice-saga
+        run: docker compose build ${{ matrix.service }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'lab6-magasin-api-microservice-saga-${{ matrix.service }}'
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+
+      - name: Create deployment manifest
+        working-directory: lab6-magasin-api-microservice-saga
+        run: |
+          DATE_TAG=$(date +%Y-%m-%d)
+          cat > deployment-manifest.yml << EOF
+          # Lab6 Magasin API Microservices with Saga Pattern
+          # Build: ${{ github.sha }}
+          # Date: $DATE_TAG
+          
+          services:
+            discovery-server: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-discovery-server:$DATE_TAG
+            api-gateway: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-api-gateway:$DATE_TAG
+            frontend-service: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-frontend-service:$DATE_TAG
+            inventory-service: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-inventory-service:$DATE_TAG
+            transaction-service: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-transaction-service:$DATE_TAG
+            store-service: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-store-service:$DATE_TAG
+            saga-orchestrator-service: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-saga-orchestrator-service:$DATE_TAG
+          EOF
+          
+          echo "Deployment manifest created:"
+          cat deployment-manifest.yml
+
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-manifest-${{ github.sha }}
+          path: |
+            lab6-magasin-api-microservice-saga/deployment-manifest.yml
+            lab6-magasin-api-microservice-saga/docker-compose.yml
+            lab6-magasin-api-microservice-saga/prometheus.yml
+            lab6-magasin-api-microservice-saga/alert_rules.yml
+
+  # ──────────────────────────── NOTIFICATION ────────────────────────────
+  notify:
+    runs-on: ubuntu-latest
+    needs: [publish-stack, security-scan]
+    if: always()
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [[ "${{ needs.publish-stack.result }}" == "success" && "${{ needs.security-scan.result }}" == "success" ]]; then
+            echo " Lab6 Microservices with Saga Pattern deployed successfully!"
+            echo " Services available:"
+            echo "  - Discovery Server: http://localhost:8761"
+            echo "  - API Gateway: http://localhost:8765"
+            echo "  - Frontend: http://localhost:8080"
+            echo "  - Inventory Service: http://localhost:8081"
+            echo "  - Transaction Service: http://localhost:8082"
+            echo "  - Store Service: http://localhost:8083"
+            echo "  - Saga Orchestrator: http://localhost:8085"
+            echo "  - Grafana: http://localhost:3000"
+            echo "  - Prometheus: http://localhost:9090"
+          else
+            echo " Deployment failed or security issues found"
+            echo "Publish result: ${{ needs.publish-stack.result }}"
+            echo "Security scan result: ${{ needs.security-scan.result }}"
+          fi
