@@ -16,13 +16,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.log430.tp6.application.service.SagaPaymentService;
 import com.log430.tp6.application.service.TransactionService;
 import com.log430.tp6.domain.transaction.Transaction;
 import com.log430.tp6.infrastructure.repository.TransactionRepository;
+import com.log430.tp6.presentation.api.dto.PaymentRequest;
+import com.log430.tp6.presentation.api.dto.PaymentResponse;
 import com.log430.tp6.presentation.api.dto.TransactionDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * REST API controller for transaction management.
@@ -38,10 +42,14 @@ public class TransactionController {
     
     private final TransactionService transactionService;
     private final TransactionRepository transactionRepository;
+    private final SagaPaymentService sagaPaymentService;
 
-    public TransactionController(TransactionService transactionService, TransactionRepository transactionRepository) {
+    public TransactionController(TransactionService transactionService, 
+                               TransactionRepository transactionRepository,
+                               SagaPaymentService sagaPaymentService) {
         this.transactionService = transactionService;
         this.transactionRepository = transactionRepository;
+        this.sagaPaymentService = sagaPaymentService;
     }
 
     /**
@@ -279,6 +287,42 @@ public class TransactionController {
         );
         return ResponseEntity.ok(response);
     }
+
+    // ========== SAGA ENDPOINTS ==========
+
+    /**
+     * Process payment for saga operations.
+     */
+    @Operation(summary = "Traiter un paiement", description = "Traite un paiement pour une opération saga.")
+    @PostMapping("/api/v1/transactions/process-payment")
+    public ResponseEntity<PaymentResponse> processPayment(@Valid @RequestBody PaymentRequest request) {
+        log.info("Saga API call: processPayment for saga {} - customer: {}, amount: {}", 
+            request.sagaId(), request.customerId(), request.amount());
+        
+        try {
+            PaymentResponse response = sagaPaymentService.processPayment(request);
+            
+            if (response.success()) {
+                log.info("Payment processed successfully for saga {} - transactionId: {}", 
+                    request.sagaId(), response.transactionId());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Payment processing failed for saga {}: {} ({})", 
+                    request.sagaId(), response.message(), response.errorCode());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in processPayment for saga {}: {}", request.sagaId(), e.getMessage(), e);
+            PaymentResponse errorResponse = PaymentResponse.failure(
+                request.sagaId(), request.customerId(), request.amount(),
+                "Internal server error", "INTERNAL_ERROR"
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    // ========== END SAGA ENDPOINTS ==========
 
     // Request DTOs
     public record CreateSaleRequest(
