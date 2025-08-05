@@ -1,4 +1,4 @@
-package com.log430.tp6.service;
+package com.log430.tp7.service;
 
 import java.util.List;
 import java.util.Set;
@@ -11,8 +11,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.log430.tp6.dto.InventoryApiResponseDTO;
-import com.log430.tp6.dto.ProductDTO;
+import com.log430.tp7.dto.InventoryApiResponseDTO;
+import com.log430.tp7.dto.ProductDTO;
 
 @Service
 public class InventoryService {

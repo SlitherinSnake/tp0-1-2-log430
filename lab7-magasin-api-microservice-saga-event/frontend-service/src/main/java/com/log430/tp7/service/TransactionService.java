@@ -1,4 +1,4 @@
-package com.log430.tp6.service;
+package com.log430.tp7.service;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.log430.tp6.dto.TransactionDTO;
+import com.log430.tp7.dto.TransactionDTO;
 
 @Service
 public class TransactionService {

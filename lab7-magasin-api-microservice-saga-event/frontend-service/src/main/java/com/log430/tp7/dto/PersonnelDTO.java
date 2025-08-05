@@ -1,4 +1,4 @@
-package com.log430.tp6.dto;
+package com.log430.tp7.dto;
 
 public class PersonnelDTO {
     private Long id;

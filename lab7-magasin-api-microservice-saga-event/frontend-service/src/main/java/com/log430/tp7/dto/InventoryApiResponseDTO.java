@@ -1,4 +1,4 @@
-package com.log430.tp6.dto;
+package com.log430.tp7.dto;
 
 /**
  * DTO that matches the structure returned by the inventory service API.

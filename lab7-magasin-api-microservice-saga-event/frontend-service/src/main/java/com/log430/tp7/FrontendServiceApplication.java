@@ -1,4 +1,4 @@
-package com.log430.tp6;
+package com.log430.tp7;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.log430.tp6.controller;
+package com.log430.tp7.controller;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.log430.tp6.dto.ProductDTO;
-import com.log430.tp6.service.InventoryService;
+import com.log430.tp7.dto.ProductDTO;
+import com.log430.tp7.service.InventoryService;
 
 /**
  * Admin controller for employee/admin interface.

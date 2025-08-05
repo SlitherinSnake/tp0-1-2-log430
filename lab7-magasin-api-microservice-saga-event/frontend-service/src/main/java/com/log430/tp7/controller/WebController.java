@@ -1,4 +1,4 @@
-package com.log430.tp6.controller;
+package com.log430.tp7.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.log430.tp6.dto.ProductDTO;
-import com.log430.tp6.dto.TransactionDTO;
-import com.log430.tp6.service.InventoryService;
-import com.log430.tp6.service.TransactionService;
+import com.log430.tp7.dto.ProductDTO;
+import com.log430.tp7.dto.TransactionDTO;
+import com.log430.tp7.service.InventoryService;
+import com.log430.tp7.service.TransactionService;
 
 /**
  * Web controller for online store interface.

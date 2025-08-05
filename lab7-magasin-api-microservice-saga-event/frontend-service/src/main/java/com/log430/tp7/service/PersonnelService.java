@@ -1,4 +1,4 @@
-package com.log430.tp6.service;
+package com.log430.tp7.service;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.log430.tp6.dto.PersonnelDTO;
+import com.log430.tp7.dto.PersonnelDTO;
 
 @Service
 public class PersonnelService {

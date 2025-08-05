@@ -40,7 +40,7 @@ gateway:
 # Logging configuration
 logging:
   level:
-    com.log430.tp6: INFO
+    com.log430.tp7: INFO
     org.springframework.cloud: INFO
     org.springframework.web: INFO
   pattern:

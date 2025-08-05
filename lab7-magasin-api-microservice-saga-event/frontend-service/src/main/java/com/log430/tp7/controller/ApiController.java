@@ -1,4 +1,4 @@
-package com.log430.tp6.controller;
+package com.log430.tp7.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.log430.tp6.dto.TransactionDTO;
-import com.log430.tp6.service.TransactionService;
+import com.log430.tp7.dto.TransactionDTO;
+import com.log430.tp7.service.TransactionService;
 
 import reactor.core.publisher.Mono;
 
