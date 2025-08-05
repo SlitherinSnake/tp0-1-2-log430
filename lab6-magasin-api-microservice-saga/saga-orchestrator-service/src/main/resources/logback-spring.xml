@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    
+    <!-- Define properties -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{sagaId:-}] [%X{correlationId:-}] [%X{sagaState:-}] [%X{eventType:-}] [%X{step:-}] %logger{36} - %msg%n"/>
+    <property name="JSON_LOG_PATTERN" value='{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%level","thread":"%thread","logger":"%logger{36}","message":"%msg","sagaId":"%X{sagaId:-}","correlationId":"%X{correlationId:-}","sagaState":"%X{sagaState:-}","eventType":"%X{eventType:-}","step":"%X{step:-}","customerId":"%X{customerId:-}","productId":"%X{productId:-}"}%n'/>
+    
+    <!-- Console appender with structured logging -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- JSON console appender for structured logging -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${JSON_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- File appender for saga events -->
+    <appender name="SAGA_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/saga-orchestrator.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/saga-orchestrator.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- JSON file appender for structured logging -->
+    <appender name="SAGA_JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/saga-orchestrator-json.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/saga-orchestrator-json.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${JSON_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- Async appender for better performance -->
+    <appender name="ASYNC_SAGA_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="SAGA_FILE"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+    
+    <!-- Async JSON appender for better performance -->
+    <appender name="ASYNC_SAGA_JSON_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="SAGA_JSON_FILE"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+    
+    <!-- Specific logger for saga events with structured logging -->
+    <logger name="com.log430.tp6.sagaorchestrator.logging.SagaEventLogger" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_SAGA_FILE"/>
+        <appender-ref ref="ASYNC_SAGA_JSON_FILE"/>
+    </logger>
+    
+    <!-- Specific logger for saga orchestrator service -->
+    <logger name="com.log430.tp6.sagaorchestrator.service.SagaOrchestrator" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_SAGA_FILE"/>
+    </logger>
+    
+    <!-- Specific logger for saga metrics -->
+    <logger name="com.log430.tp6.sagaorchestrator.metrics" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_SAGA_FILE"/>
+    </logger>
+    
+    <!-- Profile-specific configurations -->
+    <springProfile name="development">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SAGA_FILE"/>
+        </root>
+    </springProfile>
+    
+    <springProfile name="production">
+        <root level="WARN">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_SAGA_JSON_FILE"/>
+        </root>
+        
+        <!-- More verbose logging for saga components in production -->
+        <logger name="com.log430.tp6.sagaorchestrator" level="INFO"/>
+    </springProfile>
+    
+    <springProfile name="!development &amp; !production">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_SAGA_FILE"/>
+        </root>
+    </springProfile>
+    
+    <!-- Reduce noise from Spring and Hibernate -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.apache.http" level="WARN"/>
+    
+    <!-- Enable debug logging for saga components when needed -->
+    <logger name="com.log430.tp6.sagaorchestrator.client" level="INFO"/>
+    <logger name="com.log430.tp6.sagaorchestrator.repository" level="INFO"/>
+    
+</configuration>

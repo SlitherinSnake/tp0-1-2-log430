@@ -1,0 +1,191 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: saga-orchestrator-service
+
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/saga_db}
+    username: ${POSTGRES_USER:magasin}
+    password: ${POSTGRES_PASSWORD:password}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,env,configprops,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    info:
+      enabled: true
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
+  health:
+    defaults:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        step: 10s
+        descriptions: true
+  metrics:
+    tags:
+      service: saga-orchestrator-service
+      environment: ${ENVIRONMENT:development}
+    distribution:
+      percentiles:
+        http.server.requests: 0.5,0.9,0.95,0.99
+        saga.duration: 0.5,0.9,0.95,0.99
+        saga.stock.verification.duration: 0.5,0.9,0.95,0.99
+        saga.payment.processing.duration: 0.5,0.9,0.95,0.99
+      percentiles-histogram:
+        http.server.requests: true
+        saga.duration: true
+      sla:
+        http.server.requests: 100ms,500ms,1s,2s,5s
+        saga.duration: 1s,5s,10s,30s,60s
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Saga Orchestrator Service for distributed transaction management
+    version: 1.0.0
+    encoding: UTF-8
+    java:
+      version: ${java.version}
+  build:
+    artifact: saga-orchestrator-service
+    group: com.log430.tp6
+    time: ${BUILD_TIME:unknown}
+  git:
+    branch: ${GIT_BRANCH:unknown}
+    commit:
+      id: ${GIT_COMMIT:unknown}
+      time: ${GIT_COMMIT_TIME:unknown}
+
+# Logging configuration is handled by logback-spring.xml for structured logging
+
+# Saga-specific configuration
+saga:
+  timeout:
+    default: 300000 # 5 minutes in milliseconds
+    stock-verification: 30000 # 30 seconds
+    stock-reservation: 30000 # 30 seconds
+    payment-processing: 60000 # 1 minute
+    order-confirmation: 30000 # 30 seconds
+
+  retry:
+    max-attempts: 3
+    backoff-delay: 1000 # 1 second
+
+# Resilience4j configuration for circuit breaker and retry patterns
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventory-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+      transaction-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+      store-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - java.lang.IllegalArgumentException
+  retry:
+    instances:
+      inventory-service:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+      transaction-service:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+      store-service:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+  timelimiter:
+    instances:
+      inventory-service:
+        timeout-duration: 10s
+      transaction-service:
+        timeout-duration: 30s
+      store-service:
+        timeout-duration: 15s
