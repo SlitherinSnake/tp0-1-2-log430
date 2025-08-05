@@ -10,3 +10,13 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards
+  
+  - name: 'saga-orchestrator'
+    org_id: 1
+    folder: 'Saga Orchestrator'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
