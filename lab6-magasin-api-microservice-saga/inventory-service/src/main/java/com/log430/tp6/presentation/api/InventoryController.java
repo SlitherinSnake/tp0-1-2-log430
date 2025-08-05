@@ -21,11 +21,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.log430.tp6.application.service.InventoryService;
+import com.log430.tp6.application.service.SagaInventoryService;
 import com.log430.tp6.domain.inventory.InventoryItem;
 import com.log430.tp6.presentation.api.dto.InventoryItemDto;
+import com.log430.tp6.presentation.api.dto.StockReservationRequest;
+import com.log430.tp6.presentation.api.dto.StockReservationResponse;
+import com.log430.tp6.presentation.api.dto.StockVerificationRequest;
+import com.log430.tp6.presentation.api.dto.StockVerificationResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * REST API controller for inventory management.
@@ -40,9 +46,11 @@ public class InventoryController {
     private static final String QUANTITY_PARAM = "quantity";
 
     private final InventoryService inventoryService;
+    private final SagaInventoryService sagaInventoryService;
 
-    public InventoryController(InventoryService inventoryService) {
+    public InventoryController(InventoryService inventoryService, SagaInventoryService sagaInventoryService) {
         this.inventoryService = inventoryService;
+        this.sagaInventoryService = sagaInventoryService;
     }
 
     /**
@@ -434,6 +442,111 @@ public class InventoryController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    // ========== SAGA ENDPOINTS ==========
+
+    /**
+     * Verify stock availability for saga operations.
+     */
+    @Operation(summary = "Vérifier la disponibilité du stock", description = "Vérifie si le stock est suffisant pour une opération saga.")
+    @PostMapping("/api/v1/inventory/verify-stock")
+    public ResponseEntity<StockVerificationResponse> verifyStock(@Valid @RequestBody StockVerificationRequest request) {
+        log.info("Saga API call: verifyStock for product {} with quantity {} for saga {}", 
+            request.productId(), request.quantity(), request.sagaId());
+        
+        try {
+            StockVerificationResponse response = sagaInventoryService.verifyStock(
+                request.productId(), request.quantity(), request.sagaId()
+            );
+            
+            if (response.available()) {
+                log.info("Stock verification successful for saga {}", request.sagaId());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Stock verification failed for saga {}: {}", request.sagaId(), response.message());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in verifyStock for saga {}: {}", request.sagaId(), e.getMessage(), e);
+            StockVerificationResponse errorResponse = StockVerificationResponse.failure(
+                request.productId(), request.quantity(), 0, 
+                "Internal server error", request.sagaId()
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
+     * Reserve stock for saga operations.
+     */
+    @Operation(summary = "Réserver du stock", description = "Réserve du stock pour une opération saga.")
+    @PostMapping("/api/v1/inventory/reserve-stock")
+    public ResponseEntity<StockReservationResponse> reserveStock(@Valid @RequestBody StockReservationRequest request) {
+        log.info("Saga API call: reserveStock for product {} with quantity {} for saga {}", 
+            request.productId(), request.quantity(), request.sagaId());
+        
+        try {
+            StockReservationResponse response = sagaInventoryService.reserveStock(
+                request.productId(), request.quantity(), request.sagaId()
+            );
+            
+            if (response.success()) {
+                log.info("Stock reservation successful for saga {} - reservationId: {}", 
+                    request.sagaId(), response.reservationId());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Stock reservation failed for saga {}: {}", request.sagaId(), response.message());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in reserveStock for saga {}: {}", request.sagaId(), e.getMessage(), e);
+            StockReservationResponse errorResponse = StockReservationResponse.failure(
+                request.productId(), request.quantity(), request.sagaId(), 
+                "Internal server error"
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
+     * Release stock reservation (compensation action).
+     */
+    @Operation(summary = "Libérer une réservation", description = "Libère une réservation de stock pour compensation saga.")
+    @DeleteMapping("/api/v1/inventory/reservations/{reservationId}")
+    public ResponseEntity<Map<String, Object>> releaseReservation(@PathVariable String reservationId) {
+        log.info("Saga API call: releaseReservation for reservationId {}", reservationId);
+        
+        try {
+            boolean success = sagaInventoryService.releaseReservation(reservationId);
+            
+            Map<String, Object> response = Map.of(
+                "success", success,
+                "reservationId", reservationId,
+                "message", success ? "Reservation released successfully" : "Failed to release reservation"
+            );
+            
+            if (success) {
+                log.info("Stock reservation released successfully: {}", reservationId);
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Failed to release stock reservation: {}", reservationId);
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in releaseReservation for reservationId {}: {}", reservationId, e.getMessage(), e);
+            Map<String, Object> errorResponse = Map.of(
+                "success", false,
+                "reservationId", reservationId,
+                "message", "Internal server error"
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    // ========== END SAGA ENDPOINTS ==========
 
     // Request DTOs
     public record CreateItemRequest(
