@@ -1,0 +1,74 @@
+# ===========================================
+# Java / Maven / Spring Boot
+# ===========================================
+
+# Dossiers de compilation
+target/
+build/
+
+# Fichiers compilés
+*.class
+
+# Logs
+*.log
+hs_err_pid*
+replay_pid*
+
+# Maven Wrapper
+.mvn/
+!**/src/main/**/target/
+!**/src/test/**/target/
+mvnw
+mvnw.cmd
+
+# Fichiers générés par Maven
+inputFiles.lst
+createdFiles.lst
+
+# Archives
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Fichier généré par Spring Initializr
+HELP.md
+
+# ===========================================
+# IDE : IntelliJ, Eclipse, VS Code, NetBeans
+# ===========================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse / STS
+.project
+.classpath
+.settings/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# ===========================================
+# Dockerr
+# ===========================================
+
+# Volume local PostgreSQL
+pgdata/
+**/pgdata/

@@ -1,0 +1,76 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+  - "saga-orchestrator-alerting-rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+scrape_configs:
+  # Discovery Server
+  - job_name: 'discovery-server'
+    static_configs:
+      - targets: ['discovery-server:8761']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8765']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Frontend Service
+  - job_name: 'frontend-service'
+    static_configs:
+      - targets: ['frontend-service:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Inventory Service
+  - job_name: 'inventory-service'
+    static_configs:
+      - targets: ['inventory-service:8081']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Transaction Service
+  - job_name: 'transaction-service'
+    static_configs:
+      - targets: ['transaction-service:8082']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Store Service
+  - job_name: 'store-service'
+    static_configs:
+      - targets: ['store-service:8083']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Personnel Service
+  - job_name: 'personnel-service'
+    static_configs:
+      - targets: ['personnel-service:8084']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Saga Orchestrator Service
+  - job_name: 'saga-orchestrator-service'
+    static_configs:
+      - targets: ['saga-orchestrator-service:8085']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s  # More frequent scraping for saga metrics
+    scrape_timeout: 5s
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

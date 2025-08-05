@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produits - Magasin en ligne</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .product-image {
+            height: 200px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .cart-badge {
+            background-color: #dc3545;
+            border-radius: 50%;
+            font-size: 0.8rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .category-filter {
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 8px 16px;
+            margin: 4px;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .category-filter:hover,
+        .category-filter.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" aria-label="Navigation principale">
+        <div class="container">
+            <a class="navbar-brand" href="/products">
+                <i class="fas fa-store"></i> Magasin en ligne
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="/products">
+                        <i class="fas fa-shopping-bag"></i> Produits
+                    </a>
+                    <a class="nav-link" href="/sales">
+                        <i class="fas fa-receipt"></i> Mes achats
+                    </a>
+                    <a class="nav-link" href="/returns">
+                        <i class="fas fa-undo"></i> Retours
+                    </a>
+                </div>
+                
+                <div class="navbar-nav">
+                    <a class="nav-link position-relative" href="/cart">
+                        <i class="fas fa-shopping-cart"></i> Panier
+                        <span class="position-absolute top-0 start-100 translate-middle badge cart-badge" id="cartCount">
+                            0
+                        </span>
+                    </a>
+                    <a class="nav-link" href="/login">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <!-- Error message -->
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1><i class="fas fa-shopping-bag"></i> Nos Produits</h1>
+                <p class="text-muted">Découvrez notre sélection de produits de qualité</p>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Rechercher un produit...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="sortSelect">
+                    <option value="name">Trier par nom</option>
+                    <option value="price-asc">Prix croissant</option>
+                    <option value="price-desc">Prix décroissant</option>
+                    <option value="category">Catégorie</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex flex-wrap">
+                    <span class="category-filter active" onclick="filterByCategory('')">
+                        <i class="fas fa-th"></i> Toutes les catégories
+                    </span>
+                    <span th:each="category : ${categories}" 
+                          class="category-filter" 
+                          th:attr="data-category=${category}"
+                          th:text="${category}">
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="row" id="productsGrid">
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4" th:each="product : ${products}">
+                <div class="card product-card h-100">
+                    <div class="product-image">
+                        <i class="fas fa-box fa-3x text-muted"></i>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title" th:text="${product.nom}">[[${product.nom}]]</h6>
+                        <p class="card-text text-muted small" th:text="${product.description}">[[${product.description}]]</p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-secondary" th:text="${product.categorie}">[[${product.categorie}]]</span>
+                                <span class="price-tag" th:text="${#numbers.formatCurrency(product.prix)}">[[${product.prix}]]</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-box"></i> 
+                                    <span th:text="${product.stockCentral}">[[${product.stockCentral}]]</span> en stock
+                                </small>
+                                <button class="btn btn-primary btn-sm add-to-cart-btn" 
+                                        th:attr="data-id=${product.id},data-nom=${product.nom},data-prix=${product.prix}"
+                                        th:disabled="${product.stockCentral <= 0}">
+                                    <i class="fas fa-cart-plus"></i> Ajouter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No products message -->
+        <div class="row" id="noProductsMessage" style="display: none;">
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Aucun produit trouvé</h4>
+                <p class="text-muted">Essayez de modifier vos critères de recherche</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast for cart notifications -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="cartToast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-shopping-cart text-success me-2"></i>
+                <strong class="me-auto">Panier</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                Produit ajouté au panier !
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/logger.js"></script>
+    <script>
+        // Initialize page logging
+        FrontendLogger.pageLoad('Products');
+        
+        // Set debug level for products page
+        FrontendLogger.setLevel('INFO');
+        
+        // Enable specific features for debugging
+        FrontendLogger.enableFeature('CART_OPERATIONS');
+        FrontendLogger.enableFeature('USER_INTERACTIONS');
+
+        FrontendLogger.info('APP', 'Products page JavaScript initialized');
+        
+        let cart = JSON.parse(localStorage.getItem('cart'))?.map(item => ({
+            ...item,
+            price: parseFloat(item.price),
+            quantity: parseInt(item.quantity)
+        })) || [];
+        
+        FrontendLogger.debug('APP', 'Initial cart loaded from localStorage:', cart);
+        
+        // Update cart count on page load
+        updateCartCount();
+
+        function addToCart(productId, productName, price) {
+            FrontendLogger.logIf('CART_OPERATIONS', 'debug', 'UI', `User add-to-cart`, { productId, productName, price });
+            FrontendLogger.time('add-to-cart-operation');
+            
+            cart = JSON.parse(localStorage.getItem('cart'))?.map(item => ({
+                ...item,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity)
+            })) || [];
+            price = parseFloat(price);
+            const existingItem = cart.find(item => item.id == productId);
+            
+            if (existingItem) {
+                FrontendLogger.debug('APP', `Product already in cart, increasing quantity from ${existingItem.quantity} to ${existingItem.quantity + 1}`);
+                existingItem.quantity += 1;
+            } else {
+                FrontendLogger.debug('APP', 'Adding new product to cart');
+                cart.push({
+                    id: productId,
+                    name: productName,
+                    price: price,
+                    quantity: 1
+                });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            FrontendLogger.debug('APP', 'Updated cart saved to localStorage:', cart);
+            
+            updateCartCount();
+            showToast();
+            
+            FrontendLogger.timeEnd('add-to-cart-operation');
+        }
+
+        function updateCartCount() {
+            cart = JSON.parse(localStorage.getItem('cart'))?.map(item => ({
+                ...item,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity)
+            })) || [];
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            FrontendLogger.debug('APP', `Updating cart count: ${totalItems} items`);
+            document.getElementById('cartCount').textContent = totalItems;
+        }
+
+        function showToast() {
+            FrontendLogger.debug('APP', 'Showing cart toast notification');
+            const toast = new bootstrap.Toast(document.getElementById('cartToast'));
+            toast.show();
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            FrontendLogger.logIf('USER_INTERACTIONS', 'debug', 'UI', `User search-input`, { query: this.value });
+            FrontendLogger.debug('APP', `Search input changed: "${this.value}"`);
+            filterProducts();
+        });
+
+        // Sort functionality
+        document.getElementById('sortSelect').addEventListener('change', function() {
+            FrontendLogger.logIf('USER_INTERACTIONS', 'debug', 'UI', `User sort-change`, { sortBy: this.value });
+            FrontendLogger.debug('APP', `Sort changed: ${this.value}`);
+            sortProducts();
+        });
+
+        // Add to cart click handler - Fix the event handler to match HTML data attributes
+        document.addEventListener('DOMContentLoaded', function() {
+            FrontendLogger.debug('APP', 'DOM content loaded, setting up event handlers');
+            
+            // Add click handlers for "Ajouter" buttons
+            document.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const productId = this.dataset.id;
+                    const productName = this.dataset.nom;
+                    const productPrice = this.dataset.prix;
+                    
+                    FrontendLogger.debug('APP', `Add to cart button clicked:`, { 
+                        productId, 
+                        productName, 
+                        productPrice,
+                        buttonElement: this 
+                    });
+                    
+                    addToCart(productId, productName, productPrice);
+                });
+            });
+            
+            // Add click handlers for category filters
+            document.querySelectorAll('.category-filter').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    const category = this.dataset.category || '';
+                    FrontendLogger.logIf('USER_INTERACTIONS', 'debug', 'UI', `User category-filter`, { category });
+                    FrontendLogger.debug('APP', `Category filter clicked: "${category}"`);
+                    filterByCategory(category);
+                });
+            });
+            
+            FrontendLogger.info('APP', 'All event handlers set up successfully');
+        });
+
+        function filterByCategory(category) {
+            FrontendLogger.info('APP', `Filtering products by category: "${category}"`);
+            FrontendLogger.time('category-filter-operation');
+            
+            // Update active filter
+            document.querySelectorAll('.category-filter').forEach(filter => {
+                filter.classList.remove('active');
+            });
+            
+            // Find and activate the clicked filter
+            const clickedFilter = Array.from(document.querySelectorAll('.category-filter')).find(filter => {
+                const filterCategory = filter.dataset.category || '';
+                return filterCategory === category;
+            });
+            
+            if (clickedFilter) {
+                clickedFilter.classList.add('active');
+                FrontendLogger.debug('APP', 'Updated active category filter:', clickedFilter);
+            }
+            
+            // Filter products
+            const products = document.querySelectorAll('#productsGrid .col-lg-3');
+            let visibleCount = 0;
+            
+            products.forEach(product => {
+                const productCategory = product.querySelector('.badge').textContent;
+                const shouldShow = !category || productCategory === category;
+                
+                if (shouldShow) {
+                    product.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+            
+            FrontendLogger.info('APP', `Category filter applied: ${visibleCount} products visible out of ${products.length}`);
+            
+            // Show/hide no products message
+            const noProductsMessage = document.getElementById('noProductsMessage');
+            if (noProductsMessage) {
+                noProductsMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+            
+            FrontendLogger.timeEnd('category-filter-operation');
+        }
+
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            FrontendLogger.info('APP', `Filtering products with search term: "${searchTerm}"`);
+            FrontendLogger.time('search-filter-operation');
+            
+            const products = document.querySelectorAll('#productsGrid .col-lg-3');
+            let visibleCount = 0;
+            
+            products.forEach(product => {
+                const productName = product.querySelector('.card-title').textContent.toLowerCase();
+                const productDescription = product.querySelector('.card-text').textContent.toLowerCase();
+                const shouldShow = productName.includes(searchTerm) || productDescription.includes(searchTerm);
+                
+                if (shouldShow) {
+                    product.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+            
+            FrontendLogger.info('APP', `Search filter applied: ${visibleCount} products visible out of ${products.length}`);
+            
+            const noProductsMessage = document.getElementById('noProductsMessage');
+            if (noProductsMessage) {
+                noProductsMessage.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+            
+            FrontendLogger.timeEnd('search-filter-operation');
+        }
+
+        function sortProducts() {
+            const sortBy = document.getElementById('sortSelect').value;
+            FrontendLogger.info('APP', `Sorting products by: ${sortBy}`);
+            FrontendLogger.time('sort-operation');
+            
+            const productsGrid = document.getElementById('productsGrid');
+            const products = Array.from(productsGrid.children);
+            
+            products.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.querySelector('.card-title').textContent.localeCompare(
+                               b.querySelector('.card-title').textContent);
+                    case 'price-asc':
+                        return parseFloat(a.querySelector('.price-tag').textContent.replace(/[$,]/g, '')) - 
+                               parseFloat(b.querySelector('.price-tag').textContent.replace(/[$,]/g, ''));
+                    case 'price-desc':
+                        return parseFloat(b.querySelector('.price-tag').textContent.replace(/[$,]/g, '')) - 
+                               parseFloat(a.querySelector('.price-tag').textContent.replace(/[$,]/g, ''));
+                    case 'category':
+                        return a.querySelector('.badge').textContent.localeCompare(
+                               b.querySelector('.badge').textContent);
+                    default:
+                        return 0;
+                }
+            });
+            
+            products.forEach(product => productsGrid.appendChild(product));
+            FrontendLogger.debug('APP', `Products sorted by: ${sortBy}`);
+            FrontendLogger.timeEnd('sort-operation');
+        }
+    </script>
+</body>
+</html>

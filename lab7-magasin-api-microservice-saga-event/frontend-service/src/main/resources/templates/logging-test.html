@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de logging - Magasin en ligne</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">Test du système de logging frontend</h1>
+                
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> Instructions</h5>
+                    <ol>
+                        <li>Ouvrez la console de votre navigateur (F12)</li>
+                        <li>Cliquez sur les boutons ci-dessous</li>
+                        <li>Observez les logs dans la console</li>
+                    </ol>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Tests de niveau de log</h5>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary" onclick="testDebugLog()">Test DEBUG</button>
+                                    <button class="btn btn-info" onclick="testInfoLog()">Test INFO</button>
+                                    <button class="btn btn-warning" onclick="testWarnLog()">Test WARN</button>
+                                    <button class="btn btn-danger" onclick="testErrorLog()">Test ERROR</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Tests d'interactions</h5>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success" onclick="testUserInteraction()">Test Interaction</button>
+                                    <button class="btn btn-secondary" onclick="testApiCall()">Test API Call</button>
+                                    <button class="btn btn-dark" onclick="testPerformance()">Test Performance</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Tests de features</h5>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" onclick="toggleCartOperations()">Toggle Cart Ops</button>
+                                    <button class="btn btn-outline-info" onclick="toggleApiCalls()">Toggle API Calls</button>
+                                    <button class="btn btn-outline-warning" onclick="testFeatureLogging()">Test Feature Logging</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Configuration de logging en temps réel</h5>
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <label for="logLevel" class="form-label">Niveau de log:</label>
+                                        <select class="form-select" id="logLevel" onchange="changeLogLevel()">
+                                            <option value="DEBUG">DEBUG</option>
+                                            <option value="INFO" selected>INFO</option>
+                                            <option value="WARN">WARN</option>
+                                            <option value="ERROR">ERROR</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-outline-secondary" onclick="showLoggerStatus()">Afficher Status</button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-outline-danger" onclick="clearConsole()">Vider Console</button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-outline-success" onclick="runFullTest()">Test Complet</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Statut du logger</h5>
+                                <pre id="loggerStatus" class="bg-light p-3 rounded"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/logger.js"></script>
+    <script>
+        // Initialize logging for test page
+        FrontendLogger.pageLoad('LoggingTest');
+        FrontendLogger.setLevel('INFO');
+        FrontendLogger.enableFeature('API_CALLS');
+        FrontendLogger.enableFeature('USER_INTERACTIONS');
+        FrontendLogger.enableFeature('CART_OPERATIONS');
+
+        Logger.info('Test page loaded - check console for logs!');
+
+        // Test functions
+        function testDebugLog() {
+            Logger.debug('This is a DEBUG message with some data:', { test: true, timestamp: new Date() });
+        }
+
+        function testInfoLog() {
+            Logger.info('This is an INFO message', { user: 'testUser', action: 'button_click' });
+        }
+
+        function testWarnLog() {
+            Logger.warn('This is a WARNING message - something might be wrong', { warning: 'test_warning' });
+        }
+
+        function testErrorLog() {
+            Logger.error('This is an ERROR message - something went wrong!', new Error('Test error'));
+        }
+
+        function testUserInteraction() {
+            FrontendLogger.interaction('button-click', 'test-button', { 
+                buttonType: 'interaction-test',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        function testApiCall() {
+            FrontendLogger.apiCall('GET', '/api/test/endpoint', { param1: 'value1' });
+            // Simulate API response
+            setTimeout(() => {
+                FrontendLogger.apiResponse('/api/test/endpoint', 200, { success: true, data: 'test' });
+            }, 1000);
+        }
+
+        function testPerformance() {
+            FrontendLogger.performance('test-operation');
+            // Simulate some work
+            setTimeout(() => {
+                FrontendLogger.performance('test-operation', 'timeEnd');
+            }, 2000);
+        }
+
+        function toggleCartOperations() {
+            const isEnabled = FrontendLogger.isFeatureEnabled('CART_OPERATIONS');
+            if (isEnabled) {
+                FrontendLogger.disableFeature('CART_OPERATIONS');
+                Logger.info('CART_OPERATIONS feature disabled');
+            } else {
+                FrontendLogger.enableFeature('CART_OPERATIONS');
+                Logger.info('CART_OPERATIONS feature enabled');
+            }
+        }
+
+        function toggleApiCalls() {
+            const isEnabled = FrontendLogger.isFeatureEnabled('API_CALLS');
+            if (isEnabled) {
+                FrontendLogger.disableFeature('API_CALLS');
+                Logger.info('API_CALLS feature disabled');
+            } else {
+                FrontendLogger.enableFeature('API_CALLS');
+                Logger.info('API_CALLS feature enabled');
+            }
+        }
+
+        function testFeatureLogging() {
+            // This should only log if CART_OPERATIONS is enabled
+            if (FrontendLogger.isFeatureEnabled('CART_OPERATIONS')) {
+                Logger.info('Cart operations feature is enabled - this log shows');
+            } else {
+                Logger.info('Cart operations feature is disabled - but this still shows because it\'s not a feature-specific log');
+            }
+        }
+
+        function changeLogLevel() {
+            const level = document.getElementById('logLevel').value;
+            FrontendLogger.setLevel(level);
+            Logger.info(`Log level changed to: ${level}`);
+            showLoggerStatus();
+        }
+
+        function showLoggerStatus() {
+            const status = {
+                currentLevel: FrontendLogger.getLevel(),
+                enabledFeatures: FrontendLogger.getEnabledFeatures(),
+                sessionInfo: FrontendLogger.getSessionInfo(),
+                stats: FrontendLogger.getStats()
+            };
+            document.getElementById('loggerStatus').textContent = JSON.stringify(status, null, 2);
+            Logger.info('Logger status displayed');
+        }
+
+        function clearConsole() {
+            console.clear();
+            Logger.info('Console cleared - logging test page ready');
+        }
+
+        function runFullTest() {
+            Logger.info('🚀 Starting full logging test suite...');
+            
+            // Test all log levels
+            testDebugLog();
+            testInfoLog();
+            testWarnLog();
+            testErrorLog();
+            
+            // Test interactions and performance
+            testUserInteraction();
+            testApiCall();
+            testPerformance();
+            
+            // Show status
+            setTimeout(() => {
+                showLoggerStatus();
+                Logger.info('✅ Full test suite completed! Check the logs above.');
+            }, 500);
+        }
+
+        // Initialize status display
+        showLoggerStatus();
+    </script>
+</body>
+</html>
