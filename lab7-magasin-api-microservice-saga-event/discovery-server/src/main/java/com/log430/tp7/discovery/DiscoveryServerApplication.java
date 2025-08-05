@@ -1,4 +1,4 @@
-package com.log430.tp6.discovery;
+package com.log430.tp7.discovery;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
