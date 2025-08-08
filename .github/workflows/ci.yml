@@ -1,5 +1,5 @@
 # Nom du flow
-name: CI/CD Pipeline – Magasin Web Microservices with Saga
+name: CI/CD Pipeline – Magasin Web Microservices with Saga and Event
 
 # Nom de la branch push sur et pull
 on:
@@ -13,8 +13,33 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab7-magasin-api-microservice-saga-event
 
 jobs:
+# ──────────────────────────── INSTALL SHARED MODULES ────────────────────────────
+  install-shared-modules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Install shared module event-infrastructure
+        working-directory: lab7-magasin-api-microservice-saga-event
+        run: mvn install -pl event-infrastructure -am -DskipTests
+
 # ──────────────────────────── LINT ────────────────────────────
   lint:
+    needs: install-shared-modules
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -45,7 +70,7 @@ jobs:
       - name: Lint ${{ matrix.service }} (Run Checkstyle)
         working-directory: lab7-magasin-api-microservice-saga-event/${{ matrix.service }}
         run: mvn --batch-mode -q verify -DskipTests
-
+        
 # ──────────────────────────── TEST ────────────────────────────
   test:
     runs-on: ubuntu-latest
