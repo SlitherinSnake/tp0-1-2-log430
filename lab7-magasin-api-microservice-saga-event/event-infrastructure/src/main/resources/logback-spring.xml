@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    
+    <!-- Console appender with JSON format for structured logging -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+    
+    <!-- File appender for event logs -->
+    <appender name="EVENT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/events.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/events.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+    
+    <!-- File appender for audit logs -->
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+            </providers>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>NEUTRAL</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    
+    <!-- Async appender for better performance -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CONSOLE"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+    
+    <appender name="ASYNC_EVENT_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="EVENT_FILE"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+    
+    <appender name="ASYNC_AUDIT_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="AUDIT_FILE"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+    
+    <!-- Logger for event infrastructure -->
+    <logger name="com.log430.tp7.event" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+        <appender-ref ref="ASYNC_EVENT_FILE"/>
+    </logger>
+    
+    <!-- Logger for audit events -->
+    <logger name="AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_AUDIT_FILE"/>
+    </logger>
+    
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </root>
+    
+    <!-- Profile-specific configurations -->
+    <springProfile name="dev">
+        <logger name="com.log430.tp7" level="DEBUG"/>
+        <logger name="org.springframework.amqp" level="DEBUG"/>
+    </springProfile>
+    
+    <springProfile name="prod">
+        <logger name="com.log430.tp7" level="INFO"/>
+        <logger name="org.springframework.amqp" level="WARN"/>
+    </springProfile>
+    
+</configuration>

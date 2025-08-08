@@ -1,0 +1,33 @@
+# Event Infrastructure Configuration
+event:
+  infrastructure:
+    enabled: true
+    
+# RabbitMQ Configuration
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    publisher-confirms: true
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-attempts: 3
+          multiplier: 2.0
+          max-interval: 10000ms
+
+# Logging Configuration
+logging:
+  level:
+    com.log430.tp7.event: INFO
+    org.springframework.amqp: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
