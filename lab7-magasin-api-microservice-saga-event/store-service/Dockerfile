@@ -1,7 +1,16 @@
 FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /build
-COPY pom.xml .
-COPY src ./src
+
+# Copy and build event-infrastructure first
+COPY event-infrastructure/pom.xml ./event-infrastructure/
+COPY event-infrastructure/src ./event-infrastructure/src/
+WORKDIR /build/event-infrastructure
+RUN mvn clean install -DskipTests
+
+# Now build the store service
+WORKDIR /build
+COPY store-service/pom.xml .
+COPY store-service/src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jdk-alpine
