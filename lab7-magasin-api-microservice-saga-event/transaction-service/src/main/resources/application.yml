@@ -5,6 +5,9 @@ spring:
   application:
     name: transaction-service
   
+  main:
+    allow-bean-definition-overriding: true
+  
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/transaction_db}
     username: ${POSTGRES_USER:magasin}
@@ -17,6 +20,22 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    connection-timeout: 30000
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        multiplier: 2
 
 eureka:
   client:
