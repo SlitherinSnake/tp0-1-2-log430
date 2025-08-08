@@ -9,8 +9,8 @@ on:
     branches: [ main ]
 
 env:
-  # Repo Docker Hub : <SlitherinSnake>/lab6-magasin-api-microservice-saga
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab6-magasin-api-microservice-saga
+  # Repo Docker Hub : <SlitherinSnake>/lab7-magasin-api-microservice-saga-event
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/lab7-magasin-api-microservice-saga-event
 
 jobs:
 # ──────────────────────────── LINT ────────────────────────────
@@ -43,7 +43,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Lint ${{ matrix.service }} (Run Checkstyle)
-        working-directory: lab6-magasin-api-microservice-saga/${{ matrix.service }}
+        working-directory: lab7-magasin-api-microservice-saga-event/${{ matrix.service }}
         run: mvn --batch-mode -q verify -DskipTests
 
 # ──────────────────────────── TEST ────────────────────────────
@@ -77,7 +77,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Run Maven tests for ${{ matrix.service }}
-        working-directory: lab6-magasin-api-microservice-saga/${{ matrix.service }}
+        working-directory: lab7-magasin-api-microservice-saga-event/${{ matrix.service }}
         run: mvn --batch-mode clean test
 
       - name: Generate test report for ${{ matrix.service }}
@@ -85,7 +85,7 @@ jobs:
         if: success() || failure()
         with:
           name: Maven Tests - ${{ matrix.service }}
-          path: lab6-magasin-api-microservice-saga/${{ matrix.service }}/target/surefire-reports/*.xml
+          path: lab7-magasin-api-microservice-saga-event/${{ matrix.service }}/target/surefire-reports/*.xml
           reporter: java-junit
 
 # ──────────────────────────── BUILD DOCKER ────────────────────────────
@@ -100,11 +100,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build docker-compose stack
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: docker compose -f docker-compose.yml build --parallel
 
       - name: Verify all services are built
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           echo "Verifying Docker images..."
           docker images | grep -E "(discovery-server|api-gateway|frontend-service|inventory-service|transaction-service|store-service|saga-orchestrator-service)"
@@ -121,7 +121,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Start services for integration testing
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           docker compose up -d postgres redis discovery-server
           sleep 30
@@ -129,13 +129,13 @@ jobs:
           sleep 60
 
       - name: Wait for services to be healthy
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           echo "Waiting for services to be healthy..."
           timeout 300 bash -c 'until docker compose ps | grep -E "(healthy|running)"; do sleep 10; done'
 
       - name: Run integration tests
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           # Test service discovery
           curl -f http://localhost:8761/actuator/health || exit 1
@@ -153,7 +153,7 @@ jobs:
           curl -f http://localhost:8085/api/saga/health || echo "Saga API endpoint not available yet"
 
       - name: Run Saga integration tests
-        working-directory: lab6-magasin-api-microservice-saga/Tests
+        working-directory: lab7-magasin-api-microservice-saga-event/Tests
         run: |
           if [ -f "integration-tests.sh" ]; then
             chmod +x integration-tests.sh
@@ -164,7 +164,7 @@ jobs:
 
       - name: Collect logs on failure
         if: failure()
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           echo "=== Docker Compose Logs ==="
           docker compose logs --tail=100
@@ -173,7 +173,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: docker compose down -v
 
 # ──────────────────────────── PUBLISH DOCKER HUB ────────────────────────────
@@ -206,7 +206,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push ${{ matrix.service }}
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
           SERVICE_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/lab6-${{ matrix.service }}"
@@ -215,9 +215,9 @@ jobs:
           docker compose build ${{ matrix.service }}
           
           # Tag the image
-          docker tag lab6-magasin-api-microservice-saga-${{ matrix.service }} $SERVICE_IMAGE:latest
-          docker tag lab6-magasin-api-microservice-saga-${{ matrix.service }} $SERVICE_IMAGE:$DATE_TAG
-          docker tag lab6-magasin-api-microservice-saga-${{ matrix.service }} $SERVICE_IMAGE:${{ github.sha }}
+          docker tag lab7-magasin-api-microservice-saga-event-${{ matrix.service }} $SERVICE_IMAGE:latest
+          docker tag lab7-magasin-api-microservice-saga-event-${{ matrix.service }} $SERVICE_IMAGE:$DATE_TAG
+          docker tag lab7-magasin-api-microservice-saga-event-${{ matrix.service }} $SERVICE_IMAGE:${{ github.sha }}
           
           # Push all tags
           docker push $SERVICE_IMAGE:latest
@@ -243,7 +243,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push complete stack
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
           
@@ -251,9 +251,9 @@ jobs:
           docker compose build
           
           # Tag and push the main API Gateway as the primary image
-          docker tag lab6-magasin-api-microservice-saga-api-gateway $IMAGE_NAME:latest
-          docker tag lab6-magasin-api-microservice-saga-api-gateway $IMAGE_NAME:$DATE_TAG
-          docker tag lab6-magasin-api-microservice-saga-api-gateway $IMAGE_NAME:${{ github.sha }}
+          docker tag lab7-magasin-api-microservice-saga-event-api-gateway $IMAGE_NAME:latest
+          docker tag lab7-magasin-api-microservice-saga-event-api-gateway $IMAGE_NAME:$DATE_TAG
+          docker tag lab7-magasin-api-microservice-saga-event-api-gateway $IMAGE_NAME:${{ github.sha }}
           
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$DATE_TAG
@@ -279,13 +279,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build ${{ matrix.service }} for scanning
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: docker compose build ${{ matrix.service }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'lab6-magasin-api-microservice-saga-${{ matrix.service }}'
+          image-ref: 'lab7-magasin-api-microservice-saga-event-${{ matrix.service }}'
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service }}.sarif'
 
@@ -296,7 +296,7 @@ jobs:
           sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
 
       - name: Create deployment manifest
-        working-directory: lab6-magasin-api-microservice-saga
+        working-directory: lab7-magasin-api-microservice-saga-event
         run: |
           DATE_TAG=$(date +%Y-%m-%d)
           cat > deployment-manifest.yml << EOF
@@ -322,10 +322,10 @@ jobs:
         with:
           name: deployment-manifest-${{ github.sha }}
           path: |
-            lab6-magasin-api-microservice-saga/deployment-manifest.yml
-            lab6-magasin-api-microservice-saga/docker-compose.yml
-            lab6-magasin-api-microservice-saga/prometheus.yml
-            lab6-magasin-api-microservice-saga/alert_rules.yml
+            lab7-magasin-api-microservice-saga-event/deployment-manifest.yml
+            lab7-magasin-api-microservice-saga-event/docker-compose.yml
+            lab7-magasin-api-microservice-saga-event/prometheus.yml
+            lab7-magasin-api-microservice-saga-event/alert_rules.yml
 
   # ──────────────────────────── NOTIFICATION ────────────────────────────
   notify:
