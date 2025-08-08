@@ -1,37 +1,34 @@
 package com.log430.tp7.application.service;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
+import com.log430.tp7.domain.transaction.Transaction;
+import com.log430.tp7.domain.transaction.Transaction.StatutTransaction;
+import com.log430.tp7.infrastructure.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.log430.tp7.domain.transaction.Transaction;
-import com.log430.tp7.domain.transaction.Transaction.StatutTransaction;
-import com.log430.tp7.domain.transaction.Transaction.TypeTransaction;
-import com.log430.tp7.infrastructure.repository.TransactionRepository;
+import java.util.Optional;
 
 /**
- * Application service for transaction management operations.
- * Coordinates domain logic and data access for transactions.
+ * Command service for transaction write operations.
+ * Part of CQRS implementation - handles commands that modify state.
  */
 @Service
 @Transactional
-public class TransactionService {
-    private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
-
+public class TransactionCommandService {
+    
+    private static final Logger log = LoggerFactory.getLogger(TransactionCommandService.class);
+    
     private final TransactionRepository transactionRepository;
     private final TransactionEventService transactionEventService;
-
-    public TransactionService(TransactionRepository transactionRepository,
-                             TransactionEventService transactionEventService) {
+    
+    public TransactionCommandService(TransactionRepository transactionRepository,
+                                   TransactionEventService transactionEventService) {
         this.transactionRepository = transactionRepository;
         this.transactionEventService = transactionEventService;
     }
-
+    
     /**
      * Create a new sale transaction.
      */
@@ -50,11 +47,12 @@ public class TransactionService {
         
         return savedTransaction;
     }
-
+    
     /**
      * Create a new return transaction.
      */
-    public Transaction createReturnTransaction(Long personnelId, Long storeId, Long originalTransactionId, String motifRetour) {
+    public Transaction createReturnTransaction(Long personnelId, Long storeId, 
+                                             Long originalTransactionId, String motifRetour) {
         log.info("Creating return transaction for personnel: {} at store: {}", personnelId, storeId);
         
         Transaction transaction = new Transaction(personnelId, storeId, originalTransactionId, motifRetour);
@@ -68,67 +66,7 @@ public class TransactionService {
         
         return savedTransaction;
     }
-
-    /**
-     * Get all transactions.
-     */
-    @Transactional(readOnly = true)
-    public List<Transaction> getAllTransactions() {
-        log.info("Fetching all transactions");
-        return transactionRepository.findAll();
-    }
-
-    /**
-     * Get transaction by ID.
-     */
-    public Optional<Transaction> getTransactionById(Long id) {
-        log.info("Getting transaction by id: {}", id);
-        return transactionRepository.findById(id);
-    }
-
-    /**
-     * Get transactions by personnel ID.
-     */
-    public List<Transaction> getTransactionsByPersonnel(Long personnelId) {
-        log.info("Getting transactions for personnel: {}", personnelId);
-        return transactionRepository.findByPersonnelId(personnelId);
-    }
-
-    /**
-     * Get transactions by store ID.
-     */
-    public List<Transaction> getTransactionsByStore(Long storeId) {
-        log.info("Getting transactions for store: {}", storeId);
-        return transactionRepository.findByStoreId(storeId);
-    }
-
-    /**
-     * Get transactions by type.
-     */
-    @Transactional(readOnly = true)
-    public List<Transaction> getTransactionsByType(TypeTransaction type) {
-        log.info("Fetching transactions by type: {}", type);
-        return transactionRepository.findByTypeTransaction(type);
-    }
-
-    /**
-     * Get transactions by status.
-     */
-    @Transactional(readOnly = true)
-    public List<Transaction> getTransactionsByStatus(StatutTransaction status) {
-        log.info("Fetching transactions by status: {}", status);
-        return transactionRepository.findByStatut(status);
-    }
-
-    /**
-     * Get transactions by date range.
-     */
-    @Transactional(readOnly = true)
-    public List<Transaction> getTransactionsByDateRange(LocalDate startDate, LocalDate endDate) {
-        log.info("Fetching transactions between {} and {}", startDate, endDate);
-        return transactionRepository.findByDateTransactionBetween(startDate, endDate);
-    }
-
+    
     /**
      * Complete a transaction.
      */
@@ -147,7 +85,26 @@ public class TransactionService {
         log.info("Transaction {} completed successfully", transactionId);
         return savedTransaction;
     }
-
+    
+    /**
+     * Complete a transaction with correlation context.
+     */
+    public Transaction completeTransaction(Long transactionId, String correlationId, String causationId) {
+        log.info("Completing transaction with id: {} with correlation: {}", transactionId, correlationId);
+        
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found with id: " + transactionId));
+        
+        transaction.complete();
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        
+        // Publish TransactionCompleted event with context
+        transactionEventService.publishTransactionCompleted(savedTransaction, correlationId, causationId);
+        
+        log.info("Transaction {} completed successfully", transactionId);
+        return savedTransaction;
+    }
+    
     /**
      * Cancel a transaction.
      */
@@ -186,11 +143,12 @@ public class TransactionService {
         log.info("Transaction {} cancelled successfully", transactionId);
         return savedTransaction;
     }
-
+    
     /**
      * Add item to transaction.
      */
-    public Transaction addItemToTransaction(Long transactionId, Long inventoryItemId, Integer quantity, Double unitPrice) {
+    public Transaction addItemToTransaction(Long transactionId, Long inventoryItemId, 
+                                          Integer quantity, Double unitPrice) {
         log.info("Adding item {} to transaction {}", inventoryItemId, transactionId);
         
         Transaction transaction = transactionRepository.findById(transactionId)
@@ -202,7 +160,7 @@ public class TransactionService {
         log.info("Item {} added to transaction {}", inventoryItemId, transactionId);
         return savedTransaction;
     }
-
+    
     /**
      * Remove item from transaction.
      */
@@ -218,7 +176,7 @@ public class TransactionService {
         log.info("Item {} removed from transaction {}", inventoryItemId, transactionId);
         return savedTransaction;
     }
-
+    
     /**
      * Update item quantity in transaction.
      */
@@ -234,42 +192,12 @@ public class TransactionService {
         log.info("Item {} quantity updated to {} in transaction {}", inventoryItemId, newQuantity, transactionId);
         return savedTransaction;
     }
-
+    
     /**
-     * Calculate total sales for a store within a date range.
+     * Get transaction by ID for command operations (write-side).
      */
-    @Transactional(readOnly = true)
-    public Double calculateTotalSales(Long storeId, LocalDate startDate, LocalDate endDate) {
-        log.info("Calculating total sales for store {} between {} and {}", storeId, startDate, endDate);
-        Double totalSales = transactionRepository.calculateTotalSales(storeId, startDate, endDate);
-        return totalSales != null ? totalSales : 0.0;
-    }
-
-    /**
-     * Get returns by original transaction ID.
-     */
-    @Transactional(readOnly = true)
-    public List<Transaction> getReturnsByOriginalTransactionId(Long originalTransactionId) {
-        log.info("Fetching returns for original transaction: {}", originalTransactionId);
-        return transactionRepository.findByTransactionOriginaleId(originalTransactionId);
-    }
-
-    /**
-     * Get total transaction count.
-     */
-    public long getTransactionCount() {
-        log.info("Getting total transaction count");
-        return transactionRepository.count();
-    }
-
-    /**
-     * Get total sales amount.
-     */
-    public double getTotalSalesAmount() {
-        log.info("Getting total sales amount");
-        return transactionRepository.findAll().stream()
-                .filter(t -> t.getTypeTransaction() == TypeTransaction.VENTE)
-                .mapToDouble(t -> t.getMontantTotal() != null ? t.getMontantTotal() : 0.0)
-                .sum();
+    public Optional<Transaction> getTransactionById(Long id) {
+        log.info("Getting transaction by id for command: {}", id);
+        return transactionRepository.findById(id);
     }
 }

@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.log430.tp7.application.service.SagaPaymentService;
+import com.log430.tp7.application.service.TransactionCommandService;
+import com.log430.tp7.application.service.TransactionQueryService;
 import com.log430.tp7.application.service.TransactionService;
 import com.log430.tp7.domain.transaction.Transaction;
 import com.log430.tp7.infrastructure.repository.TransactionRepository;
@@ -40,14 +42,20 @@ public class TransactionController {
     
     private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
     
-    private final TransactionService transactionService;
+    private final TransactionService transactionService; // Keep for backward compatibility
+    private final TransactionCommandService transactionCommandService;
+    private final TransactionQueryService transactionQueryService;
     private final TransactionRepository transactionRepository;
     private final SagaPaymentService sagaPaymentService;
 
-    public TransactionController(TransactionService transactionService, 
+    public TransactionController(TransactionService transactionService,
+                               TransactionCommandService transactionCommandService,
+                               TransactionQueryService transactionQueryService,
                                TransactionRepository transactionRepository,
                                SagaPaymentService sagaPaymentService) {
         this.transactionService = transactionService;
+        this.transactionCommandService = transactionCommandService;
+        this.transactionQueryService = transactionQueryService;
         this.transactionRepository = transactionRepository;
         this.sagaPaymentService = sagaPaymentService;
     }
@@ -164,15 +172,15 @@ public class TransactionController {
     }
 
     /**
-     * Get transaction statistics.
+     * Get transaction statistics using CQRS query service.
      */
     @Operation(summary = "Obtenir les statistiques des transactions", description = "Retourne les statistiques des transactions.")
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getTransactionStats() {
         log.info("API call: getTransactionStats");
         try {
-            long totalTransactions = transactionService.getTransactionCount();
-            double totalSales = transactionService.getTotalSalesAmount();
+            long totalTransactions = transactionQueryService.getTransactionCount();
+            double totalSales = transactionQueryService.getTotalSalesAmount();
             
             Map<String, Object> stats = Map.of(
                 "totalTransactions", totalTransactions,
@@ -274,6 +282,35 @@ public class TransactionController {
         }
     }
 
+    /**
+     * Get transaction analytics using CQRS read models.
+     */
+    @Operation(summary = "Obtenir les analyses des transactions", description = "Retourne les analyses des transactions depuis les modèles de lecture.")
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Object>> getTransactionAnalytics() {
+        log.info("API call: getTransactionAnalytics");
+        try {
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusDays(30); // Last 30 days
+            
+            List<Object[]> statusCounts = transactionQueryService.getTransactionCountByStatus();
+            List<Object[]> topStores = transactionQueryService.getTopPerformingStores(startDate, endDate);
+            List<Object[]> personnelPerformance = transactionQueryService.getPersonnelPerformance(startDate, endDate);
+            
+            Map<String, Object> analytics = Map.of(
+                "statusCounts", statusCounts,
+                "topStores", topStores,
+                "personnelPerformance", personnelPerformance,
+                "period", Map.of("start", startDate, "end", endDate)
+            );
+            
+            return ResponseEntity.ok(analytics);
+        } catch (Exception e) {
+            log.error("Error in getTransactionAnalytics: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
     /**
      * Simple test endpoint to verify API is working.
      */

@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EntityScan("com.log430.tp7.domain.transaction")
+@EntityScan({"com.log430.tp7.domain.transaction", "com.log430.tp7.domain.readmodel"})
 @EnableJpaRepositories("com.log430.tp7.infrastructure.repository")
 @ComponentScan(basePackages = "com.log430.tp7")
 public class TransactionServiceApplication {
