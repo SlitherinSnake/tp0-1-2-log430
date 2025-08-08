@@ -42,11 +42,33 @@ public class Order {
     @Column(nullable = false, length = 20)
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "fulfillment_status", nullable = false, length = 20)
+    private FulfillmentStatus fulfillmentStatus = FulfillmentStatus.PENDING;
+
     @Column(name = "payment_transaction_id", length = 100)
     private String paymentTransactionId;
 
     @Column(name = "stock_reservation_id", length = 36)
     private String stockReservationId;
+
+    @Column(name = "fulfilled_at")
+    private LocalDateTime fulfilledAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "estimated_delivery_time")
+    private LocalDateTime estimatedDeliveryTime;
+
+    @Column(name = "delivery_address", length = 500)
+    private String deliveryAddress;
+
+    @Column(name = "delivery_method", length = 50)
+    private String deliveryMethod;
+
+    @Column(name = "delivery_confirmation", length = 100)
+    private String deliveryConfirmation;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -67,6 +89,7 @@ public class Order {
         this.storeId = storeId;
         this.totalAmount = totalAmount;
         this.status = OrderStatus.PENDING;
+        this.fulfillmentStatus = FulfillmentStatus.PENDING;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -124,6 +147,59 @@ public class Order {
     }
 
     /**
+     * Mark the order as fulfilled.
+     */
+    public void fulfill(LocalDateTime estimatedDeliveryTime) {
+        if (fulfillmentStatus == FulfillmentStatus.FULFILLED) {
+            throw new IllegalStateException("Order is already fulfilled");
+        }
+        if (fulfillmentStatus == FulfillmentStatus.DELIVERED) {
+            throw new IllegalStateException("Cannot fulfill a delivered order");
+        }
+        if (status == OrderStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot fulfill a cancelled order");
+        }
+        
+        this.fulfillmentStatus = FulfillmentStatus.FULFILLED;
+        this.fulfilledAt = LocalDateTime.now();
+        this.estimatedDeliveryTime = estimatedDeliveryTime;
+        updateTimestamp();
+    }
+
+    /**
+     * Mark the order as delivered.
+     */
+    public void deliver(String deliveryAddress, String deliveryMethod, String deliveryConfirmation) {
+        if (fulfillmentStatus != FulfillmentStatus.FULFILLED) {
+            throw new IllegalStateException("Order must be fulfilled before delivery");
+        }
+        if (fulfillmentStatus == FulfillmentStatus.DELIVERED) {
+            throw new IllegalStateException("Order is already delivered");
+        }
+        
+        this.fulfillmentStatus = FulfillmentStatus.DELIVERED;
+        this.deliveredAt = LocalDateTime.now();
+        this.deliveryAddress = deliveryAddress;
+        this.deliveryMethod = deliveryMethod;
+        this.deliveryConfirmation = deliveryConfirmation;
+        updateTimestamp();
+    }
+
+    /**
+     * Check if the order is fulfilled.
+     */
+    public boolean isFulfilled() {
+        return fulfillmentStatus == FulfillmentStatus.FULFILLED;
+    }
+
+    /**
+     * Check if the order is delivered.
+     */
+    public boolean isDelivered() {
+        return fulfillmentStatus == FulfillmentStatus.DELIVERED;
+    }
+
+    /**
      * Update the timestamp.
      */
     private void updateTimestamp() {
@@ -164,6 +240,27 @@ public class Order {
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }
 
+    public FulfillmentStatus getFulfillmentStatus() { return fulfillmentStatus; }
+    public void setFulfillmentStatus(FulfillmentStatus fulfillmentStatus) { this.fulfillmentStatus = fulfillmentStatus; }
+
+    public LocalDateTime getFulfilledAt() { return fulfilledAt; }
+    public void setFulfilledAt(LocalDateTime fulfilledAt) { this.fulfilledAt = fulfilledAt; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
+
+    public LocalDateTime getEstimatedDeliveryTime() { return estimatedDeliveryTime; }
+    public void setEstimatedDeliveryTime(LocalDateTime estimatedDeliveryTime) { this.estimatedDeliveryTime = estimatedDeliveryTime; }
+
+    public String getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+
+    public String getDeliveryMethod() { return deliveryMethod; }
+    public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
+
+    public String getDeliveryConfirmation() { return deliveryConfirmation; }
+    public void setDeliveryConfirmation(String deliveryConfirmation) { this.deliveryConfirmation = deliveryConfirmation; }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -184,5 +281,14 @@ public class Order {
         PENDING,
         CONFIRMED,
         CANCELLED
+    }
+
+    /**
+     * Enumeration for fulfillment status.
+     */
+    public enum FulfillmentStatus {
+        PENDING,
+        FULFILLED,
+        DELIVERED
     }
 }
