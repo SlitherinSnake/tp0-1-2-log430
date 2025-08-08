@@ -33,9 +33,9 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Install shared module event-infrastructure
-        working-directory: lab7-magasin-api-microservice-saga-event
-        run: mvn install -pl event-infrastructure -am -DskipTests
+      - name: Build and install event-infrastructure
+        working-directory: lab7-magasin-api-microservice-saga-event/event-infrastructure
+        run: mvn install -DskipTests
 
 # ──────────────────────────── LINT ────────────────────────────
   lint:
