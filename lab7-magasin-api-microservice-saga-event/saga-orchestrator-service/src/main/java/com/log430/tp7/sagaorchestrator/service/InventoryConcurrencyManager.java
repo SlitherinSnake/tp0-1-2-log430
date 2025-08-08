@@ -1,6 +1,5 @@
 package com.log430.tp7.sagaorchestrator.service;
 
-import com.log430.tp7.sagaorchestrator.dto.StockReservationRequest;
 import com.log430.tp7.sagaorchestrator.dto.StockReservationResponse;
 import com.log430.tp7.sagaorchestrator.dto.StockVerificationRequest;
 import com.log430.tp7.sagaorchestrator.dto.StockVerificationResponse;
