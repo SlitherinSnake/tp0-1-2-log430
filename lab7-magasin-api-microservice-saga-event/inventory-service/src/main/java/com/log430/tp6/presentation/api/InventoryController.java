@@ -1,6 +1,7 @@
 package com.log430.tp7.presentation.api;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.log430.tp7.application.service.EventDrivenInventoryService;
+import com.log430.tp7.application.service.InventoryQueryService;
 import com.log430.tp7.application.service.InventoryService;
 import com.log430.tp7.application.service.SagaInventoryService;
 import com.log430.tp7.domain.inventory.InventoryItem;
@@ -47,10 +50,16 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
     private final SagaInventoryService sagaInventoryService;
+    private final EventDrivenInventoryService eventDrivenInventoryService;
+    private final InventoryQueryService inventoryQueryService;
 
-    public InventoryController(InventoryService inventoryService, SagaInventoryService sagaInventoryService) {
+    public InventoryController(InventoryService inventoryService, SagaInventoryService sagaInventoryService,
+                             EventDrivenInventoryService eventDrivenInventoryService,
+                             InventoryQueryService inventoryQueryService) {
         this.inventoryService = inventoryService;
         this.sagaInventoryService = sagaInventoryService;
+        this.eventDrivenInventoryService = eventDrivenInventoryService;
+        this.inventoryQueryService = inventoryQueryService;
     }
 
     /**
@@ -443,6 +452,309 @@ public class InventoryController {
         }
     }
 
+    // ========== CQRS QUERY ENDPOINTS ==========
+
+    /**
+     * Get inventory summary statistics using CQRS read model.
+     */
+    @Operation(summary = "Obtenir le résumé de l'inventaire", description = "Retourne les statistiques de l'inventaire via le modèle de lecture CQRS.")
+    @GetMapping("/cqrs/summary")
+    public ResponseEntity<Map<String, Object>> getInventorySummary() {
+        log.info("CQRS API call: getInventorySummary");
+        try {
+            InventoryQueryService.InventorySummary summary = inventoryQueryService.getInventorySummary();
+            
+            Map<String, Object> response = Map.of(
+                "totalItems", summary.getTotalItems(),
+                "totalStock", summary.getTotalStock(),
+                "reservedStock", summary.getReservedStock(),
+                "availableStock", summary.getAvailableStock(),
+                "totalValue", inventoryQueryService.calculateTotalInventoryValue(),
+                "availableValue", inventoryQueryService.calculateTotalAvailableValue(),
+                "reservedValue", inventoryQueryService.calculateTotalReservedValue()
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error in getInventorySummary: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get items with reservations using CQRS read model.
+     */
+    @Operation(summary = "Obtenir les articles avec réservations", description = "Retourne les articles ayant des réservations actives via le modèle de lecture CQRS.")
+    @GetMapping("/cqrs/with-reservations")
+    public ResponseEntity<List<Map<String, Object>>> getItemsWithReservations() {
+        log.info("CQRS API call: getItemsWithReservations");
+        try {
+            var items = inventoryQueryService.getItemsWithReservations();
+            
+            List<Map<String, Object>> response = items.stream()
+                .map(item -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("inventoryItemId", item.getInventoryItemId());
+                    map.put("nom", item.getNom());
+                    map.put("categorie", item.getCategorie());
+                    map.put("prix", item.getPrix());
+                    map.put("stockCentral", item.getStockCentral());
+                    map.put("stockReserved", item.getStockReserved());
+                    map.put("stockAvailable", item.getStockAvailable());
+                    map.put("totalValue", item.getTotalValue());
+                    map.put("needsRestock", item.isNeedsRestock());
+                    return map;
+                })
+                .toList();
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error in getItemsWithReservations: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get reservation summary for a transaction using CQRS read model.
+     */
+    @Operation(summary = "Obtenir le résumé des réservations pour une transaction", description = "Retourne le résumé des réservations pour une transaction via le modèle de lecture CQRS.")
+    @GetMapping("/cqrs/reservations/transaction/{transactionId}/summary")
+    public ResponseEntity<Map<String, Object>> getReservationSummaryForTransaction(@PathVariable String transactionId) {
+        log.info("CQRS API call: getReservationSummaryForTransaction for transaction: {}", transactionId);
+        try {
+            InventoryQueryService.ReservationSummary summary = 
+                inventoryQueryService.getReservationSummaryForTransaction(transactionId);
+            
+            Map<String, Object> response = Map.of(
+                "transactionId", transactionId,
+                "activeCount", summary.getActiveCount(),
+                "activeQuantity", summary.getActiveQuantity(),
+                "confirmedCount", summary.getConfirmedCount(),
+                "confirmedQuantity", summary.getConfirmedQuantity(),
+                "releasedCount", summary.getReleasedCount(),
+                "releasedQuantity", summary.getReleasedQuantity(),
+                "totalCount", summary.getTotalCount(),
+                "totalQuantity", summary.getTotalQuantity()
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error in getReservationSummaryForTransaction for transaction: {}", transactionId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get active reservations for a transaction using CQRS read model.
+     */
+    @Operation(summary = "Obtenir les réservations actives pour une transaction", description = "Retourne les réservations actives pour une transaction via le modèle de lecture CQRS.")
+    @GetMapping("/cqrs/reservations/transaction/{transactionId}/active")
+    public ResponseEntity<List<Map<String, Object>>> getActiveReservationsForTransaction(@PathVariable String transactionId) {
+        log.info("CQRS API call: getActiveReservationsForTransaction for transaction: {}", transactionId);
+        try {
+            var reservations = inventoryQueryService.getActiveReservationsForTransaction(transactionId);
+            
+            List<Map<String, Object>> response = reservations.stream()
+                .map(reservation -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("reservationId", reservation.getReservationId());
+                    map.put("inventoryItemId", reservation.getInventoryItemId());
+                    map.put("transactionId", reservation.getTransactionId());
+                    map.put("quantity", reservation.getQuantity());
+                    map.put("status", reservation.getStatus().toString());
+                    map.put("createdAt", reservation.getCreatedAt());
+                    map.put("expiresAt", reservation.getExpiresAt());
+                    map.put("correlationId", reservation.getCorrelationId() != null ? reservation.getCorrelationId() : "");
+                    return map;
+                })
+                .toList();
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error in getActiveReservationsForTransaction for transaction: {}", transactionId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get reservations expiring soon using CQRS read model.
+     */
+    @Operation(summary = "Obtenir les réservations expirant bientôt", description = "Retourne les réservations qui expirent dans les prochaines minutes via le modèle de lecture CQRS.")
+    @GetMapping("/cqrs/reservations/expiring-soon")
+    public ResponseEntity<List<Map<String, Object>>> getReservationsExpiringSoon(
+            @RequestParam(defaultValue = "30") int minutesAhead) {
+        log.info("CQRS API call: getReservationsExpiringSoon with minutesAhead: {}", minutesAhead);
+        try {
+            var reservations = inventoryQueryService.getReservationsExpiringSoon(minutesAhead);
+            
+            List<Map<String, Object>> response = reservations.stream()
+                .map(reservation -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("reservationId", reservation.getReservationId());
+                    map.put("inventoryItemId", reservation.getInventoryItemId());
+                    map.put("transactionId", reservation.getTransactionId());
+                    map.put("quantity", reservation.getQuantity());
+                    map.put("expiresAt", reservation.getExpiresAt());
+                    map.put("minutesUntilExpiry", java.time.Duration.between(
+                        java.time.LocalDateTime.now(), 
+                        reservation.getExpiresAt()
+                    ).toMinutes());
+                    return map;
+                })
+                .toList();
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error in getReservationsExpiringSoon: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // ========== EVENT-DRIVEN INVENTORY ENDPOINTS ==========
+
+    /**
+     * Reserve inventory with event publishing.
+     */
+    @Operation(summary = "Réserver l'inventaire avec événements", description = "Réserve l'inventaire et publie des événements appropriés.")
+    @PostMapping("/events/reserve")
+    public ResponseEntity<Map<String, Object>> reserveInventoryWithEvents(
+            @RequestBody ReserveInventoryRequest request) {
+        log.info("Event-driven API call: reserveInventoryWithEvents for item {} with quantity {} for transaction {}", 
+                request.inventoryItemId(), request.quantity(), request.transactionId());
+        
+        try {
+            String reservationId = eventDrivenInventoryService.reserveInventory(
+                    request.inventoryItemId(), 
+                    request.transactionId(), 
+                    request.quantity(), 
+                    request.correlationId()
+            );
+            
+            Map<String, Object> response;
+            if (reservationId != null) {
+                response = Map.of(
+                    "success", true,
+                    "reservationId", reservationId,
+                    "inventoryItemId", request.inventoryItemId(),
+                    "quantity", request.quantity(),
+                    "transactionId", request.transactionId(),
+                    "message", "Inventory reserved successfully"
+                );
+                log.info("Inventory reservation successful: reservationId={}", reservationId);
+                return ResponseEntity.ok(response);
+            } else {
+                response = Map.of(
+                    "success", false,
+                    "inventoryItemId", request.inventoryItemId(),
+                    "quantity", request.quantity(),
+                    "transactionId", request.transactionId(),
+                    "message", "Inventory reservation failed - insufficient stock or item unavailable"
+                );
+                log.warn("Inventory reservation failed for transaction {}", request.transactionId());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in reserveInventoryWithEvents for transaction {}: {}", 
+                     request.transactionId(), e.getMessage(), e);
+            Map<String, Object> errorResponse = Map.of(
+                "success", false,
+                "inventoryItemId", request.inventoryItemId(),
+                "quantity", request.quantity(),
+                "transactionId", request.transactionId(),
+                "message", "Internal server error: " + e.getMessage()
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
+     * Release inventory reservation with event publishing.
+     */
+    @Operation(summary = "Libérer une réservation avec événements", description = "Libère une réservation d'inventaire et publie des événements appropriés.")
+    @PostMapping("/events/release")
+    public ResponseEntity<Map<String, Object>> releaseInventoryWithEvents(
+            @RequestBody ReleaseInventoryRequest request) {
+        log.info("Event-driven API call: releaseInventoryWithEvents for reservation {} with reason '{}'", 
+                request.reservationId(), request.reason());
+        
+        try {
+            boolean success = eventDrivenInventoryService.releaseReservation(
+                    request.reservationId(), 
+                    request.reason(), 
+                    request.correlationId()
+            );
+            
+            Map<String, Object> response = Map.of(
+                "success", success,
+                "reservationId", request.reservationId(),
+                "reason", request.reason(),
+                "message", success ? "Reservation released successfully" : "Failed to release reservation"
+            );
+            
+            if (success) {
+                log.info("Inventory reservation released successfully: {}", request.reservationId());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Failed to release inventory reservation: {}", request.reservationId());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in releaseInventoryWithEvents for reservation {}: {}", 
+                     request.reservationId(), e.getMessage(), e);
+            Map<String, Object> errorResponse = Map.of(
+                "success", false,
+                "reservationId", request.reservationId(),
+                "reason", request.reason(),
+                "message", "Internal server error: " + e.getMessage()
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
+     * Confirm inventory reservation with event publishing.
+     */
+    @Operation(summary = "Confirmer une réservation avec événements", description = "Confirme une réservation d'inventaire et réduit le stock réel.")
+    @PostMapping("/events/confirm")
+    public ResponseEntity<Map<String, Object>> confirmInventoryWithEvents(
+            @RequestBody ConfirmInventoryRequest request) {
+        log.info("Event-driven API call: confirmInventoryWithEvents for reservation {}", 
+                request.reservationId());
+        
+        try {
+            boolean success = eventDrivenInventoryService.confirmReservation(
+                    request.reservationId(), 
+                    request.correlationId()
+            );
+            
+            Map<String, Object> response = Map.of(
+                "success", success,
+                "reservationId", request.reservationId(),
+                "message", success ? "Reservation confirmed successfully" : "Failed to confirm reservation"
+            );
+            
+            if (success) {
+                log.info("Inventory reservation confirmed successfully: {}", request.reservationId());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("Failed to confirm inventory reservation: {}", request.reservationId());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error in confirmInventoryWithEvents for reservation {}: {}", 
+                     request.reservationId(), e.getMessage(), e);
+            Map<String, Object> errorResponse = Map.of(
+                "success", false,
+                "reservationId", request.reservationId(),
+                "message", "Internal server error: " + e.getMessage()
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
     // ========== SAGA ENDPOINTS ==========
 
     /**
@@ -561,5 +873,24 @@ public class InventoryController {
             String categorie,
             Double prix,
             String description
+    ) {}
+
+    // Event-driven inventory request DTOs
+    public record ReserveInventoryRequest(
+            Long inventoryItemId,
+            String transactionId,
+            Integer quantity,
+            String correlationId
+    ) {}
+
+    public record ReleaseInventoryRequest(
+            String reservationId,
+            String reason,
+            String correlationId
+    ) {}
+
+    public record ConfirmInventoryRequest(
+            String reservationId,
+            String correlationId
     ) {}
 }

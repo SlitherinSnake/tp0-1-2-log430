@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.log430.tp7.domain.inventory.InventoryItem;
+import com.log430.tp7.infrastructure.event.EventProducer;
 import com.log430.tp7.infrastructure.repository.InventoryItemRepository;
 
 /**
@@ -26,9 +27,11 @@ public class InventoryService {
     private static final String ITEM_NOT_FOUND_MSG = "Item not found with id: ";
 
     private final InventoryItemRepository inventoryItemRepository;
+    private final EventProducer eventProducer;
 
-    public InventoryService(InventoryItemRepository inventoryItemRepository) {
+    public InventoryService(InventoryItemRepository inventoryItemRepository, EventProducer eventProducer) {
         this.inventoryItemRepository = inventoryItemRepository;
+        this.eventProducer = eventProducer;
     }
 
     /**
@@ -232,5 +235,21 @@ public class InventoryService {
                             throw new IllegalArgumentException(ITEM_NOT_FOUND_MSG + id);
                         }
                 );
+    }
+    
+    /**
+     * Publish inventory state change events for tracking and auditing.
+     * This method can be used to publish events when inventory levels change
+     * outside of the event-driven reservation system.
+     */
+    private void publishInventoryStateChange(InventoryItem item, String operation, String correlationId) {
+        try {
+            // For now, we'll log the state change. In a full implementation,
+            // we could publish generic inventory state change events here
+            log.info("Inventory state changed: itemId={}, operation={}, currentStock={}, correlationId={}", 
+                    item.getId(), operation, item.getStockCentral(), correlationId);
+        } catch (Exception e) {
+            log.error("Failed to publish inventory state change event", e);
+        }
     }
 }
