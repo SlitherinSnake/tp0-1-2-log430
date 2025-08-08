@@ -5,6 +5,7 @@ global:
 rule_files:
   - "alert_rules.yml"
   - "saga-orchestrator-alerting-rules.yml"
+  - "event-driven-alerting-rules.yml"
 
 alerting:
   alertmanagers:
@@ -59,6 +60,27 @@ scrape_configs:
   - job_name: 'personnel-service'
     static_configs:
       - targets: ['personnel-service:8084']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Payment Service
+  - job_name: 'payment-service'
+    static_configs:
+      - targets: ['payment-service:8086']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Audit Service
+  - job_name: 'audit-service'
+    static_configs:
+      - targets: ['audit-service:8087']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+
+  # Event Store Service
+  - job_name: 'event-store-service'
+    static_configs:
+      - targets: ['event-store-service:8088']
     metrics_path: '/actuator/prometheus'
     scrape_interval: 15s
 

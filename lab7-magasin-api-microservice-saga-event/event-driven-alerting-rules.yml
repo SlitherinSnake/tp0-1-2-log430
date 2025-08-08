@@ -1,0 +1,175 @@
+# Event-Driven Architecture Alerting Rules
+groups:
+  - name: event_driven_alerts
+    rules:
+      # High event publishing failure rate
+      - alert: HighEventPublishingFailureRate
+        expr: rate(event_publish_failures_total[5m]) / rate(events_published_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High event publishing failure rate detected"
+          description: "Service {{ $labels.service }} has an event publishing failure rate of {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # High event consumption failure rate
+      - alert: HighEventConsumptionFailureRate
+        expr: rate(event_consumption_failures_total[5m]) / rate(events_consumed_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High event consumption failure rate detected"
+          description: "Service {{ $labels.service }} has an event consumption failure rate of {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # Event publishing latency too high
+      - alert: HighEventPublishingLatency
+        expr: histogram_quantile(0.95, rate(event_publish_latency_seconds_bucket[5m])) > 1.0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High event publishing latency detected"
+          description: "Service {{ $labels.service }} has 95th percentile event publishing latency of {{ $value }}s over the last 5 minutes."
+
+      # Event processing latency too high
+      - alert: HighEventProcessingLatency
+        expr: histogram_quantile(0.95, rate(event_processing_latency_seconds_bucket[5m])) > 2.0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High event processing latency detected"
+          description: "Service {{ $labels.service }} has 95th percentile event processing latency of {{ $value }}s for {{ $labels.event_type }} events."
+
+      # No events being published (potential service issue)
+      - alert: NoEventsPublished
+        expr: rate(events_published_total[10m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No events being published"
+          description: "Service {{ $labels.service }} has not published any events in the last 10 minutes."
+
+      # No events being consumed (potential queue issue)
+      - alert: NoEventsConsumed
+        expr: rate(events_consumed_total[10m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No events being consumed"
+          description: "Service {{ $labels.service }} has not consumed any events in the last 10 minutes."
+
+      # Too many active transactions
+      - alert: TooManyActiveTransactions
+        expr: active_transactions_count > 100
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many active transactions"
+          description: "Transaction service has {{ $value }} active transactions, which may indicate processing delays."
+
+      # Too many active payments
+      - alert: TooManyActivePayments
+        expr: active_payments_count > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many active payments"
+          description: "Payment service has {{ $value }} active payments, which may indicate processing delays."
+
+      # Too many inventory reservations
+      - alert: TooManyActiveReservations
+        expr: active_reservations_count > 75
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many active inventory reservations"
+          description: "Inventory service has {{ $value }} active reservations, which may indicate processing delays."
+
+      # High transaction failure rate
+      - alert: HighTransactionFailureRate
+        expr: rate(transaction_events_total{event_type="TransactionCancelled"}[5m]) / rate(transaction_events_total{event_type="TransactionCreated"}[5m]) > 0.10
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High transaction failure rate detected"
+          description: "Transaction failure rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # High payment failure rate
+      - alert: HighPaymentFailureRate
+        expr: rate(payment_events_total{event_type="PaymentFailed"}[5m]) / (rate(payment_events_total{event_type="PaymentProcessed"}[5m]) + rate(payment_events_total{event_type="PaymentFailed"}[5m])) > 0.15
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High payment failure rate detected"
+          description: "Payment failure rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # High inventory unavailability rate
+      - alert: HighInventoryUnavailabilityRate
+        expr: rate(inventory_events_total{event_type="InventoryUnavailable"}[5m]) / (rate(inventory_events_total{event_type="InventoryReserved"}[5m]) + rate(inventory_events_total{event_type="InventoryUnavailable"}[5m])) > 0.20
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inventory unavailability rate detected"
+          description: "Inventory unavailability rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # Saga coordination event imbalance
+      - alert: SagaCoordinationEventImbalance
+        expr: abs(rate(saga_coordination_events_total{event_type="PaymentProcessed"}[5m]) - rate(saga_coordination_events_total{event_type="TransactionCreated"}[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Saga coordination event imbalance detected"
+          description: "There is an imbalance between TransactionCreated and PaymentProcessed events, indicating potential saga coordination issues."
+
+  - name: system_health_alerts
+    rules:
+      # Service down
+      - alert: ServiceDown
+        expr: up{job=~".*-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "Service {{ $labels.job }} is down."
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: process_cpu_usage > 0.8
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "Service {{ $labels.job }} has CPU usage of {{ $value | humanizePercentage }}."
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes / jvm_memory_max_bytes > 0.85
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Service {{ $labels.job }} has memory usage of {{ $value | humanizePercentage }}."
+
+      # High HTTP error rate
+      - alert: HighHTTPErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "Service {{ $labels.job }} has HTTP 5xx error rate of {{ $value | humanizePercentage }}."
